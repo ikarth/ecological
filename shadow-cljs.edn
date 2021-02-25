@@ -5,7 +5,23 @@
   "src/test"]
 
  :dependencies
- []
+ [[proto-repl "0.3.1"]
+  [cider/cider-nrepl "0.25.6"]]
+
+ :nrepl
+ {:port 3333}
+
+ ;:dev-http
+ ;{8000 "public"}
 
  :builds
- {}}
+ {:eco {:target :browser
+        :output-dir "public/js"
+        :asset-path "js"
+        :modules {:main {:entries [ecological.core]}}
+        :devtools {:before-load ecological.core/stop
+                   :after-load ecological.core/start
+                   :http-root "public"
+                   :http-port 8020
+                   :hud true}}
+  }}
