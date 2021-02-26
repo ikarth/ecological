@@ -5,12 +5,17 @@
   "devDependencies": {
     "shadow-cljs": "2.11.18"
   },
-  "dependencies": {},
+  "dependencies": {
+    "create-react-class": "^15.7.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  },
   "scripts": {
     "dev": "shadow-cljs watch eco",
-    "release": "shadow-cljs release eco"
+    "release": "shadow-cljs release eco",
+    "server": "shadow-cljs server"
   },
-  "devDependencies": {
-    "shadow-cljs": "2.11.18"
+  "repository": {
+    "type": "git"
   }
 }
