@@ -2,9 +2,9 @@
   (:require [reagent.dom :as r]
             [ecological.views :as views]))
 
-(js/console.log "Hey from proto-repl!")
+(js/console.log "Ecological Generator, 2021")
 
-(js/alert "test")
+;(js/alert "test")
 
 
 ;; (defn ^:dev/after-load start

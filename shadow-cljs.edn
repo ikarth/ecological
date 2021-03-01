@@ -8,7 +8,11 @@
  [[proto-repl "0.3.1"]
   [binaryage/devtools "1.0.2"]
   [cider/cider-nrepl "0.25.6"]
-  [reagent "1.0.0"]]
+  [reagent "1.0.0"]
+  [datascript "1.0.4"]
+  [cljs-http "0.1.46"]
+  ;[reagent-flowgraph "0.1.1"]
+  ]
 
  :nrepl
  {:port 3333}
