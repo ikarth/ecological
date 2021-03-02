@@ -53,11 +53,10 @@
 
 (d/transact! db-conn ((:exec move-place-greenfield-scene) nil))
 
-(def design-moves [move-place-greenfield-scene
+(def global-design-moves [move-place-greenfield-scene
                    ])
 
-
-(d/q '[:find ?o ?any :where [?o :type ?any]] @db-conn)
+;(d/q '[:find ?o ?any :where [?o :type ?any]] @db-conn)
 
 (defn export-backgrounds []
   {})
@@ -105,7 +104,8 @@
    A _possible design move_ is an object with keys `move` and `vars`, 
    representing the abstract specification of this move type
    and a specific set of bindings for this move's logic variables respectively."
-  [db])
+  [db]
+  (get-possible-design-move-from-moveset db global-design-moves))
 
 (defn get-possible-design-move-from-moveset
   "Return a list of all possible design moves for the provides `db`,
@@ -117,26 +117,23 @@
                true))
    design-moves))
 
-(get (nth design-moves 2) :query)
-(rest design-moves)
-[design-moves]
+;; (get (nth design-moves 2) :query)
+;; (rest design-moves)
+;; [design-moves]
 
-(:schema db-conn)
+;; (:schema db-conn)
 
-(d/q '[:find ?n ?value :where [?n :type ?value]] @db-conn)
-(d/q '[:find ?scene :in $ :where [?scene :type :scene]] @db-conn)
+;; (d/q '[:find ?n ?value :where [?n :type ?value]] @db-conn)
+;; (d/q '[:find ?scene :in $ :where [?scene :type :scene]] @db-conn)
 
-(if-let [move-q (get (nth design-moves 1) :query )]
-  (empty? (d/q move-q @db-conn nil))
-  true)
+;; (if-let [move-q (get (nth design-moves 1) :query )]
+;;   (empty? (d/q move-q @db-conn nil))
+;;   true)
 
-(empty? {})
+;; (empty? {})
 
-(get-possible-design-move-from-moveset db-conn design-moves)
+;; (get-possible-design-move-from-moveset db-conn design-moves)
 
-;; take the list of moves
-;; filter by whether the move.query 
-;; 
 
 
 (defn generate-level
