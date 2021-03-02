@@ -53,32 +53,42 @@
 (def design-moves [
                    ])
 
-(defn convert-scenes-to-json []
-  (let [scene-labels
-        ["_datascript_internal_id" "backgroundId" "name" "id" "width" "height" "x" "y" "collisions"]
-        scenes
-        (d/q '[:find ?scene ?backgroundId ?name ?uuid ?width ?height ?scene_x ?scene_y ?collisions
-               :in $ ?nameDefaultValue ?idDefaultValue ?collisionsDefaultValue
-               :where
-               [?scene :type :scene]
-               [?scene :backgroundId ?backgroundId] ;todo: backgrounds
-               [(get-else $ ?scene :width 10) ?width]
-               [(get-else $ ?scene :height 10) ?height]
-               [?scene :x ?scene_x]
-               [?scene :y ?scene_y]
-               [(get-else $ ?scene :name ?nameDefaultValue) ?name]
-               [(get-else $ ?scene :id ?idDefaultValue) ?uuid]
-               [(get-else $ ?scene :collisions ?collisionsDefaultValue) ?collisions]       
-               ] ; todo: actors and scripts/triggers
-             @db-conn
-             "generated scene"
-             (random-uuid)
-             [])]
-    (map #(zipmap scene-labels %) scenes)))
+(defn export-backgrounds []
+  {})
 
-(map clj->js (convert-scenes-to-json))
+(defn export-scenes []
+    (let [scene-labels
+          ["_datascript_internal_id" "backgroundId" "name" "id" "width" "height" "x" "y" "collisions"]
+          scenes
+          (d/q '[:find ?scene ?backgroundId ?name ?uuid ?width ?height ?scene_x ?scene_y ?collisions
+                 :in $ ?nameDefaultValue ?idDefaultValue ?collisionsDefaultValue
+                 :where
+                 [?scene :type :scene]
+                 [?scene :backgroundId ?backgroundId] ;todo: backgrounds
+                 [(get-else $ ?scene :width 10) ?width]
+                 [(get-else $ ?scene :height 10) ?height]
+                 [?scene :x ?scene_x]
+                 [?scene :y ?scene_y]
+                 [(get-else $ ?scene :name ?nameDefaultValue) ?name]
+                 [(get-else $ ?scene :id ?idDefaultValue) ?uuid]
+                 [(get-else $ ?scene :collisions ?collisionsDefaultValue) ?collisions]       
+                 ] ; todo: actors and scripts/triggers
+               @db-conn
+               "generated scene"
+               (random-uuid)
+               [])]
+      (map #(zipmap scene-labels %) scenes)))
 
-(zipmap ["a" "B"] [1 2 3])
+(defn export-gbs-project
+  []
+  (-> gbs-basic
+      (update :backgrounds export-backgrounds)
+      (update :scenes export-scenes)
+      ))
+
+
+(map clj->js (export-gbs-project))
+
 
 ;(defn load-project [])
 ;(defn render-project [])
