@@ -131,7 +131,6 @@
   of random design moves. The `budget` determines the number of
   design moves that can be performed."
   [db budget seed]
-  (log-db db)
   (dorun
    (for [i (range budget)]
      (let [moves (get-possible-design-move-from-moveset db global-design-moves)]
