@@ -117,22 +117,12 @@
                true))
    design-moves))
 
-;; (get (nth design-moves 2) :query)
-;; (rest design-moves)
-;; [design-moves]
 
-;; (:schema db-conn)
+(defn log-db
+  "Log a complete listing of the entities in the provided `db` to the console."
+  [db]
+  (d/q '[:find ?any ?obj :where [?obj :type ?any]] @db)) ;todo: log to console...
 
-;; (d/q '[:find ?n ?value :where [?n :type ?value]] @db-conn)
-;; (d/q '[:find ?scene :in $ :where [?scene :type :scene]] @db-conn)
-
-;; (if-let [move-q (get (nth design-moves 1) :query )]
-;;   (empty? (d/q move-q @db-conn nil))
-;;   true)
-
-;; (empty? {})
-
-;; (get-possible-design-move-from-moveset db-conn design-moves)
 
 
 
@@ -140,8 +130,18 @@
   "Generate a level in the provided `db` by performing a sequence
   of random design moves. The `budget` determines the number of
   design moves that can be performed."
-  [db budget])
+  [db budget seed]
+  (log-db db)
+  (dorun
+   (for [i (range budget)]
+     (let [moves (get-possible-design-move-from-moveset db global-design-moves)]
+       (if (empty? moves)
+         nil
+         (let [poss-move (first moves)] ;; todo: select randomly
+           (if-let [exec-func (get poss-move :exec false)]
+             (d/transact! db (exec-func db) nil) ; todo: do something with the transaction report
+             nil)))))))
 
-(defn log-db
-  "Log a complete listing of the entities in the provided `db` to the console."
-  [db])
+(generate-level db-conn 30 0)
+(log-db db-conn)
+
