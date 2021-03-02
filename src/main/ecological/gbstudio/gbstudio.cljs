@@ -15,15 +15,6 @@
                                :db.type :db.type/ref}})
 (def db-conn (d/create-conn genboy-schema))
 
-
-(defn convert-to-gbs-project
-  []
-  gbs-basic)
-
-
-
-(convert-to-gbs-project)
-
 (defn create-gbs-entity
   "create a new GBS entity"
   []
@@ -31,6 +22,16 @@
 
 ;; (defn create-entity [db entity]
 ;;   (db-with db (update entity :db/id -1)))
+
+(def move-this-move-is-never-used
+  {:name "if you see this, it is an error"
+   :query '[:find ?scene :in $ % :where [?scene :type :invalid-action-for-debugging]]
+   :exec (fn [])})
+
+(def move-this-move-is-always-used
+  {:name "if you see this, it is true"
+   :query '[:find ?scene :in $ % :where [?scene :type :scene]]
+   :exec (fn [])})
 
 (def move-place-greenfield-scene
   {:name "place-greenfield-scene"
@@ -48,10 +49,15 @@
    :exec (fn [_]
            [])})
 
+
+
 (d/transact! db-conn ((:exec move-place-greenfield-scene) nil))
 
-(def design-moves [
+(def design-moves [move-place-greenfield-scene
                    ])
+
+
+(d/q '[:find ?o ?any :where [?o :type ?any]] @db-conn)
 
 (defn export-backgrounds []
   {})
@@ -104,7 +110,34 @@
 (defn get-possible-design-move-from-moveset
   "Return a list of all possible design moves for the provides `db`,
   as selected from the provided `design-moves` collection."
-  [db design-moves])
+  [db design-moves]
+  (filter
+   (fn [mov] (if-let [move-q (get mov :query )]
+               (not (empty? (d/q move-q @db-conn nil)))
+               true))
+   design-moves))
+
+(get (nth design-moves 2) :query)
+(rest design-moves)
+[design-moves]
+
+(:schema db-conn)
+
+(d/q '[:find ?n ?value :where [?n :type ?value]] @db-conn)
+(d/q '[:find ?scene :in $ :where [?scene :type :scene]] @db-conn)
+
+(if-let [move-q (get (nth design-moves 1) :query )]
+  (empty? (d/q move-q @db-conn nil))
+  true)
+
+(empty? {})
+
+(get-possible-design-move-from-moveset db-conn design-moves)
+
+;; take the list of moves
+;; filter by whether the move.query 
+;; 
+
 
 (defn generate-level
   "Generate a level in the provided `db` by performing a sequence
