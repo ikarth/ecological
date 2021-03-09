@@ -11,6 +11,7 @@
   [reagent "1.0.0"]
   [datascript "1.0.4"]
   [cljs-http "0.1.46"]
+  [json-html "0.4.7"]
   ;[reagent-flowgraph "0.1.1"]
   ]
 
