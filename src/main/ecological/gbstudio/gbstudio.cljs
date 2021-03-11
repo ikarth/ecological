@@ -16,7 +16,7 @@
 
 (def db-conn (d/create-conn genboy-schema))
 
-(defn reset-the-database []
+(defn reset-the-database! []
   (d/reset-conn! db-conn (d/empty-db genboy-schema)))
 
 
@@ -29,6 +29,48 @@
 
 ;; (defn create-entity [db entity]
 ;;   (db-with db (update entity :db/id -1)))
+
+(d/q '[:find ?element ?id ?name ?width ?height ?image-width ?image-height ?filename
+               :in $
+               :where
+               [?element :type :background]
+               [?element :name ?name]
+               [?element :id ?id]
+               [?element :width ?width]
+               [?element :height ?height]
+               [?element :imageWidth ?image-width]
+               [?element :imageHeight ?image-height]
+               [?element :filename ?filename]
+               ]
+             @db-conn)
+
+(defn find-in-db [type property value]
+  (d/q '[:find ?element
+         :in $ ?element-type ?element-prop ?element-value
+         :where
+         [?element :type ?element-type]
+         [?element ?element-prop ?element-value]]
+       @db-conn
+       type
+       property
+       value))
+
+(defn exists-in-db? [exist-type exist-name]
+  (< 0
+     (count
+      (d/q '[:find ?element
+             :in $ ?name ?type
+             :where
+             [?element :type ?type]
+             [?element :name ?name]]
+           @db-conn
+           exist-name
+           exist-type))))
+
+;; (defn update-db-property [eid propery value]
+;;   (d/db-with @db-conn [[":db/add" eid property value]])  
+;;   )
+
 
 (def move-this-move-is-never-used
   {:name "if you see this, it is an error"
@@ -44,11 +86,109 @@
   {:name "place-greenfield-scene"
    :exec (fn [_] ; takes parameters but ignores them
            [{:db/id -1
-             :type :scene
-             :id (random-uuid)
-             :backgroundId ""
-             :x 20
-             :y 20}])}) ; todo: query db for empty editor space to place scene?
+               :type :scene
+               :id (str (random-uuid))             
+               :backgroundId ""
+               :x 20
+               :y 20}])}) ; todo: query db for empty editor space to place scene?
+
+(def move-create-background-from-image
+  {:name "create-background-from-image"
+   :query (fn [_]
+            (not (exists-in-db? :background "autogen_logo.png")))
+   :exec (fn [_ & {:keys [image-filename] :or {image-filename "autogen_logo.png"}}]
+           (let [image-size [160 144] ;; todo: check actual size of image
+                 tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
+                 image-tiles (map #(/ % tile-size) image-size)]
+             [{:db/id -1
+               :type :background
+               :name image-filename
+               :id (str (random-uuid)) ; todo: use hash to speed comparisons?
+               :width (first image-tiles)
+               :height (second image-tiles)
+               :imageWidth (first image-size)
+               :imageHeight (second image-size)
+               :filename image-filename}] ))})
+
+
+(def move-add-existing-background-to-scene
+  {:name "add-existing-background-to-scene"
+   :comment "Adds an existing background (chosen at random) to a scene that doesn't have a background yet."
+   :query '[:find ?scene ?background ?background_id ?bkg_width ?bkg_height
+           :in $ %
+           :where
+            [?scene :type :scene]
+            (not [?scene :db-background])
+            [?scene :backgroundId ""]
+           [?background :type :background]
+           [?background :id ?background_id]
+           [?background :width ?bkg_width]
+           [?background :height ?bkg_height]]
+   :exec
+   (fn [_]
+     ;; todo: I feel like "" isn't explicit enough for scenes without backgrounds yet...
+     (let [scenes-sans-bkg (find-in-db :scene :backgroundId "")
+           backgrounds (find-in-db :background :type :background)
+           selected-background (first (rand-nth (seq backgrounds)))
+           selected-scene-id (first (rand-nth (seq scenes-sans-bkg)))
+           bkg-data (first (first (d/q '[:find (pull ?e [:id :width :height])
+                                        :in $ ?e
+                                        :where
+                                        [?e :type :background]]
+                                      @db-conn selected-background)))
+           ;; todo: handle problem if there are multiple matches found for bkg-data...
+           ]
+       (cljs.pprint/pprint "XXX")       
+       (cljs.pprint/pprint bkg-data)       
+       [{:db/id selected-scene-id
+         :backgroundId (get bkg-data :id "MISSING_BACKGROUND")
+         :background selected-background
+         :height (get bkg-data :height 0)
+         :width  (get bkg-data :width 0)
+         :test true
+         }])
+     )
+   })
+
+;; (def move-add-background-to-scene
+;;   {:name "add-background-to-scene"
+;;    :query '[:find ?scene ?background ?background_id ?bkg_width ?bkg_height
+;;            :in $ %
+;;            :where
+;;             [?scene :type :scene]
+;;             (not [?scene :background])
+;;             [?scene :backgroundId ""]
+;;            [?background :type :background]
+;;            [?background :id ?background_id]
+;;            [?background :width ?bkg_width]
+;;            [?background :height ?bkg_height]]
+;;    :exec
+;;    ;; (fn [[scene background background-id width height]]
+;;    ;;         [[scene :backgroundId background-id]
+;;    ;;          [scene :width width]
+;;    ;;          [scene :height height]]
+;;    ;;         )
+;;    (fn [_]
+;;      (let [scenes-with-no-backgrounds (find-in-db :scene :backgroundId "")
+;;            available-backgrounds (find-in-db :background :type :background)
+;;            selected-background (if (< 0 (count available-backgrounds))
+;;                                  (first (seq available-backgrounds))
+;;                                  false)]
+      
+;;        (cljs.pprint/pprint "vvv")
+;;        (cljs.pprint/pprint scenes-with-no-backgrounds)
+;;        (if (and selected-background (< 0 (count scenes-with-no-backgrounds)))
+;;          (let [selected-scene-id (first (rand-nth (seq scenes-with-no-backgrounds)))
+;;                background-id 0
+;;                background-uuid "X"
+;;                ] ; todo: make determanistic
+;;                   (cljs.pprint/pprint selected-scene-id)
+;;            [{:db/id selected-scene-id
+;;              :background background-id
+;;              :backgroundId background-uuid}]
+;;            )
+;;          [])))})
+
 
 (def move-place-possible-connection-point
   {:name "place-possible-connection-point"
@@ -60,13 +200,31 @@
 
 (d/transact! db-conn ((:exec move-place-greenfield-scene) nil))
 
-(def global-design-moves [move-place-greenfield-scene
-                   ])
+(def global-design-moves
+  [move-place-greenfield-scene
+   move-create-background-from-image
+   move-add-existing-background-to-scene])
 
 ;(d/q '[:find ?o ?any :where [?o :type ?any]] @db-conn)
 
 (defn export-backgrounds []
-  {})
+  (let [element-labels ["_datascript_internal_id" "id" "name" "width" "height" "imageWidth" "imageHeight" "filename"]
+        elements
+        (d/q '[:find ?element ?id ?name ?width ?height ?image-width ?image-height ?filename
+               :in $
+               :where
+               [?element :type :background]
+               [?element :name ?name]
+               [?element :id ?id]
+               [?element :width ?width]
+               [?element :height ?height]
+               [?element :imageWidth ?image-width]
+               [?element :imageHeight ?image-height]
+               [?element :filename ?filename]
+               ]
+             @db-conn)]
+     (map #(zipmap element-labels %)
+         elements)))
 
 (defn export-scripts
   [scene-id]
@@ -124,10 +282,20 @@
                  [(get-else $ ?scene :collisions ?collisionsDefaultValue) ?collisions]       
                  ] ; todo: actors and scripts/triggers
                @db-conn
-               "generated scene"
+                "generated scene"
                (random-uuid)
                [])]
-      (map #(zipmap scene-labels %) (concat scenes [(export-actors (first scenes)) (export-triggers (first scenes)) (export-scripts (first scenes))]) )))
+      (map (fn [scene]
+             (zipmap scene-labels (concat
+                                   scene
+                                   (export-actors (first scene))
+                                   (export-triggers (first scene))
+                                   (export-scripts (first scene))
+                                   ))
+             )
+           scenes)
+      ;(map #(zipmap scene-labels %) (concat scenes [(export-actors (first scenes)) (export-triggers (first scenes)) (export-scripts (first scenes))]) )
+      ))
 
 (defn export-gbs-project
   []
@@ -137,9 +305,7 @@
       ))
 
 
-(defn fetch-gbs []
-  (clj->js (map clj->js (export-gbs-project)))
-  (export-gbs-project))
+
 
 
 ;(defn load-project [])
@@ -151,10 +317,15 @@
 (defn get-possible-design-move-from-moveset
   "Return a list of all possible design moves for the provides `db`,
   as selected from the provided `design-moves` collection."
-  [db design-moves]
+  [design-moves]
   (filter
-   (fn [mov] (if-let [move-q (get mov :query )]
-               (not (empty? (d/q move-q @db-conn nil)))
+   (fn [mov]
+     ;; (cljs.pprint/pprint mov)
+     ;; (cljs.pprint/pprint "+++")
+     (if-let [move-q (get mov :query false)]
+       (if (fn? move-q)
+         (move-q)
+         (not (empty? (d/q move-q @db-conn nil))))
                true))
    design-moves))
 
@@ -163,8 +334,8 @@
    A _possible design move_ is an object with keys `move` and `vars`, 
    representing the abstract specification of this move type
    and a specific set of bindings for this move's logic variables respectively."
-  [db]
-  (get-possible-design-move-from-moveset db global-design-moves))
+  []
+  (get-possible-design-move-from-moveset global-design-moves))
 
 
 (defn log-db
@@ -183,15 +354,32 @@
   [db budget seed]
   (dorun
    (for [i (range budget)]
-     (let [moves (get-possible-design-move-from-moveset db global-design-moves)]
+     (let [moves (get-possible-design-move-from-moveset global-design-moves)]
+       (cljs.pprint/pprint moves)
+       (cljs.pprint/pprint (type moves))
+       (cljs.pprint/pprint "---")
        (if (empty? moves)
          nil
          (let [poss-move (rand-nth moves)] ;; todo: make determanistic
+           (cljs.pprint/pprint poss-move)
+           (cljs.pprint/pprint (type poss-move))
+           
            (if-let [exec-func (get poss-move :exec false)]
              (d/transact! db (exec-func db) nil) ; todo: do something with the transaction report, such as checking for errors
-             nil)))))))
+             nil))
+           ))))) ;; todo: log which transaction was executed
 
-(reset-the-database)
-(generate-level-random-heuristic db-conn 3 0)
-;; (log-db db-conn)
+(defn generate []
+  (reset-the-database!)
+  (generate-level-random-heuristic db-conn 8 0))
 
+(reset-the-database!)
+(generate)
+(generate-level-random-heuristic db-conn 5 0)
+(log-db db-conn)
+
+
+(defn fetch-gbs []
+  (generate)
+  ;(clj->js (map clj->js (export-gbs-project)))
+  (export-gbs-project))
