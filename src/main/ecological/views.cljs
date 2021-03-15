@@ -57,7 +57,7 @@
   [:div
    (json->hiccup (clj->js (:gbs-output @app-state)))
    [:hr]
-   (.stringify js/JSON (clj->js (with-out-str (cljs.pprint/pprint (:gbs-output @app-state)))))]
+   (.stringify js/JSON (clj->js (:gbs-output @app-state)))]
    ;; (with-out-str) (cljs.pprint/pprint)
    ;; (clj->js (:gbs-output @app-state))
    )

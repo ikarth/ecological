@@ -72,15 +72,15 @@
 ;;   )
 
 
-(def move-this-move-is-never-used
-  {:name "if you see this, it is an error"
-   :query '[:find ?scene :in $ % :where [?scene :type :invalid-action-for-debugging]]
-   :exec (fn [])})
+;; (def move-this-move-is-never-used
+;;   {:name "if you see this, it is an error"
+;;    :query '[:find ?scene :in $ % :where [?scene :type :invalid-action-for-debugging]]
+;;    :exec (fn [])})
 
-(def move-this-move-is-always-used
-  {:name "if you see this, it is true"
-   :query '[:find ?scene :in $ % :where [?scene :type :scene]]
-   :exec (fn [])})
+;; (def move-this-move-is-always-used
+;;   {:name "if you see this, it is true"
+;;    :query '[:find ?scene :in $ % :where [?scene :type :scene]]
+;;    :exec (fn [])})
 
 (def move-place-greenfield-scene
   {:name "place-greenfield-scene"
@@ -88,18 +88,40 @@
            [{:db/id -1
                :type :scene
                :id (str (random-uuid))             
-               :backgroundId ""
+               :backgroundId ""`
                :x 20
                :y 20}])}) ; todo: query db for empty editor space to place scene?
 
+
+(def move-load-resource-files
+  {:name "load-resource-files"
+   :exec (fn [db vars]
+           (let [filenames ["auto_gen.png"]]
+             (map 
+              (fn [name]
+                {:db/id -1
+                 :type :resource
+                 :name name})
+              filenames)))})
+
+;; TODO: populate the database with existing image files
 (def move-create-background-from-image
   {:name "create-background-from-image"
-   :query (fn [_]
-            (not (exists-in-db? :background "autogen_logo.png")))
-   :exec (fn [_ & {:keys [image-filename] :or {image-filename "autogen_logo.png"}}]
+   ;; :query
+   ;; '[:find ?background ?image-filename]
+   ;; (fn [_]
+   ;;          (not (exists-in-db? :background "autogen_logo.png")))
+   :query
+   '[:find ?image-filename ?r
+     :in $ %
+     :where
+     [?r :type :resource]
+     [?r :name ?image-filename]
+     ]
+   :exec (fn [db [image-filename resource]]
            (let [image-size [160 144] ;; todo: check actual size of image
                  tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
-                 image-tiles (map #(/ % tile-size) image-size)]
+                 image-tiles (map (fn [n] (/ n tile-size)) image-size)]
              [{:db/id -1
                :type :background
                :name image-filename
@@ -113,42 +135,25 @@
 
 (def move-add-existing-background-to-scene
   {:name "add-existing-background-to-scene"
-   :comment "Adds an existing background (chosen at random) to a scene that doesn't have a background yet."
-   :query '[:find ?scene ?background ?background_id ?bkg_width ?bkg_height
-           :in $ %
-           :where
-            [?scene :type :scene]
-            (not [?scene :db-background])
-            [?scene :backgroundId ""]
-           [?background :type :background]
-           [?background :id ?background_id]
-           [?background :width ?bkg_width]
-           [?background :height ?bkg_height]]
+   ;:comment "Adds an existing background (chosen at random) to a scene that doesn't have a background yet."
+   :query  '[:find ?scene ?e ?background-id ?bkg-width ?bkg-height
+             :in $ %
+             :where
+             [?scene :backgroundId ""]
+             (not [?scene :db-background])
+             [?e :type :background]
+             [?e :id ?background-id]
+             [?e :width ?bkg-width]
+             [?e :height ?bkg-height]
+             ]
    :exec
-   (fn [_]
-     ;; todo: I feel like "" isn't explicit enough for scenes without backgrounds yet...
-     (let [scenes-sans-bkg (find-in-db :scene :backgroundId "")
-           backgrounds (find-in-db :background :type :background)
-           selected-background (first (rand-nth (seq backgrounds)))
-           selected-scene-id (first (rand-nth (seq scenes-sans-bkg)))
-           bkg-data (first (first (d/q '[:find (pull ?e [:id :width :height])
-                                        :in $ ?e
-                                        :where
-                                        [?e :type :background]]
-                                      @db-conn selected-background)))
-           ;; todo: handle problem if there are multiple matches found for bkg-data...
-           ]
-       (cljs.pprint/pprint "XXX")       
-       (cljs.pprint/pprint bkg-data)       
-       [{:db/id selected-scene-id
-         :backgroundId (get bkg-data :id "MISSING_BACKGROUND")
-         :background selected-background
-         :height (get bkg-data :height 0)
-         :width  (get bkg-data :width 0)
-         :test true
-         }])
-     )
-   })
+   (fn [db [scene bkg bkg-uuid bkg-width bkg-height]]
+     [{:db/id scene
+       :backgroundId bkg-uuid
+       :db-background bkg
+       :width bkg-width
+       :height bkg-height
+       }])})
 
 ;; (def move-add-background-to-scene
 ;;   {:name "add-background-to-scene"
@@ -192,7 +197,7 @@
 
 (def move-place-possible-connection-point
   {:name "place-possible-connection-point"
-   :query '[:find ?scene :in $ % :where [?scene :type :scene]]
+   :query '[:find ?scene :in $ :where [?scene :type :scene]]
    :exec (fn [_]
            [])})
 
@@ -201,9 +206,11 @@
 (d/transact! db-conn ((:exec move-place-greenfield-scene) nil))
 
 (def global-design-moves
-  [move-place-greenfield-scene
+  [move-load-resource-files
+   move-place-greenfield-scene
    move-create-background-from-image
-   move-add-existing-background-to-scene])
+   move-add-existing-background-to-scene
+   ])
 
 ;(d/q '[:find ?o ?any :where [?o :type ?any]] @db-conn)
 
@@ -311,23 +318,45 @@
 ;(defn load-project [])
 ;(defn render-project [])
 
+ ;[?scene :type :scene]
+            ;(not [?scene :db-background])
+            ;[?scene :backgroundId ""]
+          ; [?background :type :background]
+           ;[?background :id ?background_id]
+           ;[?background :width ?bkg_width]
+            ;[?background :height ?bkg_height]
 
-
+;; (d/q
+;;  '[:find ?scene ?e ?background-id ?bkg-width ?bkg-height
+;;    :in $ 
+;;    :where
+;;    [?scene :backgroundId ""]
+;;    (not [?scene :db-background])
+;;    [?e :type :background]
+;;    [?e :id ?background-id]
+;;    [?e :width ?bkg-width]
+;;    [?e :height ?bkg-height]]
+;;  @db-conn)
 
 (defn get-possible-design-move-from-moveset
   "Return a list of all possible design moves for the provides `db`,
   as selected from the provided `design-moves` collection."
   [design-moves]
-  (filter
-   (fn [mov]
-     ;; (cljs.pprint/pprint mov)
-     ;; (cljs.pprint/pprint "+++")
-     (if-let [move-q (get mov :query false)]
-       (if (fn? move-q)
-         (move-q)
-         (not (empty? (d/q move-q @db-conn nil))))
-               true))
-   design-moves))
+  (apply concat
+   (map
+    (fn [mov]
+      (let [q-map
+            (if-let [move-query (get mov :query false)]
+              ;; (if (fn? move-query) (move-query @db-conn)) ;; todo: properly handle functions for queries
+              (let [query-result (d/q move-query @db-conn nil)] ;; todo: pass additional context to query
+                ;; todo: check if result is a promise
+                (map (fn [v] {:move mov :vars v}) query-result))
+              {:move mov :vars nil})]
+        (if (map? q-map)
+          [q-map]
+          q-map)
+       ))
+    design-moves)))
 
 (defn get-possible-design-moves
   "Return a list of all possible design moves for the provided `db`. 
@@ -355,19 +384,25 @@
   (dorun
    (for [i (range budget)]
      (let [moves (get-possible-design-move-from-moveset global-design-moves)]
+       (cljs.pprint/pprint "all moves")
        (cljs.pprint/pprint moves)
        (cljs.pprint/pprint (type moves))
        (cljs.pprint/pprint "---")
        (if (empty? moves)
          nil
          (let [poss-move (rand-nth moves)] ;; todo: make determanistic
+           (cljs.pprint/pprint "possible move:")
            (cljs.pprint/pprint poss-move)
            (cljs.pprint/pprint (type poss-move))
-           
-           (if-let [exec-func (get poss-move :exec false)]
-             (d/transact! db (exec-func db) nil) ; todo: do something with the transaction report, such as checking for errors
-             nil))
-           ))))) ;; todo: log which transaction was executed
+           ;; (cljs.pprint/pprint (get poss-move :move))
+           ;; (cljs.pprint/pprint (get (get poss-move :move) :exec false))
+           ;; (cljs.pprint/pprint ((get (get poss-move :move) :exec false)))
+           (if-let [exec-func (get (get poss-move :move) :exec false)]
+             (d/transact! db (exec-func db (:vars poss-move)) nil) ; todo: do something with the transaction report, such as checking for errors
+             nil)
+
+           ))
+         )))) ;; todo: log which transaction was executed
 
 (defn generate []
   (reset-the-database!)
