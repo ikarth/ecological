@@ -93,16 +93,24 @@
                :y 20}])}) ; todo: query db for empty editor space to place scene?
 
 
-(def move-load-resource-files
-  {:name "load-resource-files"
-   :exec (fn [db vars]
-           (let [filenames ["auto_gen.png"]]
-             (map 
-              (fn [name]
-                {:db/id -1
-                 :type :resource
-                 :name name})
-              filenames)))})
+;; (def move-load-resource-files
+;;   {:name "load-resource-files"
+;;    :query
+;;    (fn [db]
+;;      (d/q
+;;       '[:find ?n
+;;         :in $ %
+;;         :where [?n :type :resource]]
+;;       @db-conn))
+;;    :exec (fn [db vars]
+;;            (let [filenames ["auto_gen.png" "test.png"]]
+;;              (map 
+;;               (fn [id-val name]
+;;                 {:db/id id-val
+;;                  :type :resource
+;;                  :name name})
+;;               (range -1 (- 0 (count filenames)) -1)
+;;               filenames)))})
 
 ;; TODO: populate the database with existing image files
 (def move-create-background-from-image
@@ -117,6 +125,9 @@
      :where
      [?r :type :resource]
      [?r :name ?image-filename]
+     (not-join [?image-filename]
+               [?e :filename ?image-filename]
+               [?e :type :background])
      ]
    :exec (fn [db [image-filename resource]]
            (let [image-size [160 144] ;; todo: check actual size of image
@@ -206,7 +217,7 @@
 (d/transact! db-conn ((:exec move-place-greenfield-scene) nil))
 
 (def global-design-moves
-  [move-load-resource-files
+  [
    move-place-greenfield-scene
    move-create-background-from-image
    move-add-existing-background-to-scene
@@ -404,8 +415,17 @@
            ))
          )))) ;; todo: log which transaction was executed
 
+(defn load-resources-from-disk [db]
+  (d/transact!
+   db
+   [{:db/id -1
+     :name "auto_gen.png"
+     :type :resource
+     }]))
+
 (defn generate []
   (reset-the-database!)
+  (load-resources-from-disk db-conn)
   (generate-level-random-heuristic db-conn 8 0))
 
 (reset-the-database!)
