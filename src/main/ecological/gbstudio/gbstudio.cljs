@@ -16,7 +16,10 @@
 (def db-conn (d/create-conn genboy-schema))
 
 (defn reset-the-database! []
-  (d/reset-conn! db-conn (d/empty-db genboy-schema)))
+  (d/reset-conn! db-conn (d/empty-db genboy-schema))
+  (d/transact! db-conn [{:db/id -1
+                         :signal :resources-not-loaded 
+                         :type :signal}]))
 
 
 (defn create-gbs-entity
@@ -75,6 +78,24 @@
 ;;   {:name "if you see this, it is true"
 ;;    :query '[:find ?scene :in $ % :where [?scene :type :scene]]
 ;;    :exec (fn [])})
+
+(def move-load-resources-from-disk
+  {:name "load-resources-from-disk"
+   :query
+   '[:find ?sig
+     :in $ %
+     :where
+     [?sig :type :signal]
+     [?sig :signal :resources-not-loaded]]
+   :exec
+   (fn [db [signal-resources-not-loaded]]
+     ;; TODO: actually check resources folder for resources that exist on disk
+     [[:db/retractEntity signal-resources-not-loaded]
+      {:db/id -1
+       :type :resource
+       :name "auto_gen.png"}
+      ]
+     )})
 
 (def move-place-greenfield-scene
   {:name "place-greenfield-scene"
@@ -144,6 +165,7 @@
 
 (def global-design-moves
   [
+   move-load-resources-from-disk
    move-place-greenfield-scene
    move-create-background-from-image
    move-add-existing-background-to-scene
@@ -288,9 +310,11 @@
   be performed. Takes a random `seed` for determanistic generation.
   TODO: determanistic generation is not implemented yet."
   [db budget seed]
+  (cljs.pprint/pprint (get (:val db) :datoms))
   (dorun
    (for [i (range budget)]
      (let [moves (get-possible-design-move-from-moveset global-design-moves)]
+       (cljs.pprint/pprint db)
        (if (empty? moves)
          nil
          (let [poss-move (rand-nth moves)] ;; todo: make determanistic
@@ -303,18 +327,18 @@
            ))
          )))) ;; todo: log which transaction was executed
 
-(defn load-resources-from-disk [db]
-  (d/transact!
-   db
-   [{:db/id -1
-     :name "auto_gen.png"
-     :type :resource
-     }]))
+;; (defn load-resources-from-disk [db]
+;;   (d/transact!
+;;    db
+;;    [{:db/id -1
+;;      :name "auto_gen.png"
+;;      :type :resource
+;;      }]))
 
 (defn generate []
   (reset-the-database!)
-  (load-resources-from-disk db-conn)
-  (generate-level-random-heuristic db-conn 8 0))
+  ;; (load-resources-from-disk db-conn)
+  (generate-level-random-heuristic db-conn 18 0))
 
 (comment (reset-the-database!)
          (generate)
