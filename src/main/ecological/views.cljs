@@ -10,7 +10,7 @@
 (defn header
   []
   [:div
-   [:h1 "A template for reagent apps"]])
+   [:h1 "Ecological Generator Output Visualization"]])
 
 (defn counter
   []
