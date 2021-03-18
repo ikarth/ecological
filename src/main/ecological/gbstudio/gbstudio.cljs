@@ -10,16 +10,29 @@
 
 ;(.parse js/JSON "{\"author\": \"test\", \"music\": []}")
 
-(def genboy-schema {:conn-end {:db.cardinality :db.cardinality/many
-                               :db.type :db.type/ref}})
+(def genboy-schema
+  {:signal/signal             {:db/cardinality :db.cardinality/one}                 ; :db/valueType :db.type/keyword
+   :scene/background          {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}                               
+   :scene/name                {:db/cardinality :db.cardinality/one}                 ; :db/valueType :db.type/string
+   :scene/uuid                {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
+   :scene/backgroundUUID      {:db/cardinality :db.cardinality/one}                 ; :db/valueType :db.type/string
+   :scene/collisions          {:db/cardinality :db.cardinality/one}                 ; :db/valueType :db.type/tuple
+   :scene/editor-position     {:db/cardinality :db.cardinality/one}                 ; :db/valueType :db.type/tuple
+   :background/filename       {:db/cardinality :db.cardinality/one}                 ; :db/valueType :db.type/string
+   :background/image          {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
+   :background/size           {:db/cardinality :db.cardinality/one}                 ; :db/valueType :db.type/tuple
+   :background/imageSize      {:db/cardinality :db.cardinality/one}                 ; :db/valueType :db.type/tuple
+   :background/uuid           {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
+   :resource/filename         {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
+   :resource/type             {:db/cardinality :db.cardinality/one}                 ; :db/valueType :db.type/keyword
+   })
 
 (def db-conn (d/create-conn genboy-schema))
 
 (defn reset-the-database! []
   (d/reset-conn! db-conn (d/empty-db genboy-schema))
   (d/transact! db-conn [{:db/id -1
-                         :signal :resources-not-loaded 
-                         :type :signal}]))
+                         :signal/signal :resources-not-loaded}]))
 
 
 (defn create-gbs-entity
@@ -41,28 +54,28 @@
 ;;                ]
 ;;              @db-conn)
 
-(defn find-in-db [type property value]
-  (d/q '[:find ?element
-         :in $ ?element-type ?element-prop ?element-value
-         :where
-         [?element :type ?element-type]
-         [?element ?element-prop ?element-value]]
-       @db-conn
-       type
-       property
-       value))
+;; (defn find-in-db [type property value]
+;;   (d/q '[:find ?element
+;;          :in $ ?element-type ?element-prop ?element-value
+;;          :where
+;;          [?element :type ?element-type]
+;;          [?element ?element-prop ?element-value]]
+;;        @db-conn
+;;        type
+;;        property
+;;        value))
 
-(defn exists-in-db? [exist-type exist-name]
-  (< 0
-     (count
-      (d/q '[:find ?element
-             :in $ ?name ?type
-             :where
-             [?element :type ?type]
-             [?element :name ?name]]
-           @db-conn
-           exist-name
-           exist-type))))
+;; (defn exists-in-db? [exist-type exist-name]
+;;   (< 0
+;;      (count
+;;       (d/q '[:find ?element
+;;              :in $ ?name ?type
+;;              :where
+;;              [?element :type ?type]
+;;              [?element :name ?name]]
+;;            @db-conn
+;;            exist-name
+;;            exist-type))))
 
 ;; (defn update-db-property [eid propery value]
 ;;   (d/db-with @db-conn [[":db/add" eid property value]])  
@@ -85,27 +98,32 @@
    '[:find ?sig
      :in $ %
      :where
-     [?sig :type :signal]
-     [?sig :signal :resources-not-loaded]]
+     ;[?sig :type :signal]
+     [?sig :signal/signal :resources-not-loaded]]
    :exec
    (fn [db [signal-resources-not-loaded]]
      ;; TODO: actually check resources folder for resources that exist on disk
      [[:db/retractEntity signal-resources-not-loaded]
       {:db/id -1
-       :type :resource
-       :name "auto_gen.png"}
+       :resource/type :image
+       :resource/filename "auto_gen.png"}
       ]
      )})
 
 (def move-place-greenfield-scene
   {:name "place-greenfield-scene"
+   ;; :query
+   ;; '[:find _
+   ;;   :in $ %
+   ;;   :where
+   ;;   (not [_ :signal/signal :resources-not-loaded])]
    :exec (fn [_] ; takes parameters but ignores them
            [{:db/id -1
-               :type :scene
-               :id (str (random-uuid))             
-               :backgroundId ""`
-               :x 20
-               :y 20}])}) ; todo: query db for empty editor space to place scene?
+               ;:type :scene
+               :scene/uuid (str (random-uuid))             
+               :scene/backgroundUUID ""
+               :scene/editor-position [20 20]
+               }])}) ; todo: query db for empty editor space to place scene?
 
 ;; TODO: populate the database with existing image files
 (def move-create-background-from-image
@@ -114,54 +132,48 @@
    '[:find ?image-filename ?r
      :in $ %
      :where
-     [?r :type :resource]
-     [?r :name ?image-filename]
+     [?r :resource/type :image]
+     [?r :resource/filename ?image-filename]
      (not-join [?image-filename]
-               [?e :filename ?image-filename]
-               [?e :type :background])]
+               [?e :background/filename ?image-filename])]
    :exec (fn [db [image-filename resource]]
            (let [image-size [160 144] ;; todo: check actual size of image
                  tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
                  image-tiles (map (fn [n] (/ n tile-size)) image-size)]
              [{:db/id -1
-               :type :background
-               :name image-filename
-               :id (str (random-uuid)) ; todo: use hash to speed comparisons?
-               :width (first image-tiles)
-               :height (second image-tiles)
-               :imageWidth (first image-size)
-               :imageHeight (second image-size)
-               :filename image-filename}] ))})
+               ;:background/type :background
+               :background/uuid (str (random-uuid)) ; todo: use hash to speed comparisons?
+               :background/size image-tiles
+               :background/imageSize image-size
+               :background/filename image-filename}] ))})
 
 
 (def move-add-existing-background-to-scene
   {:name "add-existing-background-to-scene"
    :comment "Adds an existing background (chosen at random) to a scene that doesn't have a background yet."
-   :query  '[:find ?scene ?e ?background-id ?bkg-width ?bkg-height
+   :query  '[:find ?scene ?e ?background-id ?bkg-size
              :in $ %
              :where
-             [?scene :backgroundId ""]
-             (not [?scene :db-background])
-             [?e :type :background]
-             [?e :id ?background-id]
-             [?e :width ?bkg-width]
-             [?e :height ?bkg-height]
+             [?scene :scene/backgroundUUID ""]
+             ;(not [?scene :scene/background])
+             ;[?e :type :background]
+             [?e :background/uuid ?background-id]
+             [?e :background/size ?bkg-size]
              ]
    :exec
-   (fn [db [scene bkg bkg-uuid bkg-width bkg-height]]
+   (fn [db [scene bkg bkg-uuid bkg-size]]
      [{:db/id scene
-       :backgroundId bkg-uuid
-       :db-background bkg
-       :width bkg-width
-       :height bkg-height
+       :scene/backgroundUUID bkg-uuid
+       :scene/background bkg
+       ;:scene/size  bkg-size
        }])})
 
 
-(def move-place-possible-connection-point
-  {:name "place-possible-connection-point"
-   :query '[:find ?scene :in $ :where [?scene :type :scene]]
-   :exec (fn [_]
-           [])})
+;; (def move-place-possible-connection-point
+;;   {:name "place-possible-connection-point"
+;;    :query '[:find ?scene :in $ :where [?scene :type :scene]]
+;;    :exec (fn [_]
+;;            [])})
 
 (def global-design-moves
   [
@@ -171,81 +183,81 @@
    move-add-existing-background-to-scene
    ])
 
+(def design-moves-finalizing
+  [{:name "resolve-scene-backgrounds"}])
+
 (defn export-backgrounds []
-  (let [element-labels ["_datascript_internal_id" "id" "name" "width" "height" "imageWidth" "imageHeight" "filename"]
+  (let [element-labels ["_datascript_internal_id" "id" "size" "filename"]
         elements
-        (d/q '[:find ?element ?id ?name ?width ?height ?image-width ?image-height ?filename
+        (d/q '[:find ?element ?uuid ?size ?filename
                :in $
                :where
-               [?element :type :background]
-               [?element :name ?name]
-               [?element :id ?id]
-               [?element :width ?width]
-               [?element :height ?height]
-               [?element :imageWidth ?image-width]
-               [?element :imageHeight ?image-height]
-               [?element :filename ?filename]
+               ;[?element :type :background]
+               ;[?element :background/filename ?name]
+               [?element :background/uuid ?uuid]
+               [?element :background/size ?size]
+               [?element :background/filename ?filename]
                ]
              @db-conn)]
      (map #(zipmap element-labels %)
          elements)))
 
-(defn export-scripts
-  [scene-id]
-  [])
+;; (defn export-scripts
+;;   [scene-id]
+;;   [])
 
-(defn export-triggers
-  "Finds and returns the scene triggers as exported Clojure data structures."
-  [scene-id]
-  (let [labels ["_datascript_internal_id"]
-        scene-triggers
-        (d/q '[:find ?trigger
-               :in $ ?parent-scene
-               :where
-               [?trigger :type :trigger]
-               [?trigger :parent-scene ?parent-scene]
-               ]
-             @db-conn
-             scene-id)
-        ]
-    (map #(zipmap labels %)
-         scene-triggers)))
+;; (defn export-triggers
+;;   "Finds and returns the scene triggers as exported Clojure data structures."
+;;   [scene-id]
+;;   (let [labels ["_datascript_internal_id"]
+;;         scene-triggers
+;;         (d/q '[:find ?trigger
+;;                :in $ ?parent-scene
+;;                :where
+;;                [?trigger :type :trigger]
+;;                [?trigger :parent-scene ?parent-scene]
+;;                ]
+;;              @db-conn
+;;              scene-id)
+;;         ]
+;;     (map #(zipmap labels %)
+;;          scene-triggers)))
 
-(defn export-actors
-  "Finds and returns the scene actors as exported Clojure data structures."
-  [scene-id]
-  (let [labels ["_datascript_internal_id"]
-        scene-triggers
-        (d/q '[:find ?element
-               :in $ ?parent-scene
-               :where
-               [?element :type :actor]
-               [?element :parent-scene ?parent-scene]
-               ]
-             @db-conn
-             scene-id)
-        ]
-    (map #(zipmap labels %)
-         scene-triggers)))
+;; (defn export-actors
+;;   "Finds and returns the scene actors as exported Clojure data structures."
+;;   [scene-id]
+;;   (let [labels ["_datascript_internal_id"]
+;;         scene-triggers
+;;         (d/q '[:find ?element
+;;                :in $ ?parent-scene
+;;                :where
+;;                [?element :type :actor]
+;;                [?element :parent-scene ?parent-scene]
+;;                ]
+;;              @db-conn
+;;              scene-id)
+;;         ]
+;;     (map #(zipmap labels %)
+;;          scene-triggers)))
 
 (defn export-scenes
   "Export all of the scenes from the database and return EDN that can eventually be interperted by GBS."
   []
     (let [scene-labels
-          ["_datascript_internal_id" "backgroundId" "name" "id" "width" "height" "x" "y" "collisions" "actors" "triggers" "script"]
+          ["_datascript_internal_id" "backgroundId" "editor-position" "name" "id" "collisions"]
           scenes
-          (d/q '[:find ?scene ?backgroundId ?name ?uuid ?width ?height ?scene_x ?scene_y ?collisions
+          (d/q '[:find ?scene ?backgroundUUID ?editor-position ?name ?uuid ?collisions
                  :in $ ?nameDefaultValue ?idDefaultValue ?collisionsDefaultValue
                  :where
-                 [?scene :type :scene]
-                 [?scene :backgroundId ?backgroundId] ;todo: backgrounds
-                 [(get-else $ ?scene :width 10) ?width]
-                 [(get-else $ ?scene :height 10) ?height]
-                 [?scene :x ?scene_x]
-                 [?scene :y ?scene_y]
-                 [(get-else $ ?scene :name ?nameDefaultValue) ?name]
-                 [(get-else $ ?scene :id ?idDefaultValue) ?uuid]
-                 [(get-else $ ?scene :collisions ?collisionsDefaultValue) ?collisions]       
+                 ;[?scene :type :scene]
+                 [?scene :scene/backgroundUUID ?backgroundUUID] ;todo: backgrounds
+                 ;; [(get-else $ ?scene :scene/width 10) ?width]
+                 ;; [(get-else $ ?scene :scene/height 10) ?height]
+                 [?scene :scene/editor-position ?editor-position]
+                 ;; [?scene :scene/y ?scene_y]
+                 [(get-else $ ?scene :scene/name ?nameDefaultValue) ?name]
+                 [(get-else $ ?scene :scene/uuid ?idDefaultValue) ?uuid]
+                 [(get-else $ ?scene :scene/collisions ?collisionsDefaultValue) ?collisions]
                  ] ; todo: actors and scripts/triggers
                @db-conn
                 "generated scene"
@@ -254,9 +266,9 @@
       (map (fn [scene]
              (zipmap scene-labels (concat
                                    scene
-                                   (export-actors (first scene))
-                                   (export-triggers (first scene))
-                                   (export-scripts (first scene))
+                                   ;(export-actors (first scene))
+                                   ;(export-triggers (first scene))
+                                   ;(export-scripts (first scene))
                                    )))
            scenes)))
 
@@ -301,7 +313,12 @@
   [db]
   (d/q '[:find ?any ?obj :where [?obj :type ?any]] @db)) ;todo: log to console...
 
-
+;; #object[cljs.core.Atom
+;;         {:val #datascript/DB
+;;          {:schema
+;;           {:signal/signal {:db/cardinality :db.cardinality/one}, :scene/uuid {:db/cardinality :db.cardinality/one, :db/unique :db.unique/identity}, :scene/name {:db/cardinality :db.cardinality/one}, :background/imageSize {:db/cardinality :db.cardinality/one}, :background/uuid {:db/cardinality :db.cardinality/one, :db/unique :db.unique/identity}, :background/filename {:db/cardinality :db.cardinality/one}, :resource/filename {:db/cardinality :db.cardinality/one, :db/unique :db.unique/identity}, :background/image {:db/cardinality :db.cardinality/one, :db/valueType :db.type/ref}, :scene/editor-position {:db/cardinality :db.cardinality/one}, :scene/collisions {:db/cardinality :db.cardinality/one}, :scene/background {:db/cardinality :db.cardinality/one, :db/valueType :db.type/ref}, :background/size {:db/cardinality :db.cardinality/one}, :resource/type {:db/cardinality :db.cardinality/one}, :scene/backgroundUUID {:db/cardinality :db.cardinality/one}},
+;;           :datoms [[1 :signal/signal :resources-not-loaded 536870913]]}
+;;          }]
 
 ;; todo: implement other generation heuristics.
 (defn generate-level-random-heuristic
@@ -310,11 +327,11 @@
   be performed. Takes a random `seed` for determanistic generation.
   TODO: determanistic generation is not implemented yet."
   [db budget seed]
-  (cljs.pprint/pprint (get (:val db) :datoms))
+  (cljs.pprint/pprint (get-in @db [:val :datoms]))
   (dorun
    (for [i (range budget)]
      (let [moves (get-possible-design-move-from-moveset global-design-moves)]
-       (cljs.pprint/pprint db)
+       (cljs.pprint/pprint @db)
        (if (empty? moves)
          nil
          (let [poss-move (rand-nth moves)] ;; todo: make determanistic
@@ -338,7 +355,8 @@
 (defn generate []
   (reset-the-database!)
   ;; (load-resources-from-disk db-conn)
-  (generate-level-random-heuristic db-conn 18 0))
+  (generate-level-random-heuristic db-conn 18 0)
+  )
 
 (comment (reset-the-database!)
          (generate)
