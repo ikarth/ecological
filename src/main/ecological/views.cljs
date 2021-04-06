@@ -1,6 +1,6 @@
 (ns ecological.views
   (:require [ecological.state :refer [app-state]]
-            [ecological.events :refer [increment decrement]]
+            [ecological.events :refer [increment decrement graph-display]]
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
@@ -12,6 +12,10 @@
   []
   [:div
    [:h1 "Ecological Generator Output Visualization"]])
+
+(defn graph-display-button []
+  [:div
+   [:button.btn {:on-click #(graph-display %)} "display"]])
 
 (defn counter
   []
@@ -55,28 +59,12 @@
 ;;      ]))
 
 
-;; from https://blog.klipse.tech/visualization/2021/02/16/graph-playground-cytoscape.html
-(def ^:dynamic *default-graph-options* 
-  {:style [{:selector "node"
-            :style {:background-color "#666"
-                    :label "data(label)"}}
-           {:selector "edge"
-            :style {"width" 2
-                    :line-color "#ccc"
-                    :target-arrow-color "#ccc"
-                    :curve-style "bezier"
-                    :target-arrow-shape "triangle"
-                    :label "data(label)"}}]
-   :layout {:name "circle"}
-   :userZoomingEnabled false
-   :userPanningEnabled false
-   :boxSelectionEnabled false})
 
-(defn cytoscape-graph [data]
-  
-  data)
 
-(defn convert-seq-to-vec-for-display [data]
+
+(defn convert-data-for-display
+  "Converts data structures to a format that can be completely explored via coll-pen."
+  [data]
   (cond
     (string? data) data
     (keyword? data) data
@@ -86,30 +74,31 @@
     (vector? data)
     (into (vector)
           (map (fn [val]
-                 (convert-seq-to-vec-for-display val))
+                 (convert-data-for-display val))
                data))
     (seq? data)
     (into (vector)
           (map (fn [val]
-                 (convert-seq-to-vec-for-display val))
+                 (convert-data-for-display val))
                data))
     (set? data)
-    data
+    data ; TODO: also handle sets
     (map? data)
     (into (hash-map)
            (map (fn [[key val]]
-                  [key (convert-seq-to-vec-for-display val)])
+                  [key (convert-data-for-display val)])
                 data))
     :else (type data)))
 
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
     [:div
-     (cytoscape-graph gen-state)
+     ;[graph-display-button]
+     ;[:div#artifact-graph {:style {:min-height "100px"}}]
      [:hr]
      (json->hiccup (clj->js gen-state))
      [:hr]
-     (coll-pen.core/draw (convert-seq-to-vec-for-display gen-state)
+     (coll-pen.core/draw (convert-data-for-display gen-state)
                          {:el-per-page 30 :truncate false })
      [:hr]
      (.stringify js/JSON (clj->js gen-state))])
@@ -125,4 +114,5 @@
    [download-btn]
    [counter]
    [display-gbs]
+   
    ])

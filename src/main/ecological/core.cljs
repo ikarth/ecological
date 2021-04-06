@@ -20,7 +20,7 @@
 (defn start []
   (js/console.log "Starting...")
   (r/render [views/app]
-                      (.getElementById js/document "app")))
+            (.getElementById js/document "app")))
 
 ; This is the `ecological.core.init()` that's triggered in the html
 (defn ^:export init []
