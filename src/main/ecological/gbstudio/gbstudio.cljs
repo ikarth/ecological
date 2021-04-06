@@ -168,6 +168,26 @@
        ;:scene/size  bkg-size
        }])})
 
+(def move-apply-collision-to-scene
+  {})
+
+(def move-selection-collision-by-background
+  {})
+
+(def move-mixin-npc
+  {})
+
+(def move-connect-scenes
+  {})
+
+(def move-connect-scenes-by-region
+  {})
+
+(def move-connect-scenes-by-edge-tag
+  {})
+
+
+
 
 ;; (def move-place-possible-connection-point
 ;;   {:name "place-possible-connection-point"

@@ -4,7 +4,8 @@
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
-            ;[reagent-flowgraph.core :refer [flowgraph]]
+                                        ;[reagent-flowgraph.core :refer [flowgraph]]
+            [coll-pen.core]
             ))
 
 (defn header
@@ -53,11 +54,66 @@
 ;;                          ])
 ;;      ]))
 
+
+;; from https://blog.klipse.tech/visualization/2021/02/16/graph-playground-cytoscape.html
+(def ^:dynamic *default-graph-options* 
+  {:style [{:selector "node"
+            :style {:background-color "#666"
+                    :label "data(label)"}}
+           {:selector "edge"
+            :style {"width" 2
+                    :line-color "#ccc"
+                    :target-arrow-color "#ccc"
+                    :curve-style "bezier"
+                    :target-arrow-shape "triangle"
+                    :label "data(label)"}}]
+   :layout {:name "circle"}
+   :userZoomingEnabled false
+   :userPanningEnabled false
+   :boxSelectionEnabled false})
+
+(defn cytoscape-graph [data]
+  
+  data)
+
+(defn convert-seq-to-vec-for-display [data]
+  (cond
+    (string? data) data
+    (keyword? data) data
+    (symbol? data) data
+    (number? data) data
+    (boolean? data) data
+    (vector? data)
+    (into (vector)
+          (map (fn [val]
+                 (convert-seq-to-vec-for-display val))
+               data))
+    (seq? data)
+    (into (vector)
+          (map (fn [val]
+                 (convert-seq-to-vec-for-display val))
+               data))
+    (set? data)
+    data
+    (map? data)
+    (into (hash-map)
+           (map (fn [[key val]]
+                  [key (convert-seq-to-vec-for-display val)])
+                data))
+    :else (type data)))
+
 (defn display-gbs []
-  [:div
-   (json->hiccup (clj->js (:gbs-output @app-state)))
-   [:hr]
-   (.stringify js/JSON (clj->js (:gbs-output @app-state)))]
+  (let [gen-state (:gbs-output @app-state)]
+    [:div
+     (cytoscape-graph gen-state)
+     [:hr]
+     (json->hiccup (clj->js gen-state))
+     [:hr]
+     (coll-pen.core/draw (convert-seq-to-vec-for-display gen-state)
+                         {:el-per-page 30 :truncate false })
+     [:hr]
+     (.stringify js/JSON (clj->js gen-state))])
+  
    ;; (with-out-str) (cljs.pprint/pprint)
    ;; (clj->js (:gbs-output @app-state))
    )

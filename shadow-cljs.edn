@@ -12,7 +12,14 @@
   [datascript "1.0.4"]
   [cljs-http "0.1.46"]
   [json-html "0.4.7"]
-  ;[reagent-flowgraph "0.1.1"]
+                                        ;[reagent-flowgraph "0.1.1"]
+  [lacij "0.10.0"]
+  [ubergraph "0.8.2"]
+  [aysylu/loom "1.0.2"]
+  [aerial.hanami "0.12.1"]
+  [net.drib/strokes "0.5.1"]
+  [quil "3.1.0"]
+  [coll-pen "0.2.1"]
   ]
 
  :nrepl
