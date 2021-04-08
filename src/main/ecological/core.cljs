@@ -1,10 +1,14 @@
 (ns ecological.core
   (:require [reagent.dom :as r]
-            [ecological.views :as views]))
+            [ecological.views :as views]
+            [ecological.gbstudio.assets :as assets]
+            [shadow.resource :as resource]))
 
 (js/console.log "Ecological Generator, 2021")
 
 ;(js/alert "test")
+
+;(def resource-manifest)
 
 
 ;; (defn ^:dev/after-load start
@@ -19,6 +23,7 @@
 ; This is the :devtools {:after-load script
 (defn start []
   (js/console.log "Starting...")
+  ;(spit (str "./test_start.txt") "Test text.")
   (r/render [views/app]
             (.getElementById js/document "app")))
 
@@ -29,3 +34,9 @@
 ;; (defn ^:export main
 ;;   []
 ;;   (start))
+
+;; (defn hook
+;;   {:shadow.build/stage :flush}
+;;   [build-state & args]
+;;   (prn [:hello-world args])
+;;   build-state)

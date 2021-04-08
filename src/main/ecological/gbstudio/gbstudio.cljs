@@ -187,6 +187,27 @@
   {})
 
 
+;; Design moves to write:
+;; - Grab a GBS project from a file
+;; - Convert a GBS project to a list of proto-scene-templates
+;; - Convert a proto-template to a scene-template
+;; - Load assets from an asset directory (backgrounds and sprites)
+;; - Get collision data associated with scene/background
+;; - Detect connection points
+;; - Edit background graphics to visually show where there's a connection
+;; - compsite one image on top of another image (with transparency)
+;; - scrunch image with seam carving
+;; - detect the number of unique tiles in an image
+;; - place NPC in scene
+;; - generate an NPC
+;; - generate a connection lock
+;; - generate a key for a lock
+;; - pair templates together so you have to either have both or neither
+;; - pathfinding to make sure level is completeable (entrance->key->door->victory)
+;; - pathfinding to make sure door is seen before key (problem/solution ordering)
+;; - graph grammar/rewriting to generate level layout
+;; - decorate a plain scene background with WFC
+
 
 
 ;; (def move-place-possible-connection-point

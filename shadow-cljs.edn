@@ -12,15 +12,18 @@
   [datascript "1.0.4"]
   [cljs-http "0.1.46"]
   [json-html "0.4.7"]
-                                        ;[reagent-flowgraph "0.1.1"]
-  [lacij "0.10.0"]
-  [ubergraph "0.8.2"]
-  [aysylu/loom "1.0.2"]
-  [aerial.hanami "0.12.1"]
-  [net.drib/strokes "0.5.1"]
-  [quil "3.1.0"]
+  ;;[reagent-flowgraph "0.1.1"]
+  ;; [lacij "0.10.0"]
+  ;; [ubergraph "0.8.2"]
+  ;; [aysylu/loom "1.0.2"]
+  ;; [aerial.hanami "0.12.1"]
+  ;; [net.drib/strokes "0.5.1"]
+  ;; [quil "3.1.0"]
   [coll-pen "0.2.1"]
   [re-com "2.13.2"]
+  [clj-commons/fs "1.6.307"]
+  [org.clojure/core.match "1.0.0"]
+  [cljs-node-io "1.1.2"]
   ]
 
  :nrepl
@@ -34,9 +37,14 @@
         :output-dir "public/js"
         :asset-path "js"
         :modules {:main {:entries [ecological.core]}}
-        :devtools {:before-load ecological.core/stop
+        :devtools {:before-load ecological.core/stop 
                    :after-load ecological.core/start
+                   ;:before-load-async ecological.build/build-asset-data
+                   :watch-dir "resources"
+                   :build-hooks [(ecological.asset-management/hook "resources/assets")] ; It seems like this isn't getting called for some reason, so perhaps I'm doing something wrong with it?
                    :http-root "public"
                    :http-port 8020
-                   :hud true}}
-  }}
+                   :hud true
+                   :open-file-command
+                   ["emacsclient" "-n" ["+%s:%s" :line :column] :file]
+                   }}}}

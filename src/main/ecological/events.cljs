@@ -53,6 +53,9 @@
    
                  ])
 
+;; TODO: Write a proper converter for scene data to a graph
+;; TODO: Write a proper converter for project data to a graph
+;; TODO: Write a react component so it automatically updates and renders, instead of pushing a button
 (defn graph-display
   [event]
   (.preventDefault event)
