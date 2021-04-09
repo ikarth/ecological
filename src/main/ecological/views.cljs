@@ -4,14 +4,9 @@
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
-                                        ;[reagent-flowgraph.core :refer [flowgraph]]
             [coll-pen.core]
-            [erinite.template.core :as t]
-            ;; [cljs.core.match :refer-macros [match]]
             [clojure.walk]
-            [clojure.string]
-             
-            ))
+            [clojure.string]))
 
 (defn header
   []
@@ -30,8 +25,7 @@
    [:button.btn {:on-click #(increment %)} "+"]])
 
 ; (.stringify js/JSON (:gbs-output @app-state))
-
-(.stringify js/JSON (clj->js {:data "test data"}))
+;(.stringify js/JSON (clj->js {:data "test data"}))
 
 
 
@@ -66,11 +60,7 @@
 (def tranformations
   {[:div :td.jh-value :span.jh-type-string] [:append-content :test]})
 
-(defn augment-project-viz [proj]
-  (js/console.log proj)
-  (let [template proj]
-    ((t/compile-template proj tranformations)
-     {:test "text"})))
+
 
 
 (defn convert-data-for-display
@@ -101,21 +91,7 @@
                 data))
     :else (type data)))
 
-(defn add-viz [proj]
-  (js/console.log proj)
-  (let []
-    (-> proj
-        (update-in
-         [:backgrounds]
-         (fn [elements]
-           (map
-            (fn [elmt]
-              (assoc-in
-               elmt
-               [:viz-image]
-               (get elmt "filename" "no image found")))
-            elements)
-           )))))
+
 
 (defn convert-viz [hic]
   (clojure.walk/postwalk
@@ -127,7 +103,6 @@
             (or (clojure.string/includes? data "./")
                 (clojure.string/includes? data ".\\")))
          [:div
-          ;data [:br]
           [:img {:src data}]]
          data)
        :else data)

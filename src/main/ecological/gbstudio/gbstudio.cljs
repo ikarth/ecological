@@ -47,58 +47,6 @@
   []
   [{:db/id -1 :type "scene"}])
 
-;; (d/q '[:find ?element ?id ?name ?width ?height ?image-width ?image-height ?filename
-;;                :in $
-;;                :where
-;;                [?element :type :background]
-;;                [?element :name ?name]
-;;                [?element :id ?id]
-;;                [?element :width ?width]
-;;                [?element :height ?height]
-;;                [?element :imageWidth ?image-width]
-;;                [?element :imageHeight ?image-height]
-;;                [?element :filename ?filename]
-;;                ]
-;;              @db-conn)
-
-;; (defn find-in-db [type property value]
-;;   (d/q '[:find ?element
-;;          :in $ ?element-type ?element-prop ?element-value
-;;          :where
-;;          [?element :type ?element-type]
-;;          [?element ?element-prop ?element-value]]
-;;        @db-conn
-;;        type
-;;        property
-;;        value))
-
-;; (defn exists-in-db? [exist-type exist-name]
-;;   (< 0
-;;      (count
-;;       (d/q '[:find ?element
-;;              :in $ ?name ?type
-;;              :where
-;;              [?element :type ?type]
-;;              [?element :name ?name]]
-;;            @db-conn
-;;            exist-name
-;;            exist-type))))
-
-;; (defn update-db-property [eid propery value]
-;;   (d/db-with @db-conn [[":db/add" eid property value]])  
-;;   )
-
-
-;; (def move-this-move-is-never-used
-;;   {:name "if you see this, it is an error"
-;;    :query '[:find ?scene :in $ % :where [?scene :type :invalid-action-for-debugging]]
-;;    :exec (fn [])})
-
-;; (def move-this-move-is-always-used
-;;   {:name "if you see this, it is true"
-;;    :query '[:find ?scene :in $ % :where [?scene :type :scene]]
-;;    :exec (fn [])})
-
 
 (def move-viz-display-background-image
   {:name "viz-display-background-image"
@@ -121,7 +69,6 @@
    '[:find ?sig 
      :in $ %
      :where
-     ;[?sig :type :signal]
      [?sig :signal/signal :resources-not-loaded]]
    :exec
    (fn [db [signal-resources-not-loaded]]
@@ -145,16 +92,9 @@
 
 (def move-place-greenfield-scene
   {:name "place-greenfield-scene"
-   ;; :query
-   ;; '[:find _
-   ;;   :in $ %
-   ;;   :where
-   ;;   (not [_ :signal/signal :resources-not-loaded])]
    :exec (fn [_] ; takes parameters but ignores them
            [{:db/id -1
-               ;:type :scene
                :scene/uuid (str (random-uuid))             
-               ;;:scene/backgroundUUID ""
                :scene/editor-position [20 20]
                }])}) ; todo: query db for empty editor space to place scene?
 
@@ -174,7 +114,6 @@
                  tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
                  image-tiles (map (fn [n] (/ n tile-size)) image-size)]
              [{:db/id -1
-               ;:background/type :background
                :background/uuid (str (random-uuid)) ; todo: use hash to speed comparisons?
                :background/size image-tiles
                :background/imageSize image-size
@@ -188,19 +127,15 @@
    :query  '[:find ?scene ?e ?background-id ?bkg-size
              :in $ %
              :where
-             ;[?scene :scene/backgroundUUID ""]
              [?scene :scene/uuid ?uuid]
              [(missing? $ ?scene :scene/background)]
-             ;[?e :type :background]
              [?e :background/uuid ?background-id]
              [?e :background/size ?bkg-size]
              ]
    :exec
    (fn [db [scene bkg bkg-uuid bkg-size]]
      [{:db/id scene
-       ;:scene/backgroundUUID bkg-uuid
        :scene/background bkg
-       ;:scene/size  bkg-size
        }])})
 
 (def move-apply-collision-to-scene
@@ -257,7 +192,6 @@
    move-place-greenfield-scene
    move-create-background-from-image
    move-add-existing-background-to-scene
-   ;;move-viz-display-background-image
    ])
 
 (def design-moves-finalizing
@@ -269,8 +203,6 @@
         (d/q '[:find ?element ?uuid ?size ?filename ?path
                :in $
                :where
-               ;[?element :type :background]
-               ;[?element :background/filename ?name]
                [?element :background/uuid ?uuid]
                [?element :background/size ?size]
                [?element :background/filename ?filename]
@@ -328,12 +260,7 @@
           (d/q '[:find ?scene ?backgroundUUID ?editor-position ?name ?uuid ?collisions ?bkg-resource-path
                  :in $ ?nameDefaultValue ?idDefaultValue ?collisionsDefaultValue
                  :where
-                 ;[?scene :type :scene]
-                 ;;[?scene :scene/backgroundUUID ?backgroundUUID] ;todo: backgrounds
-                                  ;; [(get-else $ ?scene :scene/width 10) ?width]
-                 ;; [(get-else $ ?scene :scene/height 10) ?height]
                  [?scene :scene/editor-position ?editor-position]
-                 ;; [?scene :scene/y ?scene_y]
                  [(get-else $ ?scene :scene/name ?nameDefaultValue) ?name]
                  [(get-else $ ?scene :scene/uuid ?idDefaultValue) ?uuid]
                  [(get-else $ ?scene :scene/collisions ?collisionsDefaultValue) ?collisions]
@@ -341,7 +268,7 @@
                  [?bkg :background/uuid ?backgroundUUID]
                  [?bkg :background/resource ?bkg-resource]
                  [?bkg-resource :resource/filepath ?bkg-resource-path]
-                 ] ; todo: actors and scripts/triggers
+                 ] ;; todo: size, actors and scripts/triggers
                @db-conn
                 "generated scene"
                (random-uuid)
@@ -373,11 +300,6 @@
          resources)))
 
 
-;; {:db/id key
-;; :resource/type (category-table (asset :category :none) :none)
-;; :resource/filename (asset :file :none)
-;; :resource/filepath (asset :path :none)
-;; }
 
 (defn export-gbs-project
   "Export the entire project as a GBS-compatible EDN."
@@ -421,12 +343,7 @@
   [db]
   (d/q '[:find ?any ?obj :where [?obj :type ?any]] @db)) ;todo: log to console...
 
-;; #object[cljs.core.Atom
-;;         {:val #datascript/DB
-;;          {:schema
-;;           {:signal/signal {:db/cardinality :db.cardinality/one}, :scene/uuid {:db/cardinality :db.cardinality/one, :db/unique :db.unique/identity}, :scene/name {:db/cardinality :db.cardinality/one}, :background/imageSize {:db/cardinality :db.cardinality/one}, :background/uuid {:db/cardinality :db.cardinality/one, :db/unique :db.unique/identity}, :background/filename {:db/cardinality :db.cardinality/one}, :resource/filename {:db/cardinality :db.cardinality/one, :db/unique :db.unique/identity}, :background/image {:db/cardinality :db.cardinality/one, :db/valueType :db.type/ref}, :scene/editor-position {:db/cardinality :db.cardinality/one}, :scene/collisions {:db/cardinality :db.cardinality/one}, :scene/background {:db/cardinality :db.cardinality/one, :db/valueType :db.type/ref}, :background/size {:db/cardinality :db.cardinality/one}, :resource/type {:db/cardinality :db.cardinality/one}, :scene/backgroundUUID {:db/cardinality :db.cardinality/one}},
-;;           :datoms [[1 :signal/signal :resources-not-loaded 536870913]]}
-;;          }]
+
 
 ;; todo: implement other generation heuristics.
 (defn generate-level-random-heuristic
@@ -453,17 +370,9 @@
            ))
          )))) ;; todo: log which transaction was executed
 
-;; (defn load-resources-from-disk [db]
-;;   (d/transact!
-;;    db
-;;    [{:db/id -1
-;;      :name "auto_gen.png"
-;;      :type :resource
-;;      }]))
 
 (defn generate []
   (reset-the-database!)
-  ;; (load-resources-from-disk db-conn)
   (generate-level-random-heuristic db-conn 18 0)
   )
 
@@ -472,11 +381,6 @@
          (generate-level-random-heuristic db-conn 5 0)
          (log-db db-conn))
 
-
-(defn fetch-database []
-  []
-  ;@db-conn
-  )
 
 (defn fetch-gbs []
   (generate)

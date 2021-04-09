@@ -26,7 +26,7 @@
   ;[cljs-node-io "1.1.2"]
   ;[clj-http "3.12.0"]
   ;[cljs-http "0.1.46"]
-  [erinite/template "0.2.0"]
+  ;[erinite/template "0.2.0"]
   ]
 
  :nrepl
