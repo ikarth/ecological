@@ -2,7 +2,14 @@
   ;; (:require-macros [cljs.core.async.macros :refer [go]])
   ;; (:require [cljs-http.client :as http]
   ;;           [cljs.core.async :refer [<!]])
-  (:require [datascript.core :as d])
+  ;;(:require-macros [cljs.core.async.macros :refer [go]])
+  (:require [datascript.core :as d]
+            ;[cljs.reader :as reader]
+            ;;[cljs-http.client :as http]
+            ;;[cljs.core.async :refer [<!]]
+            [ecological.gbstudio.assets :refer [asset-manifest]]
+            [clojure.string]
+            )
   )
 
 
@@ -92,23 +99,49 @@
 ;;    :query '[:find ?scene :in $ % :where [?scene :type :scene]]
 ;;    :exec (fn [])})
 
+
+(def move-viz-display-background-image
+  {:name "viz-display-background-image"
+   :query
+   '[:find ?bkg-id ?fname
+     :in $ %
+     :where
+     [?bkg-id :background/filename ?fname]
+     [(missing? $ ?bkg-id :background/viz-image)]]
+   :exec
+   (fn [db [bkg-id fname]]
+     [{:db/id bkg-id
+       :background/filename fname
+       :background/viz-image (clojure.string/join "./data/assets/backgrounds/" fname)
+       }])})
+
 (def move-load-resources-from-disk
   {:name "load-resources-from-disk"
    :query
-   '[:find ?sig
+   '[:find ?sig 
      :in $ %
      :where
      ;[?sig :type :signal]
      [?sig :signal/signal :resources-not-loaded]]
    :exec
    (fn [db [signal-resources-not-loaded]]
-     ;; TODO: actually check resources folder for resources that exist on disk
-     [[:db/retractEntity signal-resources-not-loaded]
-      {:db/id -1
-       :resource/type :image
-       :resource/filename "auto_gen.png"}
-      ]
-     )})
+     ;; TODO: actually get data from server
+     (let [category-table {"ui" :ui "image" :image "sprites" :sprites "backgrounds" :image}
+           manifest-transaction
+           (concat
+            [[:db/retractEntity signal-resources-not-loaded]]
+            (mapv
+             (fn [key asset]
+               {:db/id key
+                :resource/type (category-table (asset :category :none) :none)
+                :resource/filename (asset :file :none)
+                :resource/filepath (asset :path :none)
+                })
+             (iterate dec -1)
+             (asset-manifest)))]
+       (js/console.log manifest-transaction)
+       manifest-transaction
+       ))})
 
 (def move-place-greenfield-scene
   {:name "place-greenfield-scene"
@@ -121,7 +154,7 @@
            [{:db/id -1
                ;:type :scene
                :scene/uuid (str (random-uuid))             
-               :scene/backgroundUUID ""
+               ;;:scene/backgroundUUID ""
                :scene/editor-position [20 20]
                }])}) ; todo: query db for empty editor space to place scene?
 
@@ -136,7 +169,7 @@
      [?r :resource/filename ?image-filename]
      (not-join [?image-filename]
                [?e :background/filename ?image-filename])]
-   :exec (fn [db [image-filename resource]]
+   :exec (fn [db [image-filename resource-id]]
            (let [image-size [160 144] ;; todo: check actual size of image
                  tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
                  image-tiles (map (fn [n] (/ n tile-size)) image-size)]
@@ -145,7 +178,8 @@
                :background/uuid (str (random-uuid)) ; todo: use hash to speed comparisons?
                :background/size image-tiles
                :background/imageSize image-size
-               :background/filename image-filename}] ))})
+               :background/filename image-filename
+               :background/resource resource-id}] ))})
 
 
 (def move-add-existing-background-to-scene
@@ -154,8 +188,9 @@
    :query  '[:find ?scene ?e ?background-id ?bkg-size
              :in $ %
              :where
-             [?scene :scene/backgroundUUID ""]
-             ;(not [?scene :scene/background])
+             ;[?scene :scene/backgroundUUID ""]
+             [?scene :scene/uuid ?uuid]
+             [(missing? $ ?scene :scene/background)]
              ;[?e :type :background]
              [?e :background/uuid ?background-id]
              [?e :background/size ?bkg-size]
@@ -163,7 +198,7 @@
    :exec
    (fn [db [scene bkg bkg-uuid bkg-size]]
      [{:db/id scene
-       :scene/backgroundUUID bkg-uuid
+       ;:scene/backgroundUUID bkg-uuid
        :scene/background bkg
        ;:scene/size  bkg-size
        }])})
@@ -222,15 +257,16 @@
    move-place-greenfield-scene
    move-create-background-from-image
    move-add-existing-background-to-scene
+   ;;move-viz-display-background-image
    ])
 
 (def design-moves-finalizing
   [{:name "resolve-scene-backgrounds"}])
 
 (defn export-backgrounds []
-  (let [element-labels ["_datascript_internal_id" "id" "size" "filename"]
+  (let [element-labels ["_datascript_internal_id" "id" "size" "filename" "image"]
         elements
-        (d/q '[:find ?element ?uuid ?size ?filename
+        (d/q '[:find ?element ?uuid ?size ?filename ?path
                :in $
                :where
                ;[?element :type :background]
@@ -238,6 +274,8 @@
                [?element :background/uuid ?uuid]
                [?element :background/size ?size]
                [?element :background/filename ?filename]
+               [?element :background/resource ?resource]
+               [?resource :resource/filepath ?path]
                ]
              @db-conn)]
      (map #(zipmap element-labels %)
@@ -285,20 +323,24 @@
   "Export all of the scenes from the database and return EDN that can eventually be interperted by GBS."
   []
     (let [scene-labels
-          ["_datascript_internal_id" "backgroundId" "editor-position" "name" "id" "collisions"]
+          ["_datascript_internal_id" "backgroundId" "editor-position" "name" "id" "collisions" "background-image"]
           scenes
-          (d/q '[:find ?scene ?backgroundUUID ?editor-position ?name ?uuid ?collisions
+          (d/q '[:find ?scene ?backgroundUUID ?editor-position ?name ?uuid ?collisions ?bkg-resource-path
                  :in $ ?nameDefaultValue ?idDefaultValue ?collisionsDefaultValue
                  :where
                  ;[?scene :type :scene]
-                 [?scene :scene/backgroundUUID ?backgroundUUID] ;todo: backgrounds
-                 ;; [(get-else $ ?scene :scene/width 10) ?width]
+                 ;;[?scene :scene/backgroundUUID ?backgroundUUID] ;todo: backgrounds
+                                  ;; [(get-else $ ?scene :scene/width 10) ?width]
                  ;; [(get-else $ ?scene :scene/height 10) ?height]
                  [?scene :scene/editor-position ?editor-position]
                  ;; [?scene :scene/y ?scene_y]
                  [(get-else $ ?scene :scene/name ?nameDefaultValue) ?name]
                  [(get-else $ ?scene :scene/uuid ?idDefaultValue) ?uuid]
                  [(get-else $ ?scene :scene/collisions ?collisionsDefaultValue) ?collisions]
+                 [?scene :scene/background ?bkg]
+                 [?bkg :background/uuid ?backgroundUUID]
+                 [?bkg :background/resource ?bkg-resource]
+                 [?bkg-resource :resource/filepath ?bkg-resource-path]
                  ] ; todo: actors and scripts/triggers
                @db-conn
                 "generated scene"
@@ -313,10 +355,35 @@
                                    )))
            scenes)))
 
+(defn export-resources
+  "Exports the collection of resources, mostly for debugging because GBS won't use this data."
+  []
+  (let [resource-labels ["_datascript_internal_id" "type" "filename" "path"]
+        resources
+        (d/q '[:find ?id ?rtype ?rfname ?rfpath
+               :in $
+               :where 
+               [?id :resource/type ?rtype]
+               [?id :resource/filename ?rfname]
+               [?id :resource/filepath ?rfpath]]
+             @db-conn)
+        ]
+    (map (fn [element]
+           (zipmap resource-labels element))
+         resources)))
+
+
+;; {:db/id key
+;; :resource/type (category-table (asset :category :none) :none)
+;; :resource/filename (asset :file :none)
+;; :resource/filepath (asset :path :none)
+;; }
+
 (defn export-gbs-project
   "Export the entire project as a GBS-compatible EDN."
   []
   (-> gbs-basic
+      ;;(update :resources export-resources)
       (update :backgrounds export-backgrounds)
       (update :scenes export-scenes)))
 
@@ -372,7 +439,8 @@
   (dorun
    (for [i (range budget)]
      (let [moves (get-possible-design-move-from-moveset global-design-moves)]
-       (cljs.pprint/pprint @db)
+       (if false ;; set to true for debugging in the console
+         (cljs.pprint/pprint @db))
        (if (empty? moves)
          nil
          (let [poss-move (rand-nth moves)] ;; todo: make determanistic
@@ -404,6 +472,11 @@
          (generate-level-random-heuristic db-conn 5 0)
          (log-db db-conn))
 
+
+(defn fetch-database []
+  []
+  ;@db-conn
+  )
 
 (defn fetch-gbs []
   (generate)

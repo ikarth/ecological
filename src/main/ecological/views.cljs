@@ -6,6 +6,11 @@
             [json-html.core :refer [json->hiccup json->html edn->html]]
                                         ;[reagent-flowgraph.core :refer [flowgraph]]
             [coll-pen.core]
+            [erinite.template.core :as t]
+            ;; [cljs.core.match :refer-macros [match]]
+            [clojure.walk]
+            [clojure.string]
+             
             ))
 
 (defn header
@@ -58,8 +63,14 @@
 ;;                          ])
 ;;      ]))
 
+(def tranformations
+  {[:div :td.jh-value :span.jh-type-string] [:append-content :test]})
 
-
+(defn augment-project-viz [proj]
+  (js/console.log proj)
+  (let [template proj]
+    ((t/compile-template proj tranformations)
+     {:test "text"})))
 
 
 (defn convert-data-for-display
@@ -90,13 +101,46 @@
                 data))
     :else (type data)))
 
+(defn add-viz [proj]
+  (js/console.log proj)
+  (let []
+    (-> proj
+        (update-in
+         [:backgrounds]
+         (fn [elements]
+           (map
+            (fn [elmt]
+              (assoc-in
+               elmt
+               [:viz-image]
+               (get elmt "filename" "no image found")))
+            elements)
+           )))))
+
+(defn convert-viz [hic]
+  (clojure.walk/postwalk
+   (fn [data]
+     (cond
+       (string? data)
+       (if (and
+            (clojure.string/includes? data ".png")
+            (or (clojure.string/includes? data "./")
+                (clojure.string/includes? data ".\\")))
+         [:div
+          ;data [:br]
+          [:img {:src data}]]
+         data)
+       :else data)
+     )
+   hic))
+
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
     [:div
      ;[graph-display-button]
      ;[:div#artifact-graph {:style {:min-height "100px"}}]
      [:hr]
-     (json->hiccup (clj->js gen-state))
+     (convert-viz (json->hiccup (clj->js gen-state)))
      [:hr]
      (coll-pen.core/draw (convert-data-for-display gen-state)
                          {:el-per-page 30 :truncate false })
@@ -114,5 +158,7 @@
    [download-btn]
    [counter]
    [display-gbs]
-   
+   [:hr]
+   (coll-pen.core/draw (:data @app-state)
+                         {:el-per-page 30 :truncate false })   
    ])
