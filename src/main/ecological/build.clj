@@ -26,7 +26,7 @@
                                      (clojure.data/diff
                                       source-file-vec
                                       source-prefix-vec)))
-        full-destination (io/file "." (string/join separator destination-vec) (string/join separator truncated-file-path)) ]
+        full-destination (io/file "." (rest (string/join separator destination-vec)) (string/join separator truncated-file-path)) ]
     (if (.exists source)
       {:category (first truncated-file-path)
        :path (str (.getPath full-destination))
@@ -47,14 +47,16 @@
         (->> source-asset-path
              (io/file)
              (file-seq)
-             (filter #(.isFile %)))]
-
+             (filter #(.isFile %))
+             (filter #(or
+                       (clojure.string/includes? (.getPath %) ".png") ; only get image files
+                       (clojure.string/includes? (.getPath %) ".json") ; only get json files
+                       )))]
     (let [assets (mapv #(copy-asset! % source-asset-path "public\\data\\assets") resource-files)]
       (with-open [writer-handle (io/writer "public\\data\\asset_manifest.edn")]
         (binding [*print-length* false
                   *out* writer-handle]
-          (pprint/pprint assets)
-          )))))
+          (pprint/pprint assets))))))
 
 (defn build-assets
   {:shadow.build/stage :flush}
