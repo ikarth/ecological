@@ -131,7 +131,7 @@
                   (iterate dec (- 0 (+ 3 (count (get sep :scenes [])))))
                   (get sep :backgrounds []))
             )]
-       (js/console.log transaction)
+       ;(js/console.log transaction)
        transaction))})
 
 (defn process-template-actors [actors]
@@ -172,8 +172,8 @@
             {:db/id template-id
              :template/use-count (inc use-count)}
             ]]
-       (js/console.log template-id)
-       (js/console.log transaction)
+       ;(js/console.log template-id)
+       ;(js/console.log transaction)
        transaction
        ))})
 

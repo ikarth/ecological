@@ -267,12 +267,7 @@
   :file "nothing.png",
   :success true,
   :length 471}
- {:category "backgrounds",
-  :path ".\\data\\assets\\backgrounds\\Old Halls by AFI.png",
-  :file "Old Halls by AFI.png",
-  :success true,
-  :length 0}
- {:category "backgrounds",
+  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\outside.png",
   :file "outside.png",
   :success true,
