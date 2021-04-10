@@ -87,10 +87,11 @@
                 :resource/type (category-table (asset :category :none) :none)
                 :resource/filename (asset :file :none)
                 :resource/filepath (asset :path :none)
-                })
+                ;:resource/size (asset :size [0 0])
+                :resource/image-size (asset :image-size [0 0])})
              (iterate dec -2)
              (asset-manifest)))]
-       ;(js/console.log manifest-transaction)
+       (js/console.log manifest-transaction)
        manifest-transaction
        ))})
 
@@ -131,7 +132,7 @@
                   (iterate dec (- 0 (+ 3 (count (get sep :scenes [])))))
                   (get sep :backgrounds []))
             )]
-       ;(js/console.log transaction)
+       (js/console.log transaction)
        transaction))})
 
 (defn process-template-actors [actors]
@@ -190,17 +191,18 @@
 (def move-create-background-from-image
   {:name "create-background-from-image"
    :query
-   '[:find ?image-filename ?r
+   '[:find ?image-filename ?r ?image-size
      :in $ %
      :where
      [?r :resource/type :image]
      [?r :resource/filename ?image-filename]
+     [?r :resource/image-size ?image-size]     
      (not-join [?image-filename]
                [?e :background/filename ?image-filename])]
-   :exec (fn [db [image-filename resource-id]]
-           (let [image-size [160 144] ;; todo: check actual size of image
+   :exec (fn [db [image-filename resource-id gb-image-size]]
+           (let [image-size gb-image-size ;; todo: check actual size of image
                  tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
-                 image-tiles (map (fn [n] (/ n tile-size)) image-size)]
+                 image-tiles (map #(quot % tile-size) image-size)]
              [{:db/id -1
                :background/uuid (str (random-uuid)) ; todo: use hash to speed comparisons?
                :background/size image-tiles
@@ -294,6 +296,22 @@
 
 (def design-moves-finalizing
   [{:name "resolve-scene-backgrounds"}])
+
+
+(defn export-design-moves []
+  (let [elements
+        (d/q '[:find ?move-count ?move-name ?move-parameters
+               :in $
+               :where
+               [?element :design/move-record ?move-name]
+               [?element :design/move-parameters ?move-parameters]
+               [?element :design/move-count  ?move-count]]
+             @db-conn )]
+    ; we could return all of the parameters...
+    (mapv #(zipmap [:order :name :parameters] %) (sort-by first elements))
+    ; ...but for now just return the names
+    (mapv second (sort-by first elements)) 
+    ))
 
 (defn export-backgrounds []
   (let [element-labels ["_datascript_internal_id" "id" "size" "filename" "image"]
@@ -403,6 +421,7 @@
   "Export the entire project as a GBS-compatible EDN."
   []
   (-> gbs-basic
+      (update :z_design-moves export-design-moves)
       ;;(update :resources export-resources)
       (update :backgrounds export-backgrounds)
       (update :scenes export-scenes)))
@@ -460,9 +479,17 @@
          nil
          (let [poss-move (rand-nth moves)] ;; todo: make determanistic
            (if-let [exec-func (get (get poss-move :move) :exec false)]
-             (let []
-               (cljs.pprint/pprint (get (get poss-move :move) :name))
-               (d/transact! db (exec-func db (:vars poss-move)) nil)) ; todo: do something with the transaction report, such as checking for errors
+             (let [move-name (get (get poss-move :move) :name)]
+               (cljs.pprint/pprint move-name)
+               (let [result (concat
+                             (exec-func db (:vars poss-move))
+                             [{:db/id -999999 ; magic number to try and be unique...
+                               :design/move-count (inc i) ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
+                               :design/move-record move-name
+                               :design/move-parameters (get poss-move :vars [])}])]
+                 ;; todo: do something to check for errors when executing the move...
+                 ;(cljs.pprint/pprint result)
+                 (d/transact! db result nil))) ; todo: do something with the transaction report, such as checking for errors
              nil)
 
            ))

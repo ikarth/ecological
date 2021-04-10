@@ -15,6 +15,7 @@
 (defn copy-asset!
   "Copy an asset file to public resources. Returns a manifest of the asset, which can be included in an overall manifest. Overwrites the destination."
   [source source-prefix destination]
+  ;(prn source source-prefix destination)
 
   (let [separator (System/getProperty "file.separator")
         source-file (str (.getPath source))
@@ -26,20 +27,38 @@
                                      (clojure.data/diff
                                       source-file-vec
                                       source-prefix-vec)))
-        full-destination (io/file "." (rest (string/join separator destination-vec)) (string/join separator truncated-file-path)) ]
+        full-destination (io/file "."
+                                  (string/join separator destination-vec)
+                                  (string/join separator truncated-file-path))]
     (if (.exists source)
-      {:category (first truncated-file-path)
-       :path (str (.getPath full-destination))
-       :file (last truncated-file-path)
-       :success (if (.exists full-destination)
-                  "exists"
-                  (do
-                    (clojure.java.io/make-parents full-destination)
-                    (nil? (io/copy source full-destination))
-                    ))
-       :length (if (.exists full-destination)
-                 (.length full-destination)
-                 false)}
+      (let [image-size
+            (with-open [r (java.io.FileInputStream. source)]
+              (let [image (javax.imageio.ImageIO/read r)]
+                (if (nil? image)
+                  (let []
+                    (prn image)
+                    (prn source)
+                    [0 0])
+                  [(.getWidth image) (.getHeight image)]              
+                  )
+                ))
+            gb-size (mapv #(quot % 8) image-size)
+            ]
+        {:category (first truncated-file-path)
+         :path (str (.getPath full-destination))
+         :file (last truncated-file-path)
+         :success (if (.exists full-destination)
+                    "exists"
+                    (do
+                      (clojure.java.io/make-parents full-destination)
+                      (nil? (io/copy source full-destination))
+                      ))
+         :length (if (.exists full-destination)
+                   (.length full-destination)
+                   false)
+         :size gb-size
+         :image-size image-size
+         })
       {})))
 
 (defn build-asset-data! [source-asset-path]                                      

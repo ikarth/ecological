@@ -11,745 +11,1006 @@
   :path ".\\data\\assets\\backgrounds\\autogen_logo.png",
   :file "autogen_logo.png",
   :success true,
-  :length 26753}
- {:category "backgrounds",
-  :path ".\\data\\assets\\backgrounds\\BlackBackground.jpg",
-  :file "BlackBackground.jpg",
-  :success true,
-  :length 1298}
+  :length 26753,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\cave.png",
   :file "cave.png",
   :success true,
-  :length 2352}
+  :length 2352,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\corridors_01.png",
   :file "corridors_01.png",
   :success true,
-  :length 3732}
+  :length 3732,
+  :size [30 18],
+  :image-size [240 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\corridors_02.png",
   :file "corridors_02.png",
   :success true,
-  :length 5130}
+  :length 5130,
+  :size [20 30],
+  :image-size [160 240]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\corridors_03.png",
   :file "corridors_03.png",
   :success true,
-  :length 5245}
+  :length 5245,
+  :size [20 30],
+  :image-size [160 240]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\corridors_04.png",
   :file "corridors_04.png",
   :success true,
-  :length 3734}
+  :length 3734,
+  :size [30 21],
+  :image-size [240 168]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\corridors_05.png",
   :file "corridors_05.png",
   :success true,
-  :length 6494}
+  :length 6494,
+  :size [30 18],
+  :image-size [240 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\corridors_06.png",
   :file "corridors_06.png",
   :success true,
-  :length 6131}
- {:category "backgrounds",
-  :path ".\\data\\assets\\backgrounds\\c_test_1.png",
-  :file "c_test_1.png",
-  :success true,
-  :length 3589}
- {:category "backgrounds",
-  :path ".\\data\\assets\\backgrounds\\c_test_2.png",
-  :file "c_test_2.png",
-  :success true,
-  :length 3598}
- {:category "backgrounds",
-  :path ".\\data\\assets\\backgrounds\\c_test_3.png",
-  :file "c_test_3.png",
-  :success true,
-  :length 3605}
+  :length 6131,
+  :size [20 32],
+  :image-size [160 256]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01a.png",
   :file "Forest_01a.png",
   :success true,
-  :length 2496}
+  :length 2496,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01b.png",
   :file "Forest_01b.png",
   :success true,
-  :length 1647}
+  :length 1647,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01c.png",
   :file "Forest_01c.png",
   :success true,
-  :length 1406}
+  :length 1406,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01d.png",
   :file "Forest_01d.png",
   :success true,
-  :length 1650}
+  :length 1650,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01e.png",
   :file "Forest_01e.png",
   :success true,
-  :length 3435}
+  :length 3435,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2a.png",
   :file "Forest_01_2a.png",
   :success true,
-  :length 3104}
+  :length 3104,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2b.png",
   :file "Forest_01_2b.png",
   :success true,
-  :length 2319}
+  :length 2319,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2c.png",
   :file "Forest_01_2c.png",
   :success true,
-  :length 3167}
+  :length 3167,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2d.png",
   :file "Forest_01_2d.png",
   :success true,
-  :length 2181}
+  :length 2181,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2e.png",
   :file "Forest_01_2e.png",
   :success true,
-  :length 2361}
+  :length 2361,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2f.png",
   :file "Forest_01_2f.png",
   :success true,
-  :length 2427}
+  :length 2427,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2g.png",
   :file "Forest_01_2g.png",
   :success true,
-  :length 1901}
+  :length 1901,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2h.png",
   :file "Forest_01_2h.png",
   :success true,
-  :length 2510}
+  :length 2510,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2i.png",
   :file "Forest_01_2i.png",
   :success true,
-  :length 2716}
+  :length 2716,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2k.png",
   :file "Forest_01_2k.png",
   :success true,
-  :length 3468}
+  :length 3468,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2l.png",
   :file "Forest_01_2l.png",
   :success true,
-  :length 2818}
+  :length 2818,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2m.png",
   :file "Forest_01_2m.png",
   :success true,
-  :length 2576}
+  :length 2576,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2n.png",
   :file "Forest_01_2n.png",
   :success true,
-  :length 2716}
+  :length 2716,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\Forest_01_2o.png",
   :file "Forest_01_2o.png",
   :success true,
-  :length 2590}
+  :length 2590,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\halls_02.png",
   :file "halls_02.png",
   :success true,
-  :length 1586}
+  :length 1586,
+  :size [28 28],
+  :image-size [224 224]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\halls_03.png",
   :file "halls_03.png",
   :success true,
-  :length 1314}
+  :length 1314,
+  :size [28 28],
+  :image-size [224 224]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\halls_04.png",
   :file "halls_04.png",
   :success true,
-  :length 1250}
+  :length 1250,
+  :size [28 28],
+  :image-size [224 224]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\halls_06.png",
   :file "halls_06.png",
   :success true,
-  :length 1166}
+  :length 1166,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\halls_07.png",
   :file "halls_07.png",
   :success true,
-  :length 990}
+  :length 990,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\halls_08.png",
   :file "halls_08.png",
   :success true,
-  :length 0}
+  :length 1652,
+  :size [30 18],
+  :image-size [240 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\house.png",
   :file "house.png",
   :success true,
-  :length 1896}
+  :length 1896,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_01a.png",
   :file "link_01a.png",
   :success true,
-  :length 1817}
+  :length 1817,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_01b.png",
   :file "link_01b.png",
   :success true,
-  :length 1086}
+  :length 1086,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_01c.png",
   :file "link_01c.png",
   :success true,
-  :length 1074}
+  :length 1074,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_01d.png",
   :file "link_01d.png",
   :success true,
-  :length 967}
+  :length 967,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_01e.png",
   :file "link_01e.png",
   :success true,
-  :length 1921}
+  :length 1921,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_05a.png",
   :file "link_05a.png",
   :success true,
-  :length 2116}
+  :length 2116,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_05b.png",
   :file "link_05b.png",
   :success true,
-  :length 1298}
+  :length 1298,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_05c.png",
   :file "link_05c.png",
   :success true,
-  :length 1279}
+  :length 1279,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_05d.png",
   :file "link_05d.png",
   :success true,
-  :length 1170}
+  :length 1170,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_05e.png",
   :file "link_05e.png",
   :success true,
-  :length 2313}
+  :length 2313,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\link_05f.png",
   :file "link_05f.png",
   :success true,
-  :length 3360}
+  :length 3360,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\logo.png",
   :file "logo.png",
   :success true,
-  :length 2204}
+  :length 2204,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\menu.png",
   :file "menu.png",
   :success true,
-  :length 2672}
+  :length 2672,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\nothing.png",
   :file "nothing.png",
   :success true,
-  :length 471}
-  {:category "backgrounds",
+  :length 471,
+  :size [20 18],
+  :image-size [160 144]}
+ {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\outside.png",
   :file "outside.png",
   :success true,
-  :length 6438}
+  :length 6438,
+  :size [32 32],
+  :image-size [256 256]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\placeholder.png",
   :file "placeholder.png",
   :success true,
-  :length 2002}
+  :length 2002,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room1.png",
   :file "room1.png",
   :success true,
-  :length 558}
+  :length 558,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room10.png",
   :file "room10.png",
   :success true,
-  :length 594}
+  :length 594,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room11.png",
   :file "room11.png",
   :success true,
-  :length 609}
+  :length 609,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room2.png",
   :file "room2.png",
   :success true,
-  :length 588}
+  :length 588,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room3.png",
   :file "room3.png",
   :success true,
-  :length 582}
+  :length 582,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room4.png",
   :file "room4.png",
   :success true,
-  :length 634}
+  :length 634,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room5.png",
   :file "room5.png",
   :success true,
-  :length 597}
+  :length 597,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room6.png",
   :file "room6.png",
   :success true,
-  :length 555}
+  :length 555,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room7.png",
   :file "room7.png",
   :success true,
-  :length 559}
+  :length 559,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room8.png",
   :file "room8.png",
   :success true,
-  :length 570}
+  :length 570,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\room9.png",
   :file "room9.png",
   :success true,
-  :length 613}
+  :length 613,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\savetheworld_01.png",
   :file "savetheworld_01.png",
   :success true,
-  :length 4074}
+  :length 4074,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\save_the_world_02.png",
   :file "save_the_world_02.png",
   :success true,
-  :length 3521}
+  :length 3521,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\save_the_world_03.png",
   :file "save_the_world_03.png",
   :success true,
-  :length 3030}
+  :length 3030,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\save_the_world_04.png",
   :file "save_the_world_04.png",
   :success true,
-  :length 2172}
+  :length 2172,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer11.png",
   :file "sewer11.png",
   :success true,
-  :length 0}
+  :length 7193,
+  :size [32 18],
+  :image-size [256 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_01.png",
   :file "sewer_01.png",
   :success true,
-  :length 7342}
+  :length 7342,
+  :size [20 32],
+  :image-size [160 256]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_02.png",
   :file "sewer_02.png",
   :success true,
-  :length 5222}
+  :length 5222,
+  :size [20 32],
+  :image-size [160 256]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_03.png",
   :file "sewer_03.png",
   :success true,
-  :length 7187}
+  :length 7187,
+  :size [26 18],
+  :image-size [208 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_04.png",
   :file "sewer_04.png",
   :success true,
-  :length 3375}
+  :length 3375,
+  :size [26 18],
+  :image-size [208 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_05.png",
   :file "sewer_05.png",
   :success true,
-  :length 3752}
+  :length 3752,
+  :size [26 18],
+  :image-size [208 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_06.png",
   :file "sewer_06.png",
   :success true,
-  :length 4737}
+  :length 4737,
+  :size [26 18],
+  :image-size [208 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_07.png",
   :file "sewer_07.png",
   :success true,
-  :length 0}
+  :length 4513,
+  :size [26 18],
+  :image-size [208 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_08.png",
   :file "sewer_08.png",
   :success true,
-  :length 0}
+  :length 3364,
+  :size [26 18],
+  :image-size [208 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_09.png",
   :file "sewer_09.png",
   :success true,
-  :length 0}
+  :length 4038,
+  :size [26 18],
+  :image-size [208 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_10.png",
   :file "sewer_10.png",
   :success true,
-  :length 0}
+  :length 5908,
+  :size [26 18],
+  :image-size [208 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\sewer_12.png",
   :file "sewer_12.png",
   :success true,
-  :length 0}
+  :length 6911,
+  :size [32 18],
+  :image-size [256 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\stars.png",
   :file "stars.png",
   :success true,
-  :length 2458}
+  :length 2458,
+  :size [32 32],
+  :image-size [256 256]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\titlescreen.png",
   :file "titlescreen.png",
   :success true,
-  :length 2368}
+  :length 2368,
+  :size [20 18],
+  :image-size [160 144]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\underground.png",
   :file "underground.png",
   :success true,
-  :length 3947}
+  :length 3947,
+  :size [32 32],
+  :image-size [256 256]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\victory.png",
   :file "victory.png",
   :success true,
-  :length 9174}
+  :length 9174,
+  :size [20 32],
+  :image-size [160 256]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\victory_old.png",
   :file "victory_old.png",
   :success true,
-  :length 9697}
+  :length 9697,
+  :size [20 32],
+  :image-size [160 256]}
  {:category "backgrounds",
   :path ".\\data\\assets\\backgrounds\\youwin.png",
   :file "youwin.png",
   :success true,
-  :length 6964}
+  :length 6964,
+  :size [20 20],
+  :image-size [160 160]}
  {:category "ban_list.json",
   :path ".\\data\\assets\\ban_list.json",
   :file "ban_list.json",
   :success true,
-  :length 55}
+  :length 55,
+  :size [0 0],
+  :image-size [0 0]}
  {:category "dialog.json",
   :path ".\\data\\assets\\dialog.json",
   :file "dialog.json",
   :success true,
-  :length 4571}
- {:category "music",
-  :path ".\\data\\assets\\music\\template.mod",
-  :file "template.mod",
-  :success true,
-  :length 52234}
+  :length 4571,
+  :size [0 0],
+  :image-size [0 0]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\actor.png",
   :file "actor.png",
   :success true,
-  :length 5780}
+  :length 5780,
+  :size [6 2],
+  :image-size [48 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\actor_animated.png",
   :file "actor_animated.png",
   :success true,
-  :length 2076}
+  :length 2076,
+  :size [12 2],
+  :image-size [96 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\bubbles1.png",
   :file "bubbles1.png",
   :success true,
-  :length 2958}
+  :length 2958,
+  :size [8 2],
+  :image-size [64 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\bubbles2.png",
   :file "bubbles2.png",
   :success true,
-  :length 3034}
+  :length 3034,
+  :size [8 2],
+  :image-size [64 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\cat.png",
   :file "cat.png",
   :success true,
-  :length 5641}
+  :length 5641,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\checkbox.png",
   :file "checkbox.png",
   :success true,
-  :length 1751}
+  :length 1751,
+  :size [6 2],
+  :image-size [48 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\closed_sewer_door.png",
   :file "closed_sewer_door.png",
   :success true,
-  :length 3034}
+  :length 3034,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\connector.png",
   :file "connector.png",
   :success true,
-  :length 3594}
+  :length 3594,
+  :size [4 2],
+  :image-size [32 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\dog.png",
   :file "dog.png",
   :success true,
-  :length 1732}
+  :length 1732,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\duck.png",
   :file "duck.png",
   :success true,
-  :length 2092}
+  :length 2092,
+  :size [4 2],
+  :image-size [32 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\duck_static.png",
   :file "duck_static.png",
   :success true,
-  :length 3632}
+  :length 3632,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\fire.png",
   :file "fire.png",
   :success true,
-  :length 1847}
+  :length 1847,
+  :size [8 2],
+  :image-size [64 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\GreenBlock.png",
   :file "GreenBlock.png",
   :success true,
-  :length 763}
+  :length 763,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\hatch.png",
   :file "hatch.png",
   :success true,
-  :length 2855}
+  :length 2855,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\ice.png",
   :file "ice.png",
   :success true,
-  :length 1710}
+  :length 1710,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\invisible.png",
   :file "invisible.png",
   :success true,
-  :length 2809}
+  :length 2809,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\key_00.png",
   :file "key_00.png",
   :success true,
-  :length 2915}
+  :length 2915,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\ladder.png",
   :file "ladder.png",
   :success true,
-  :length 2864}
+  :length 2864,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\macguffin.png",
   :file "macguffin.png",
   :success true,
-  :length 3011}
+  :length 3011,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\macguffin_bell.png",
   :file "macguffin_bell.png",
   :success true,
-  :length 2928}
+  :length 2928,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\macguffin_book.png",
   :file "macguffin_book.png",
   :success true,
-  :length 2956}
+  :length 2956,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\macguffin_candle.png",
   :file "macguffin_candle.png",
   :success true,
-  :length 2992}
+  :length 2992,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\macguffin_crystal.png",
   :file "macguffin_crystal.png",
   :success true,
-  :length 2948}
+  :length 2948,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\macguffin_egg.png",
   :file "macguffin_egg.png",
   :success true,
-  :length 2960}
+  :length 2960,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\macguffin_harp.png",
   :file "macguffin_harp.png",
   :success true,
-  :length 2963}
+  :length 2963,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\macguffin_heart.png",
   :file "macguffin_heart.png",
   :success true,
-  :length 2937}
+  :length 2937,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\macguffin_sword.png",
   :file "macguffin_sword.png",
   :success true,
-  :length 2890}
+  :length 2890,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\MazeBlock.png",
   :file "MazeBlock.png",
   :success true,
-  :length 2920}
+  :length 2920,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\npc001.png",
   :file "npc001.png",
   :success true,
-  :length 1807}
+  :length 1807,
+  :size [6 2],
+  :image-size [48 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\npc001_walk.png",
   :file "npc001_walk.png",
   :success true,
-  :length 3225}
+  :length 3225,
+  :size [12 2],
+  :image-size [96 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\npc002.png",
   :file "npc002.png",
   :success true,
-  :length 1843}
+  :length 1843,
+  :size [6 2],
+  :image-size [48 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\npc002_static.png",
   :file "npc002_static.png",
   :success true,
-  :length 3653}
+  :length 3653,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\npc003.png",
   :file "npc003.png",
   :success true,
-  :length 1991}
+  :length 1991,
+  :size [12 2],
+  :image-size [96 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\npc003_static.png",
   :file "npc003_static.png",
   :success true,
-  :length 3668}
+  :length 3668,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path
   ".\\data\\assets\\sprites\\overlay_fade_dither_one.png",
   :file "overlay_fade_dither_one.png",
   :success true,
-  :length 2826}
+  :length 2826,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path
   ".\\data\\assets\\sprites\\overlay_fade_dither_three.png",
   :file "overlay_fade_dither_three.png",
   :success true,
-  :length 2839}
+  :length 2839,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path
   ".\\data\\assets\\sprites\\overlay_fade_dither_two.png",
   :file "overlay_fade_dither_two.png",
   :success true,
-  :length 2824}
+  :length 2824,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\overlay_fade_straight.png",
   :file "overlay_fade_straight.png",
   :success true,
-  :length 2818}
+  :length 2818,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\player.png",
   :file "player.png",
   :success true,
-  :length 1942}
+  :length 1942,
+  :size [12 2],
+  :image-size [96 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\radio.png",
   :file "radio.png",
   :success true,
-  :length 1715}
+  :length 1715,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\rock.png",
   :file "rock.png",
   :success true,
-  :length 1726}
+  :length 1726,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\sage.png",
   :file "sage.png",
   :success true,
-  :length 1737}
+  :length 1737,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\savepoint.png",
   :file "savepoint.png",
   :success true,
-  :length 1029}
+  :length 1029,
+  :size [4 2],
+  :image-size [32 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\shovel.png",
   :file "shovel.png",
   :success true,
-  :length 2977}
+  :length 2977,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\signpost.png",
   :file "signpost.png",
   :success true,
-  :length 5628}
+  :length 5628,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\stairsdown.png",
   :file "stairsdown.png",
   :success true,
-  :length 2859}
+  :length 2859,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\static.png",
   :file "static.png",
   :success true,
-  :length 5757}
+  :length 5757,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\torch.png",
   :file "torch.png",
   :success true,
-  :length 1739}
+  :length 1739,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "sprites",
   :path ".\\data\\assets\\sprites\\tower.png",
   :file "tower.png",
   :success true,
-  :length 3640}
+  :length 3640,
+  :size [2 2],
+  :image-size [16 16]}
  {:category "title.json",
   :path ".\\data\\assets\\title.json",
   :file "title.json",
   :success true,
-  :length 6746}
+  :length 6746,
+  :size [0 0],
+  :image-size [0 0]}
  {:category "ui",
   :path ".\\data\\assets\\ui\\ascii.png",
   :file "ascii.png",
   :success true,
-  :length 3508}
+  :length 3508,
+  :size [16 14],
+  :image-size [128 112]}
  {:category "ui",
   :path ".\\data\\assets\\ui\\cursor.png",
   :file "cursor.png",
   :success true,
-  :length 1876}
+  :length 1876,
+  :size [1 1],
+  :image-size [8 8]}
  {:category "ui",
   :path ".\\data\\assets\\ui\\emotes.png",
   :file "emotes.png",
   :success true,
-  :length 1639}
+  :length 1639,
+  :size [16 2],
+  :image-size [128 16]}
  {:category "ui",
   :path ".\\data\\assets\\ui\\frame.png",
   :file "frame.png",
   :success true,
-  :length 5160}
+  :length 5160,
+  :size [3 3],
+  :image-size [24 24]}
  {:category "ui",
   :path ".\\data\\assets\\ui\\original\\ascii.png",
   :file "ascii.png",
   :success true,
-  :length 3508}
+  :length 3508,
+  :size [16 14],
+  :image-size [128 112]}
  {:category "ui",
   :path ".\\data\\assets\\ui\\original\\cursor.png",
   :file "cursor.png",
   :success true,
-  :length 1876}
+  :length 1876,
+  :size [1 1],
+  :image-size [8 8]}
  {:category "ui",
   :path ".\\data\\assets\\ui\\original\\emotes.png",
   :file "emotes.png",
   :success true,
-  :length 1639}
+  :length 1639,
+  :size [16 2],
+  :image-size [128 16]}
  {:category "ui",
   :path ".\\data\\assets\\ui\\original\\frame.png",
   :file "frame.png",
   :success true,
-  :length 5160}]
+  :length 5160,
+  :size [3 3],
+  :image-size [24 24]}]
 
   )
 
