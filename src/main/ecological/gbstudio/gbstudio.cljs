@@ -9,6 +9,7 @@
             ;;[cljs.core.async :refer [<!]]
             [ecological.gbstudio.assets :refer [asset-manifest scene-example-projects]]
             [clojure.string]
+            [goog.crypt :as crypt]
             )
   )
 
@@ -91,7 +92,7 @@
                 :resource/image-size (asset :image-size [0 0])})
              (iterate dec -2)
              (asset-manifest)))]
-       (js/console.log manifest-transaction)
+       ;;(js/console.log manifest-transaction)
        manifest-transaction
        ))})
 
@@ -132,13 +133,15 @@
                   (iterate dec (- 0 (+ 3 (count (get sep :scenes [])))))
                   (get sep :backgrounds []))
             )]
-       (js/console.log transaction)
+       ;;(js/console.log transaction)
        transaction))})
 
 (defn process-template-actors [actors]
   actors)
 
 (defn process-template-triggers [triggers]
+  (js/console.log triggers)
+  
   triggers)
 
 (def move-generate-scene-from-template
@@ -367,13 +370,47 @@
 ;;     (map #(zipmap labels %)
 ;;          scene-triggers)))
 
+(defn byte-to-hex [b-val]
+  (let [hex-str (.toString b-val 16)]
+    (case (count hex-str)
+      0 "00"
+      1 (str "0" hex-str)
+      (subs hex-str (- (count hex-str) 2) (count hex-str)))))
+
+;; (defn hex-to-byte [h-val]
+;;   ;(js/console.log (str h-val))
+;;   ;(js/console.log (crypt/stringToUtf8ByteArray (str h-val)))
+;;   ;(into [] (crypt/stringToUtf8ByteArray (str h-val)))
+;;   (apply str h-val))
+;; ;utf8ByteArrayToString
+
+(defn bytes-to-hex-string [array-of-bytes]
+  (clojure.string/join
+   (mapv
+    (fn [b-val]
+      (byte-to-hex b-val))
+    array-of-bytes)))
+
+;; (defn hex-string-to-bytes [hex-string]
+;;   (mapv
+;;    hex-to-byte
+;;    (partition 2 hex-string)))
+
+(defn bytes-to-bools [array-of-bytes]
+  (clojure.string/join
+   (mapv
+    (fn [b-val]
+      (cljs.pprint/cl-format nil (str "~" 8 ",'0d") (.toString b-val 2)))
+    array-of-bytes)))
+
+
 (defn export-scenes
   "Export all of the scenes from the database and return EDN that can eventually be interperted by GBS."
   []
     (let [scene-labels
-          ["_datascript_internal_id" "backgroundId" "editor-position" "name" "id" "collisions" "background-image"]
+          ["_datascript_internal_id" "backgroundId" "editor-position" "name" "id" "collisions" "background-image" "collisions-viz" "size"]
           scenes
-          (d/q '[:find ?scene ?backgroundUUID ?editor-position ?name ?uuid ?collisions ?bkg-resource-path
+          (d/q '[:find ?scene ?backgroundUUID ?editor-position ?name ?uuid ?collisions ?bkg-resource-path ?collisions ?size
                  :in $ ?nameDefaultValue ?idDefaultValue ?collisionsDefaultValue
                  :where
                  [?scene :scene/editor-position ?editor-position]
@@ -384,18 +421,22 @@
                  [?bkg :background/uuid ?backgroundUUID]
                  [?bkg :background/resource ?bkg-resource]
                  [?bkg-resource :resource/filepath ?bkg-resource-path]
+                 [?bkg :background/size ?size]
                  ] ;; todo: size, actors and scripts/triggers
                @db-conn
                 "generated scene"
                (random-uuid)
                [])]
       (map (fn [scene]
-             (zipmap scene-labels (concat
-                                   scene
-                                   ;(export-actors (first scene))
-                                   ;(export-triggers (first scene))
-                                   ;(export-scripts (first scene))
-                                   )))
+             (js/console.log scene)
+             (->
+              (zipmap scene-labels (concat
+                                    scene
+                                        ;(export-actors (first scene))
+                                        ;(export-triggers (first scene))
+                                        ;(export-scripts (first scene))
+                                    ))
+              (update-in ["collisions-viz"] (fn [colls] (str "collisions-viz|" (first (nth scene 8)) "|" (second (nth scene 8)) "|" (bytes-to-hex-string colls) "|" (nth scene 6))))))
            scenes)))
 
 (defn export-resources
@@ -483,7 +524,7 @@
                (cljs.pprint/pprint move-name)
                (let [result (concat
                              (exec-func db (:vars poss-move))
-                             [{:db/id -999999 ; magic number to try and be unique...
+                             [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
                                :design/move-count (inc i) ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
                                :design/move-record move-name
                                :design/move-parameters (get poss-move :vars [])}])]
@@ -498,7 +539,7 @@
 
 (defn generate []
   (reset-the-database!)
-  (generate-level-random-heuristic db-conn 180 0)
+  (generate-level-random-heuristic db-conn 128 0)
   )
 
 (comment (reset-the-database!)
