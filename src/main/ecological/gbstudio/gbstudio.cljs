@@ -79,7 +79,9 @@
      ;; TODO: actually get data from server
      (let [manifest (asset-manifest)]
        (if (empty? manifest)
-         (js/console.log "Missing asset manifest")
+         (let []
+           (js/console.log "Missing asset manifest")
+           [])  ; todo: more elaborate file missing error handling?
          (let [category-table {"ui" :ui "image" :image "sprites" :sprites "backgrounds" :image}
                manifest-transaction
                (concat
@@ -96,20 +98,18 @@
                  (iterate dec -2)
                  manifest
                  ))]
-           ;;(js/console.log manifest-transaction)
-           manifest-transaction
-           ))))})
+             manifest-transaction))))})
 
 (def move-load-gbs-projects-from-disk
   {:name "load-gbs-projects-from-disk"
-   :query '[:find ?sig :in $ %
+   :query '[:find ?sig ?sig2 :in $ %
             :where
             [?sig :signal/signal :gbs-examples-not-loaded]
             [?sig2 :signal/signal :resources-are-loaded]
             ;[(missing? $ ?sig2 :signal/signal :resources-not-loaded)]
             ]
    :exec
-   (fn [db [signal-not-loaded]]
+   (fn [db [signal-not-loaded signal-resources-are-loaded]]
      (let [sep (scene-manifest)
            scenes-to-add
            (mapv (fn [key asset]
@@ -119,6 +119,7 @@
                      :template/actors (get asset :actors []) ; todo: translate actors
                      :template/backgroundUUID (get asset :backgroundId "")
                      :template/collisions (get asset :collisions [])
+                     :template/originaluuid (get asset :id "")
                      :template/use-count 0
                      })
                   (iterate dec -3)
@@ -136,31 +137,58 @@
                   (iterate dec (- 0 (+ 3 (count (get sep :scenes [])))))
                   (get sep :backgrounds []))
            transaction
-           (concat
-            [[:db/retractEntity signal-not-loaded]]
-            scenes-to-add
-            backgrounds-to-add
-            )]
-       ;;(js/console.log sep)
-       ;;(js/console.log scenes-to-add)
-       ;;(js/console.log transaction)
-       (if (> 0 (count scenes-to-add))
+           (into []
+                 (concat
+                  [[:db/retractEntity signal-not-loaded]]
+                  scenes-to-add
+                  backgrounds-to-add
+                  ))]
+       ;; (js/console.log sep)
+       ;; (js/console.log (get sep :scenes :no-scenes-in-sep))
+       ;; (js/console.log scenes-to-add)
+       ;; (js/console.log (count scenes-to-add))
+       ;; (js/console.log (> (count scenes-to-add) 0))
+       ;; (js/console.log transaction)
+       ;; (js/console.log [{:db/id -999 :signal/signal :successfully-loaded-scenes}])
+       (if (and (> (count scenes-to-add) 0) (> (count backgrounds-to-add) 0))
          transaction
-         [] ; TODO: handle error if we can't manage to load the template scenes...
+         [{:db/id -999 :signal/signal :failed-to-load-scenes}]
+         ;; TODO: handle error if we can't manage to load the template scenes...
          )))})
 
-(defn process-template-actors [actors]
+(defn process-template-actors [actors original-uuid]
   actors)
 
-(defn process-template-triggers [triggers]
+;; TODO: verify this still works
+(defn is-trigger-a-connection? [trigger original-uuid]
+  (let [scripts (get trigger :script [])
+        scripts-switch (filter #(-> % (get :command "") (= "EVENT_SWITCH_SCENE")) scripts)
+        matching-scripts
+        (filter (fn [scrpt]
+               ;(js/console.log (into {} (get scrpt :args [])))
+               (= original-uuid (get (into {} (get scrpt :args [])) :sceneId ""))
+                )
+                scripts-switch)]
+    ;(js/console.log matching-scripts)
+    (> (count matching-scripts) 0))
+  false)
+
+(defn process-template-triggers [triggers original-uuid]
   ;;(js/console.log triggers)
-  
+  (mapv
+   (fn [trigger-to-process]
+     ;(js/console.log trigger-to-process)
+     (cond      
+       (is-trigger-a-connection? trigger-to-process original-uuid)        
+       trigger-to-process ;; todo: process the connection
+       :else trigger-to-process))
+   triggers)
   triggers)
 
 (def move-generate-scene-from-template
   {:name "generate-scene-from-template"
    :query
-   '[:find ?template-id ?name ?bkg-id ?use-count ?collisions ?triggers ?actors
+   '[:find ?template-id ?name ?bkg-id ?use-count ?collisions ?triggers ?actors ?original-template-uuid
      :in $ %
      :where
      [?template-id :template/name ?name]
@@ -168,13 +196,14 @@
      [?template-id :template/collisions ?collisions]     
      [?template-id :template/triggers ?triggers]
      [?template-id :template/actors ?actors]
+     [?template-id :template/originaluuid ?original-template-uuid]
      [?gbs-bkg-id :gbs-input/uuid ?bkg-uuid]
      [?gbs-bkg-id :gbs-input/filename ?bkg-filename]
      [?bkg-id :background/filename ?bkg-filename]
      [?template-id :template/use-count ?use-count]
      ]
    :exec
-   (fn [db [template-id template-name bkg-id use-count collisions triggers actors
+   (fn [db [template-id template-name bkg-id use-count collisions triggers actors original-template-uuid
             ]]
      (let [transaction
            [{:db/id -1
@@ -183,8 +212,8 @@
              :scene/background bkg-id
              :scene/collisions collisions
              :scene/name (str template-name "_" (str (random-uuid)))
-             :scene/triggers (process-template-triggers triggers)
-             :scene/actors   (process-template-actors actors)
+             :scene/triggers (process-template-triggers triggers original-template-uuid)
+             :scene/actors   (process-template-actors actors original-template-uuid)
              }
             {:db/id template-id
              :template/use-count (inc use-count)}

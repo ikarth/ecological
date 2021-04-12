@@ -228,5 +228,7 @@
    [display-gbs]
    [:hr]
    ;; (coll-pen.core/draw (:data @app-state)
-   ;;                       {:el-per-page 30 :truncate false })   
-   ])
+   ;;                       {:el-per-page 30 :truncate false })
+   (js/console.log (:data @app-state))
+   (.stringify js/JSON (clj->js (:data @app-state)))])
+    
