@@ -7,7 +7,7 @@
             ;[cljs.reader :as reader]
             ;;[cljs-http.client :as http]
             ;;[cljs.core.async :refer [<!]]
-            [ecological.gbstudio.assets :refer [asset-manifest scene-manifest scene-example-projects]]
+            [ecological.gbstudio.assets :refer [asset-manifest scene-manifest]]
             [clojure.string]
             [goog.crypt :as crypt]
             )
@@ -110,11 +110,9 @@
             ]
    :exec
    (fn [db [signal-not-loaded]]
-     (let [sep (first (scene-example-projects))
-           transaction
-           (concat
-            [[:db/retractEntity signal-not-loaded]]
-            (mapv (fn [key asset]
+     (let [sep (scene-manifest)
+           scenes-to-add
+           (mapv (fn [key asset]
                     {:db/id key
                      :template/name (get asset :name "unnamed")
                      :template/triggers (get asset :triggers []) ; todo: translate triggers
@@ -125,7 +123,8 @@
                      })
                   (iterate dec -3)
                   (get sep :scenes []))
-            (mapv (fn [key asset]
+           backgrounds-to-add
+           (mapv (fn [key asset]
                     {:db/id key
                      :gbs-input/type :background
                      :gbs-input/uuid (get asset :id "")
@@ -136,9 +135,19 @@
                      })
                   (iterate dec (- 0 (+ 3 (count (get sep :scenes [])))))
                   (get sep :backgrounds []))
+           transaction
+           (concat
+            [[:db/retractEntity signal-not-loaded]]
+            scenes-to-add
+            backgrounds-to-add
             )]
+       ;;(js/console.log sep)
+       ;;(js/console.log scenes-to-add)
        ;;(js/console.log transaction)
-       transaction))})
+       (if (> 0 (count scenes-to-add))
+         transaction
+         [] ; TODO: handle error if we can't manage to load the template scenes...
+         )))})
 
 (defn process-template-actors [actors]
   actors)

@@ -34,7 +34,7 @@
           (js/console.log "loaded forest scenes for templates")
           (let [res-text (.-responseText response)]
             ;(js/console.log res-text)
-            (swap! asset-state assoc :scene-manifest (js->clj (js/JSON.parse res-text))))
+            (swap! asset-state assoc :scene-manifest (js->clj (js/JSON.parse res-text) :keywordize-keys true)))
           )))
 
 (defn asset-manifest []

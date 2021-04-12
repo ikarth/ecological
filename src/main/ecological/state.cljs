@@ -6,7 +6,7 @@
   (atom {:count 0
          :gbs-output (fetch-gbs)
          :data (fetch-database)
-         }))
+          }))
 
 ;; {:author "ecological generator 2021"
 ;; :name "Generated Game Boy ROM",
