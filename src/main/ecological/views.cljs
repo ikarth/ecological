@@ -114,6 +114,84 @@
                    (bytes-to-bools
                     [(hex-string-to-byte h-val)]))))
 
+
+;;       for (let yi = 0; yi < height; yi++) {
+;;         for (let xi = 0; xi < width; xi++) {
+;;           const collisionIndex = width * yi + xi;
+;;           const tile = collisions[collisionIndex];
+;;           if ((tile & COLLISION_ALL) === COLLISION_ALL) {
+;;             ctx.fillStyle = "rgba(250,40,40,0.6)";
+;;             ctx.fillRect(xi * TILE_SIZE, yi * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+;;           } else if (tile !== 0) {
+;;             if (tile & COLLISION_TOP) {
+;;               ctx.fillStyle = "rgba(40,40,250,0.6)";
+;;               ctx.fillRect(xi * TILE_SIZE, yi * TILE_SIZE, TILE_SIZE, TILE_SIZE * 0.4);
+;;             }
+;;             if (tile & COLLISION_BOTTOM) {
+;;               ctx.fillStyle = "rgba(255,250,40,0.6)";
+;;               ctx.fillRect(xi * TILE_SIZE, (yi + 0.6) * TILE_SIZE, TILE_SIZE, TILE_SIZE * 0.4);
+;;             }
+;;             if (tile & COLLISION_LEFT) {
+;;               ctx.fillStyle = "rgba(250,40,250,0.6)";
+;;               ctx.fillRect(xi * TILE_SIZE, yi * TILE_SIZE, TILE_SIZE * 0.4, TILE_SIZE);
+;;             }
+;;             if (tile & COLLISION_RIGHT) {
+;;               ctx.fillStyle = "rgba(40,250,250,0.6)";
+;;               ctx.fillRect((xi + 0.6) * TILE_SIZE, yi * TILE_SIZE, TILE_SIZE * 0.4, TILE_SIZE);
+;;             }                   
+;;           }
+;;           if (tile & TILE_PROP_LADDER) {
+;;             ctx.fillStyle = "rgba(0,128,0,0.6)";
+;;             ctx.fillRect((xi + 0.0) * TILE_SIZE, yi * TILE_SIZE, TILE_SIZE * 0.2, TILE_SIZE);
+;;             ctx.fillRect((xi + 0.8) * TILE_SIZE, yi * TILE_SIZE, TILE_SIZE * 0.2, TILE_SIZE);
+;;             ctx.fillRect(xi * TILE_SIZE, (yi + 0.4) * TILE_SIZE, TILE_SIZE, TILE_SIZE * 0.2);
+;;           }             
+;;         }
+;;       }
+
+;; https://github.com/chrismaltby/gb-studio/blob/9cc3b4d341a6db6a6c10f7f35fb7f60e969f1d8c/src/consts.js#L50
+;; export const COLLISION_TOP = 0x1;
+;; export const COLLISION_BOTTOM = 0x2;
+;; export const COLLISION_LEFT = 0x4;
+;; export const COLLISION_RIGHT = 0x8;
+;; export const COLLISION_ALL = 0xF;
+;; export const TILE_PROP_LADDER = 0x10;
+;; export const TILE_PROPS = 0xF0;
+
+(def collision-conversion
+  {0x1 :top
+   0x2 :bottom
+   0x4 :left
+   0x8 :right
+   0xF :all
+   0x10 :ladder
+   0xF0 :prop})
+
+(def collision-visual
+  {:top    {:width  8 :height  4  :fill "blue"   :x 0 :y 0}
+   :bottom {:width  8 :height  4  :fill "yellow" :x 0 :y 4}
+   :left   {:width  4 :height  8  :fill "pink"   :x 0 :y 0}
+   :right  {:width  4 :height  8  :fill "cyan"   :x 4 :y 0}
+   :all    {:width  8 :height  8  :fill "red"    :x 0 :y 0}
+   :ladder {:width  4 :height  8  :fill "green"  :x 2 :y 0}
+   :prop   {:width  4 :height  4  :fill "lime"   :x 2 :y 2}})
+
+(def gbs-version 2.0)
+
+;;; for GBS 2.0 beta v4
+(defn collision-flip-mode-2
+  ([index collision-map]
+   (collision-flip-mode-2 index collision-map false))
+  ([index collision-map return-map?]
+   (if (= 0 (count collision-map))
+     (let [] true)
+     (let [cell (nth collision-map index)
+           viz (get collision-visual (get collision-conversion cell false) false)]
+       (if return-map?
+         viz
+         (map? viz))))))
+
+;;; for GBS 1.2
 (defn collision-flip-mode
   ([index collision-map]
    (collision-flip-mode index collision-map false))
@@ -149,21 +227,30 @@
          [:svg {:style {:background "pink" :width (str (* 8 width) "px") :height (str (* 8 height) "px")}}
           [:image {:href image-path :width (str (* 8 width) "px") :height (str (* 8 height) "px") :preserveAspectRatio "xMinYMin" :x 0 :y 0 }]
           (->> draw-index
-               (mapv (fn [index]
-                       (if (collision-flip-mode index bits)
-                           ^{:key index}
-                           [:rect {:r 8
-                                   :width 8
-                                   :height 8
-                                   :fill-opacity 0.6
-                                   :fill (if (collision-flip-mode index bits) "red" "blue")
-                                   :x (+ 0 (* 8 (rem index width)))
-                                   :y (+ 0 (* 8 (quot index width)))
-                                   }
-                            ;;[:title (str index " | " (collision-flip-mode index bits true))]
-                            ]
-                           nil)
-                       ))
+               (mapv
+                (fn [index]
+                  (if (>= gbs-version 2.0)
+                    (let [c-state (collision-flip-mode-2 index bits true)] 
+                      (if (map? c-state)
+                        ^{:key index}
+                        [:rect {:width (get c-state :width 8)
+                                :height (get c-state :height 8)
+                                :fill-opacity 0.4
+                                :fill (get c-state :fill "purple")
+                                :x (+ (get c-state :x 0) (* 8 (rem index width)))
+                                :y (+ (get c-state :y 0) (* 8 (quot index width)))}]
+                        nil
+                        ))
+                    (if (collision-flip-mode index bits) ; GBS 1.2
+                      ^{:key index} [:rect {:r 8
+                                            :width 8
+                                            :height 8
+                                            :fill-opacity 0.6
+                                            :fill (if (collision-flip-mode index bits) "red" "blue")
+                                            :x (+ 0 (* 8 (rem index width)))
+                                            :y (+ 0 (* 8 (quot index width)))
+                                            }]
+                      nil))))
                (filter #(not (nil? %)))
                (into (list))
                )
