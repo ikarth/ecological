@@ -1,6 +1,6 @@
 (ns ecological.views
   (:require [ecological.state :refer [app-state]]
-            [ecological.events :refer [increment decrement graph-display]]
+            [ecological.events :refer [increment decrement graph-display run-generator]]
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
@@ -30,7 +30,11 @@
 ; (.stringify js/JSON (:gbs-output @app-state))
 ;(.stringify js/JSON (clj->js {:data "test data"}))
 
-
+ (defn generate-btn
+  []
+  [:div
+   [:button.btn {:on-click #(run-generator %)} "generate"]]
+  )
 
 (defn download-gbs [_]
   (let [data-blob (js/Blob. (.stringify js/JSON (clj->js {:data "test data"})) #js {:type "application/json"})
@@ -186,7 +190,17 @@
           :else data)
        :else data)
      )
-   ))
+   hic))
+
+(defn filter-gen-state [g-state]
+  (clojure.walk/postwalk
+   (fn [node]
+     (cond
+       (and (map? node) (contains? node "collisions"))
+       (dissoc node "collisions" "editor-position")
+       :else node)
+     )
+   g-state))
 
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
@@ -194,7 +208,7 @@
      ;[graph-display-button]
      ;[:div#artifact-graph {:style {:min-height "100px"}}]
      [:hr]
-     (convert-viz (json->hiccup (clj->js gen-state)))
+     (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
      [:hr]
      (coll-pen.core/draw (convert-data-for-display gen-state)
                          {:el-per-page 30 :truncate false })
@@ -209,10 +223,10 @@
 (defn app []
   [:div
    [header]
-   [download-btn]
-   [counter]
+   [generate-btn]
+   ;[counter]
    [display-gbs]
    [:hr]
-   (coll-pen.core/draw (:data @app-state)
-                         {:el-per-page 30 :truncate false })   
+   ;; (coll-pen.core/draw (:data @app-state)
+   ;;                       {:el-per-page 30 :truncate false })   
    ])

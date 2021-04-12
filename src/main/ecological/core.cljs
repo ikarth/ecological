@@ -23,7 +23,9 @@
 ; This is the :devtools {:after-load script
 (defn start []
   (js/console.log "Starting...")
-  ;(spit (str "./test_start.txt") "Test text.")
+                                        ;(spit (str "./test_start.txt") "Test text.")
+  (assets/load-manifest)
+  (assets/load-scene-sources)
   (r/render [views/app]
             (.getElementById js/document "app")))
 

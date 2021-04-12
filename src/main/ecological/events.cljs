@@ -1,5 +1,6 @@
 (ns ecological.events
-  (:require [ecological.state :refer [app-state]]))
+  (:require [ecological.state :refer [app-state]]
+            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database]]))
 
 (defn increment
   [event]
@@ -14,7 +15,11 @@
 
 
 
-
+(defn run-generator [event]
+  (.preventDefault event)
+  (swap! app-state update-in [:gbs-output] fetch-gbs)
+  (swap! app-state update-in [:data] fetch-database)
+  )
 
 
 

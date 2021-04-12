@@ -7,7 +7,7 @@
             ;[cljs.reader :as reader]
             ;;[cljs-http.client :as http]
             ;;[cljs.core.async :refer [<!]]
-            [ecological.gbstudio.assets :refer [asset-manifest scene-example-projects]]
+            [ecological.gbstudio.assets :refer [asset-manifest scene-manifest scene-example-projects]]
             [clojure.string]
             [goog.crypt :as crypt]
             )
@@ -77,24 +77,28 @@
    :exec
    (fn [db [signal-resources-not-loaded]]
      ;; TODO: actually get data from server
-     (let [category-table {"ui" :ui "image" :image "sprites" :sprites "backgrounds" :image}
+     (let [manifest (asset-manifest)]
+       (if (empty? manifest)
+         (js/console.log "Missing asset manifest")
+         (let [category-table {"ui" :ui "image" :image "sprites" :sprites "backgrounds" :image}
+               manifest-transaction
+               (concat
+                [[:db/retractEntity signal-resources-not-loaded]]
+                [{:db/id -1 :signal/signal :resources-are-loaded}]
+                (mapv
+                 (fn [key asset]
+                   {:db/id key
+                    :resource/type (category-table (asset :category :none) :none)
+                    :resource/filename (asset :file :none)
+                    :resource/filepath (asset :path :none)
+                                        ;:resource/size (asset :size [0 0])
+                    :resource/image-size (asset :image-size [0 0])})
+                 (iterate dec -2)
+                 manifest
+                 ))]
+           ;;(js/console.log manifest-transaction)
            manifest-transaction
-           (concat
-            [[:db/retractEntity signal-resources-not-loaded]]
-            [{:db/id -1 :signal/signal :resources-are-loaded}]
-            (mapv
-             (fn [key asset]
-               {:db/id key
-                :resource/type (category-table (asset :category :none) :none)
-                :resource/filename (asset :file :none)
-                :resource/filepath (asset :path :none)
-                ;:resource/size (asset :size [0 0])
-                :resource/image-size (asset :image-size [0 0])})
-             (iterate dec -2)
-             (asset-manifest)))]
-       ;;(js/console.log manifest-transaction)
-       manifest-transaction
-       ))})
+           ))))})
 
 (def move-load-gbs-projects-from-disk
   {:name "load-gbs-projects-from-disk"
@@ -140,7 +144,7 @@
   actors)
 
 (defn process-template-triggers [triggers]
-  (js/console.log triggers)
+  ;;(js/console.log triggers)
   
   triggers)
 
@@ -428,7 +432,7 @@
                (random-uuid)
                [])]
       (map (fn [scene]
-             (js/console.log scene)
+             ;;(js/console.log scene)
              (->
               (zipmap scene-labels (concat
                                     scene

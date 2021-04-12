@@ -5,7 +5,7 @@
 (defonce app-state
   (atom {:count 0
          :gbs-output (fetch-gbs)
-         ;:data (fetch-database)
+         :data (fetch-database)
          }))
 
 ;; {:author "ecological generator 2021"

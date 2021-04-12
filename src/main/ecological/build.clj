@@ -29,9 +29,14 @@
                                       source-prefix-vec)))
         full-destination (io/file "."
                                   (string/join separator destination-vec)
-                                  (string/join separator truncated-file-path))]
+                                  (string/join separator truncated-file-path))
+        reference-destination (io/file "." (string/join separator (rest destination-vec))
+                               (string/join separator truncated-file-path))
+
+        ]
     (if (.exists source)
-      (let [image-size
+      (let [
+            image-size
             (with-open [r (java.io.FileInputStream. source)]
               (let [image (javax.imageio.ImageIO/read r)]
                 (if (nil? image)
@@ -44,8 +49,8 @@
                 ))
             gb-size (mapv #(quot % 8) image-size)
             ]
-        {:category (first truncated-file-path)
-         :path (str (.getPath full-destination))
+         {:category (first truncated-file-path)
+         :path (str (.getPath reference-destination))
          :file (last truncated-file-path)
          :success (if (.exists full-destination)
                     "exists"
@@ -58,7 +63,8 @@
                    false)
          :size gb-size
          :image-size image-size
-         })
+         }
+        )
       {})))
 
 (defn build-asset-data! [source-asset-path]                                      
@@ -71,7 +77,9 @@
                        (clojure.string/includes? (.getPath %) ".png") ; only get image files
                        (clojure.string/includes? (.getPath %) ".json") ; only get json files
                        )))]
-    (let [assets (mapv #(copy-asset! % source-asset-path "public\\data\\assets") resource-files)]
+    (let [assets (mapv
+                  #(copy-asset! % source-asset-path "public\\data\\assets")
+                  resource-files)]
       (with-open [writer-handle (io/writer "public\\data\\asset_manifest.edn")]
         (binding [*print-length* false
                   *out* writer-handle]
