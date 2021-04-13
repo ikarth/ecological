@@ -231,6 +231,7 @@
      (cond
        (string? data)
        (cond
+         ;; fixme: send a sensibler data exchange format, instead of a weird string
          (clojure.string/includes? data "collisions-viz|")
          (let [just-data (subs data (count "collisions-viz|") (count data))]
            (if (< 0 (count just-data))
