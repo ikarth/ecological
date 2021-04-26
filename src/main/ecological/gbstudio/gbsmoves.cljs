@@ -121,7 +121,7 @@
        trigger-to-process ;; todo: process the connection
        :else trigger-to-process))
    triggers)
-  triggers)
+  [triggers []])
 
 (def move-generate-scene-from-template
   {:name "generate-scene-from-template"
@@ -143,15 +143,18 @@
    :exec
    (fn [db [template-id template-name bkg-id use-count collisions triggers actors original-template-uuid
             ]]
-     (let [transaction
+     (let [triggers (process-template-triggers triggers original-template-uuid)
+           actors (process-template-actors actors original-template-uuid)
+           transaction
            [{:db/id -1
              :scene/uuid (str (random-uuid))             
              :scene/editor-position [20 20]
              :scene/background bkg-id
              :scene/collisions collisions
              :scene/name (str template-name "_" (str (random-uuid)))
-             :scene/triggers (process-template-triggers triggers original-template-uuid)
-             :scene/actors   (process-template-actors actors original-template-uuid)
+             :scene/triggers (first triggers)
+             :scene/connections (second triggers)
+             :scene/actors actors
              }
             {:db/id template-id
              :template/use-count (inc use-count)}
