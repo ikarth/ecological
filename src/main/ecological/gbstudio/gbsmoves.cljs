@@ -1,98 +1,98 @@
 
 (ns ecological.gbstudio.gbsmoves
    (:require [datascript.core :as d]
-             [ecological.gbstudio.assets :refer [asset-manifest scene-manifest]]
+             ;[ecological.gbstudio.assets :refer [asset-manifest scene-manifest]]
               ))
 
-(def move-load-resources-from-disk
-  {:name "load-resources-from-disk"
-   :query
-   '[:find ?sig 
-     :in $ %
-     :where
-     [?sig :signal/signal :resources-not-loaded]
-     ]
-   :exec
-   (fn [db [signal-resources-not-loaded]]
-     ;; TODO: actually get data from server
-     (let [manifest (asset-manifest)]
-       (if (empty? manifest)
-         (let []
-           (js/console.log "Missing asset manifest")
-           [])  ; todo: more elaborate file missing error handling?
-         (let [category-table {"ui" :ui "image" :image "sprites" :sprites "backgrounds" :image}
-               manifest-transaction
-               (concat
-                [[:db/retractEntity signal-resources-not-loaded]]
-                [{:db/id -1 :signal/signal :resources-are-loaded}]
-                (mapv
-                 (fn [key asset]
-                   {:db/id key
-                    :resource/type (category-table (asset :category :none) :none)
-                    :resource/filename (asset :file :none)
-                    :resource/filepath (asset :path :none)
-                                        ;:resource/size (asset :size [0 0])
-                    :resource/image-size (asset :image-size [0 0])})
-                 (iterate dec -2)
-                 manifest
-                 ))]
-             manifest-transaction))))})
+;; (def move-load-resources-from-disk
+;;   {:name "load-resources-from-disk"
+;;    :query
+;;    '[:find ?sig 
+;;      :in $ %
+;;      :where
+;;      [?sig :signal/signal :resources-not-loaded]
+;;      ]
+;;    :exec
+;;    (fn [db [signal-resources-not-loaded]]
+;;      ;; TODO: actually get data from server
+;;      (let [manifest (asset-manifest)]
+;;        (if (empty? manifest)
+;;          (let []
+;;            (js/console.log "Missing asset manifest")
+;;            [])  ; todo: more elaborate file missing error handling?
+;;          (let [category-table {"ui" :ui "image" :image "sprites" :sprites "backgrounds" :image}
+;;                manifest-transaction
+;;                (concat
+;;                 [[:db/retractEntity signal-resources-not-loaded]]
+;;                 [{:db/id -1 :signal/signal :resources-are-loaded}]
+;;                 (mapv
+;;                  (fn [key asset]
+;;                    {:db/id key
+;;                     :resource/type (category-table (asset :category :none) :none)
+;;                     :resource/filename (asset :file :none)
+;;                     :resource/filepath (asset :path :none)
+;;                                         ;:resource/size (asset :size [0 0])
+;;                     :resource/image-size (asset :image-size [0 0])})
+;;                  (iterate dec -2)
+;;                  manifest
+;;                  ))]
+;;              manifest-transaction))))})
 
-(def move-load-gbs-projects-from-disk
-  {:name "load-gbs-projects-from-disk"
-   :query '[:find ?sig ?sig2 :in $ %
-            :where
-            [?sig :signal/signal :gbs-examples-not-loaded]
-            [?sig2 :signal/signal :resources-are-loaded]
-            ;[(missing? $ ?sig2 :signal/signal :resources-not-loaded)]
-            ]
-   :exec
-   (fn [db [signal-not-loaded signal-resources-are-loaded]]
-     (let [sep (scene-manifest)
-           scenes-to-add
-           (mapv (fn [key asset]
-                    {:db/id key
-                     :template/name (get asset :name "unnamed")
-                     :template/triggers (get asset :triggers []) ; todo: translate triggers
-                     :template/actors (get asset :actors []) ; todo: translate actors
-                     :template/backgroundUUID (get asset :backgroundId "")
-                     :template/collisions (get asset :collisions [])
-                     :template/originaluuid (get asset :id "")
-                     :template/use-count 0
-                     })
-                  (iterate dec -3)
-                  (get sep :scenes []))
-           backgrounds-to-add
-           (mapv (fn [key asset]
-                    {:db/id key
-                     :gbs-input/type :background
-                     :gbs-input/uuid (get asset :id "")
-                     :gbs-input/name (get asset :name "")
-                     :gbs-input/filename (get asset :filename "")
-                     :gbs-input/width  (get asset :width 0)
-                     :gbs-input/height (get asset :hieght 0)
-                     })
-                  (iterate dec (- 0 (+ 3 (count (get sep :scenes [])))))
-                  (get sep :backgrounds []))
-           transaction
-           (into []
-                 (concat
-                  [[:db/retractEntity signal-not-loaded]]
-                  scenes-to-add
-                  backgrounds-to-add
-                  ))]
-       ;; (js/console.log sep)
-       ;; (js/console.log (get sep :scenes :no-scenes-in-sep))
-       ;; (js/console.log scenes-to-add)
-       ;; (js/console.log (count scenes-to-add))
-       ;; (js/console.log (> (count scenes-to-add) 0))
-       ;; (js/console.log transaction)
-       ;; (js/console.log [{:db/id -999 :signal/signal :successfully-loaded-scenes}])
-       (if (and (> (count scenes-to-add) 0) (> (count backgrounds-to-add) 0))
-         transaction
-         [{:db/id -999 :signal/signal :failed-to-load-scenes}]
-         ;; TODO: handle error if we can't manage to load the template scenes...
-         )))})
+;; (def move-load-gbs-projects-from-disk
+;;   {:name "load-gbs-projects-from-disk"
+;;    :query '[:find ?sig ?sig2 :in $ %
+;;             :where
+;;             [?sig :signal/signal :gbs-examples-not-loaded]
+;;             [?sig2 :signal/signal :resources-are-loaded]
+;;             ;[(missing? $ ?sig2 :signal/signal :resources-not-loaded)]
+;;             ]
+;;    :exec
+;;    (fn [db [signal-not-loaded signal-resources-are-loaded]]
+;;      (let [sep (scene-manifest)
+;;            scenes-to-add
+;;            (mapv (fn [key asset]
+;;                     {:db/id key
+;;                      :template/name (get asset :name "unnamed")
+;;                      :template/triggers (get asset :triggers []) ; todo: translate triggers
+;;                      :template/actors (get asset :actors []) ; todo: translate actors
+;;                      :template/backgroundUUID (get asset :backgroundId "")
+;;                      :template/collisions (get asset :collisions [])
+;;                      :template/originaluuid (get asset :id "")
+;;                      :template/use-count 0
+;;                      })
+;;                   (iterate dec -3)
+;;                   (get sep :scenes []))
+;;            backgrounds-to-add
+;;            (mapv (fn [key asset]
+;;                     {:db/id key
+;;                      :gbs-input/type :background
+;;                      :gbs-input/uuid (get asset :id "")
+;;                      :gbs-input/name (get asset :name "")
+;;                      :gbs-input/filename (get asset :filename "")
+;;                      :gbs-input/width  (get asset :width 0)
+;;                      :gbs-input/height (get asset :hieght 0)
+;;                      })
+;;                   (iterate dec (- 0 (+ 3 (count (get sep :scenes [])))))
+;;                   (get sep :backgrounds []))
+;;            transaction
+;;            (into []
+;;                  (concat
+;;                   [[:db/retractEntity signal-not-loaded]]
+;;                   scenes-to-add
+;;                   backgrounds-to-add
+;;                   ))]
+;;        ;; (js/console.log sep)
+;;        ;; (js/console.log (get sep :scenes :no-scenes-in-sep))
+;;        ;; (js/console.log scenes-to-add)
+;;        ;; (js/console.log (count scenes-to-add))
+;;        ;; (js/console.log (> (count scenes-to-add) 0))
+;;        ;; (js/console.log transaction)
+;;        ;; (js/console.log [{:db/id -999 :signal/signal :successfully-loaded-scenes}])
+;;        (if (and (> (count scenes-to-add) 0) (> (count backgrounds-to-add) 0))
+;;          transaction
+;;          [{:db/id -999 :signal/signal :failed-to-load-scenes}]
+;;          ;; TODO: handle error if we can't manage to load the template scenes...
+;;          )))})
 
 (defn process-template-actors [actors original-uuid]
   actors)
@@ -272,9 +272,9 @@
 
 (def design-moves
   [
-   move-load-resources-from-disk
+   ;move-load-resources-from-disk
    move-create-background-from-image
-   move-load-gbs-projects-from-disk
+   ;move-load-gbs-projects-from-disk
    move-generate-scene-from-template
    ;move-place-greenfield-scene
    ;move-add-existing-background-to-scene
