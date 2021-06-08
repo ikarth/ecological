@@ -1,5 +1,6 @@
 ## To develop:
 
+Install [node.js](https://nodejs.org/en/).
 Install react via `npm install react react-dom`.
 Install [shadow-cljs](https://github.com/thheller/shadow-cljs) via `npm install --save-dev shadow-cljs` and/or `npm install -g shadow-cljs`.
 
