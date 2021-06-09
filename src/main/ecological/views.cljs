@@ -34,7 +34,21 @@
   []
   [:div
    [:button.btn {:on-click #(run-generator %)} "generate"]]
-  )
+   )
+
+(defn http-post! [path body cb]
+  (let [req (js/XMLHttpRequest.)]
+    (.addEventListener req "load" #(this-as this (cb this)))
+    (.open req "POST" path)
+    (.send req body)))
+
+(defn run-gbs [_]
+  (js/console.log "RUN GBS")
+  (let [gen-state (:gbs-output @app-state)
+        gbs-json (.stringify js/JSON (clj->js gen-state))
+        ]
+    (http-post! "http://localhost:8081/rungbs" gbs-json
+                (fn [whatever] (js/console.log whatever)))))
 
 (defn download-gbs [_]
   (let [data-blob (js/Blob. (.stringify js/JSON (clj->js {:data "test data"})) #js {:type "application/json"})
@@ -46,6 +60,11 @@
     (.click data-link)
     (.removeChild (.-body js/document) data-link)
     ))
+
+(defn run-gbs-btn
+  []
+  [:div
+   [:button.btn {:on-click run-gbs} "run GB Studio"]])
 
 (defn download-btn
   []
@@ -278,6 +297,7 @@
   [:div
    [header]
    [generate-btn]
+   [run-gbs-btn]
    ;[counter]
    [display-gbs]
    [:hr]
