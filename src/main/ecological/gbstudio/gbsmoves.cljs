@@ -1,6 +1,7 @@
 
 (ns ecological.gbstudio.gbsmoves
-   (:require [datascript.core :as d]
+  (:require [datascript.core :as d]
+            ["clingo-wasm" :as clingo]
              ;[ecological.gbstudio.assets :refer [asset-manifest scene-manifest]]
               ))
 
@@ -122,6 +123,18 @@
        :else trigger-to-process))
    triggers)
   [triggers []])
+
+;; (def move-run-clingo
+;;   {:name "run-clingo"
+;;    :query
+;;    '[:find ?clingo-command
+;;      :in $ %
+;;      :where
+;;      [?e :constraint/asp ?clingo-command]]
+;;    :exec
+;;    (fn [db [clingo-command]]
+;;      (. js/clingo run)
+;;      )})
 
 (def move-generate-scene-from-template
   {:name "generate-scene-from-template"

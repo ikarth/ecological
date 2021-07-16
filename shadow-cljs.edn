@@ -42,6 +42,7 @@
         :output-dir "public/js"
         :asset-path "js"
         :modules {:main {:entries [ecological.core]}}
+        ;;:compiler-options {:infer-externs :auto}
         :devtools {:before-load ecological.core/stop 
                    :after-load ecological.core/start
                    ;:before-load-async ecological.build/build-asset-data

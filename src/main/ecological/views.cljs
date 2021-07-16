@@ -1,6 +1,6 @@
 (ns ecological.views
   (:require [ecological.state :refer [app-state]]
-            [ecological.events :refer [increment decrement graph-display run-generator]]
+            [ecological.events :refer [increment decrement graph-display run-generator test-constraint-solving]]
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
@@ -30,7 +30,12 @@
 ; (.stringify js/JSON (:gbs-output @app-state))
 ;(.stringify js/JSON (clj->js {:data "test data"}))
 
- (defn generate-btn
+(defn constraint-solving-test-btn
+  []
+  [:div
+   [:button.btn {:on-click #(test-constraint-solving %)} "test constraint solver"]])
+
+(defn generate-btn
   []
   [:div
    [:button.btn {:on-click #(run-generator %)} "generate"]]
@@ -297,6 +302,7 @@
   [:div
    [header]
    [generate-btn]
+   [constraint-solving-test-btn]
    [run-gbs-btn]
    ;[counter]
    [display-gbs]

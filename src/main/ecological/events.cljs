@@ -1,6 +1,8 @@
 (ns ecological.events
   (:require [ecological.state :refer [app-state]]
-            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database]]))
+            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database]]
+            ["clingo-wasm" :default clingo]
+            ["p5" :default p5]))
 
 (defn increment
   [event]
@@ -13,7 +15,20 @@
   (swap! app-state update-in [:count] dec))
 
 
-
+(defn test-constraint-solving [event]
+  (.preventDefault event)
+  (js/console.log "Running constraint solver...")
+  (let [solution ;(fn [_] "TEST")
+        (fn [data]
+          ;(js/console.log clingo)
+          ;(. clingo run data)
+          (js/p5 5)
+          )
+        ]
+    (js/console.log (solution "a. b :- a."))
+    (swap! app-state update-in [:constraint-test] solution)
+    )
+  )
 
 (defn run-generator [event]
   (.preventDefault event)

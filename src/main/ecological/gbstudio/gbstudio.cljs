@@ -33,6 +33,7 @@
    :background/uuid           {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
    :resource/filename         {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
    :resource/type             {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/keyword
+   :constraint/asp            {:db/cardinality :db.cardinality/one}
    })
 
 (def db-conn (d/create-conn genboy-schema))
