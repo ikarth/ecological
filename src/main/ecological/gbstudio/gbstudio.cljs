@@ -14,6 +14,54 @@
             ))
 
 
+;;; Contents
+;;; ========
+;;; gbs-basic
+;;; genboy-schema
+;;; db-conn
+;;;
+;;; initialzing
+;;; -----------
+;;; reset-the-database!
+;;; create-gbs-entity
+;;; load-resources
+;;; load-gbs-projects
+;;;
+;;; exporting
+;;; ---------
+;;; export-design-moves
+;;; export-backgrounds
+;;; export-scene
+;;; export-resources
+;;; export-gbs-project
+;;;
+;;; utilities
+;;; ---------
+;;; byte-to-hex
+;;; bytes-to-hex-string
+;;; bytes-to-bools
+;;;
+;;; design move management
+;;; ----------------------
+;;; get-possible-design-move-from-moveset
+;;; get-possible-design-moves
+;;; generate-level-random-heuristic
+;;;
+;;; db management
+;;; -------------
+;;; log-db
+;;;
+;;; overall
+;;; -------
+;;; fetch-database
+;;; fetch-gbs
+;;; fetch-possible-moves
+
+
+
+
+;; gbs-basic is the boilerplate JSON for a GB Studio .proj file. It will probably have to be updated for future versions of GB Studio, though it's been fairly stable.
+
 (def gbs-basic (js->clj (.parse js/JSON "{ \"author\": \"https://github.com/ikarth/ecological\", \"name\": \"Generated Game Boy ROM\", \"_version\": \"2.0.0\", \"scenes\": [], \"backgrounds\": [], \"variables\": [], \"spriteSheets\": [], \"music\": [], \"customEvents\": [], \"palettes\": [], \"settings\": { \"showCollisions\": true, \"showConnections\": true, \"worldScrollX\": 0, \"worldScrollY\": 0, \"zoom\": 100, \"customColorsWhite\": \"E8F8E0\", \"customColorsLight\": \"B0F088\", \"customColorsDark\": \"509878\", \"customColorsBlack\": \"202850\", \"defaultBackgroundPaletteIds\": [ \"default-bg-1\", \"default-bg-2\", \"default-bg-3\", \"default-bg-4\", \"default-bg-5\", \"default-bg-6\" ], \"defaultSpritePaletteId\": \"default-sprite\", \"defaultUIPaletteId\": \"default-ui\", \"startX\": 0, \"startY\": 0, \"startDirection\": 0, \"startSceneId\": 0, \"playerSpriteSheetId\": \"581d34d0-9591-4e6e-a609-1d94f203b0cd\" } }" ) :keywordize-keys true))
 
 ;(.parse js/JSON "{\"author\": \"test\", \"music\": []}")
@@ -38,7 +86,9 @@
 
 (def db-conn (d/create-conn genboy-schema))
 
-(defn reset-the-database! []
+(defn reset-the-database!
+  "For when you want to start over. Returns an empty database that follows the schema."
+  []
   (d/reset-conn! db-conn (d/empty-db genboy-schema))
   (d/transact! db-conn [;; {:db/id -1
                         ;;  :signal/signal :resources-not-loaded}
@@ -48,7 +98,7 @@
 
 
 (defn create-gbs-entity
-  "create a new GBS entity"
+  "Create a new GBS entity. Completely empty, mostly for testing."
   []
   [{:db/id -1 :type "scene"}])
 
@@ -81,6 +131,7 @@
              manifest-transaction))))
 
 (defn load-gbs-projects
+  "Load projects and convert them into a databse format to eventually use to create templates."
   []
   (let [sep (scene-manifest)
            scenes-to-add
@@ -121,6 +172,9 @@
          ;; TODO: handle error if we can't manage to load the template scenes...
          )))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Exporting
 
 (defn export-design-moves []
   (let [elements
@@ -379,3 +433,7 @@
   (generate)
   ;(clj->js (map clj->js (export-gbs-project)))
   (export-gbs-project))
+
+(defn fetch-possible-moves []
+  []
+  )

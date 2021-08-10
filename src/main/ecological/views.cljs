@@ -1,6 +1,6 @@
 (ns ecological.views
   (:require [ecological.state :refer [app-state]]
-            [ecological.events :refer [increment decrement graph-display run-generator test-constraint-solving]]
+            [ecological.events :refer [increment decrement graph-display run-generator]]
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
@@ -27,13 +27,35 @@
    [:button {:disabled true} (get @app-state :count)]
    [:button.btn {:on-click #(increment %)} "+"]])
 
+
+
+
+
+(defn operation-harness
+  "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
+  []
+  [:div.module-box
+   [:div.view-box
+    [:ul
+     [:li "Test Operation"]]]
+   [:div.view-box
+    [:p
+     "Input specification form"]]
+   [:div.view-box
+    [:h3
+     "TODO: Display output here"]]
+   ])
+
+
+
 ; (.stringify js/JSON (:gbs-output @app-state))
 ;(.stringify js/JSON (clj->js {:data "test data"}))
 
 (defn constraint-solving-test-btn
   []
   [:div
-   [:button.btn {:on-click #(test-constraint-solving %)} "test constraint solver"]])
+   ;[:button.btn {:on-click #(test-constraint-solving %)} "test constraint solver"]
+   ])
 
 (defn generate-btn
   []
@@ -301,6 +323,7 @@
 (defn app []
   [:div
    [header]
+   [operation-harness]
    [generate-btn]
    [constraint-solving-test-btn]
    [run-gbs-btn]

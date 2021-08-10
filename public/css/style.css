@@ -101,3 +101,22 @@ th.jh-key{
  color: #999;
  font-size: small;
 }
+
+.module-box {
+    border: 2px solid #f0f0f5;
+    margin: 0.2em;
+    min-height: 3em;
+    min-width: 4em;
+    background-color: #f3f3ff;
+    border-radius: 1em;
+    text-align: center;
+}
+
+.view-box {
+    width: 31%;
+    display: inline-block;
+    border: 2px solid #ffffff;
+    margin: 0.3%;
+    padding: 0.2%;
+    border-radius: 0.4em;
+}
