@@ -1,6 +1,6 @@
 (ns ecological.events
   (:require [ecological.state :refer [app-state]]
-            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database]]
+            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database fetch-possible-moves]]
             ["clingo-wasm" :default clingo]
             ;; ["p5" :default p5]
             ))
@@ -35,6 +35,7 @@
   (.preventDefault event)
   (swap! app-state update-in [:gbs-output] fetch-gbs)
   (swap! app-state update-in [:data] fetch-database)
+  (swap! app-state update-in [:moves] fetch-possible-moves)
   )
 
 

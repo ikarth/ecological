@@ -120,3 +120,42 @@ th.jh-key{
     padding: 0.2%;
     border-radius: 0.4em;
 }
+
+.selection-list {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 30em;
+}
+.selection-list ul {
+    list-style-type: none;
+    left: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-inline-start: 0;
+    display: block;
+    overflow-x: visible;
+}
+.selection-list li {
+    background-color: #f3f3f3;
+    border-top: 2px solid #f3f3f3;
+    border-bottom: 2px solid #f3f3f3;
+    padding: 0.3em;
+    width: 100%;
+    list-style-type: none;
+    cursor: pointer;
+}
+.selection-list li:nth-child(even) {
+    background-color: #d5d5d5;
+    border-top: 2px solid #d5d5d5;
+    border-bottom: 2px solid #d5d5d5;
+}
+.selection-list li:hover {
+    background-color: #ffbb00;
+    border-top: 2px solid #ddaa00;
+    border-bottom: 2px solid #ddaa00;
+    padding: 0.3em;
+}
+.selection-list li:active {
+    background-color: #ffee99;
+    cursor: progress;
+}

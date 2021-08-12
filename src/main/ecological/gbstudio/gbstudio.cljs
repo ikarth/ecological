@@ -389,6 +389,8 @@
   (dorun
    (for [i (range budget)]
      (let [moves (get-possible-design-move-from-moveset gbs-moves/design-moves)]
+       (if false
+         (cljs.pprint/pprint moves))
        (if false ;; set to true for debugging in the console
          (cljs.pprint/pprint @db))
        (if (empty? moves)
@@ -416,7 +418,7 @@
   (reset-the-database!)
   (d/transact! db-conn (load-resources) nil)
   (d/transact! db-conn (load-gbs-projects) nil)
-  (generate-level-random-heuristic db-conn 128 0)
+  (generate-level-random-heuristic db-conn 8 0)
   )
 
 (comment (reset-the-database!)
@@ -435,5 +437,6 @@
   (export-gbs-project))
 
 (defn fetch-possible-moves []
-  []
-  )
+  (let [moves (get-possible-design-move-from-moveset gbs-moves/design-moves)]
+    ;(cljs.pprint/pprint moves)
+    moves))

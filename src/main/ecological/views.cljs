@@ -35,11 +35,14 @@
   "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
   []
   [:div.module-box
-   [:div.view-box
+   [:div.view-box.selection-list
     [:ul
-     [:li "Test Operation"]]]
+     (for [move (distinct
+                 (map (fn [m]
+                        (:name (:move m))) (:moves @app-state)))] 
+       ^{:key move} [:li move])]]
    [:div.view-box
-    [:p
+    [:p    
      "Input specification form"]]
    [:div.view-box
     [:h3
@@ -333,5 +336,7 @@
    ;; (coll-pen.core/draw (:data @app-state)
    ;;                       {:el-per-page 30 :truncate false })
    (js/console.log (:data @app-state))
-   (.stringify js/JSON (clj->js (:data @app-state)))])
+   (.stringify js/JSON (clj->js (:data @app-state)))
+   (.stringify js/JSON (clj->js (:moves @app-state)))
+   ])
     
