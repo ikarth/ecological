@@ -440,3 +440,7 @@
   (let [moves (get-possible-design-move-from-moveset gbs-moves/design-moves)]
     ;(cljs.pprint/pprint moves)
     moves))
+
+(defn fetch-all-moves []
+  (let [moves gbs-moves/design-moves]
+    moves))

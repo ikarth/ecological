@@ -2,7 +2,7 @@
 (ns ecological.gbstudio.gbsmoves
   (:require [datascript.core :as d]
             ["clingo-wasm" :as clingo]
-             ;[ecological.gbstudio.assets :refer [asset-manifest scene-manifest]]
+            [ecological.gbstudio.assets :refer [asset-manifest scene-manifest]]
               ))
 
 ;; (def move-load-resources-from-disk
@@ -189,6 +189,13 @@
 ;; TODO: populate the database with existing image files
 (def move-create-background-from-image
   {:name "create-background-from-image"
+   :example
+   [{:db/id -1 ;; note that this assumes that this file exists
+     :resource/type :image
+     :resource/filename :none
+     :resource/filepath :none
+     :resource/image-size [0 0]
+     }]
    :query
    '[:find ?image-filename ?r ?image-size
      :in $ %

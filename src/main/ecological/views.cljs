@@ -29,7 +29,17 @@
 
 
 
-
+(defn manual-operation
+  "An interface for manually interacting with design moves."
+  []
+  [:div
+   [:div.view-box.selection-list
+    [:ul
+     (for [move (distinct
+                 (map (fn [m]
+                        (:name m)) (:all-moves @app-state)))] 
+       ^{:key move} [:li move])]]]
+  [:div])
 
 (defn operation-harness
   "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
@@ -39,7 +49,7 @@
     [:ul
      (for [move (distinct
                  (map (fn [m]
-                        (:name (:move m))) (:moves @app-state)))] 
+                        (:name m)) (:all-moves @app-state)))] 
        ^{:key move} [:li move])]]
    [:div.view-box
     [:p    
@@ -326,6 +336,7 @@
 (defn app []
   [:div
    [header]
+   [manual-operation]
    [operation-harness]
    [generate-btn]
    [constraint-solving-test-btn]
