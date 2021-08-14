@@ -8,6 +8,7 @@
          :data (fetch-database)
          :moves (fetch-possible-moves)
          :all-moves (fetch-all-moves)
+         :selected-moves nil
           }))
 
 

@@ -15,6 +15,13 @@
   (.preventDefault event)
   (swap! app-state update-in [:count] dec))
 
+(defn select-move
+  "Makes the given design move be the currently selected one."
+  [event move]
+  (.preventDefault event)
+  (js/console.log "Selecting" (:name move))
+  (swap! app-state assoc-in [:selected-move] move)
+  )
 
 ;; (defn test-constraint-solving [event]
 ;;   (.preventDefault event)

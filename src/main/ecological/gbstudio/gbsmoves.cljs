@@ -138,6 +138,7 @@
 
 (def move-generate-scene-from-template
   {:name "generate-scene-from-template"
+   :comment "Given a GBS-derived template, create a new scene that resembles it."
    :query
    '[:find ?template-id ?name ?bkg-id ?use-count ?collisions ?triggers ?actors ?original-template-uuid
      :in $ %
@@ -189,6 +190,7 @@
 ;; TODO: populate the database with existing image files
 (def move-create-background-from-image
   {:name "create-background-from-image"
+   :comment "Takes an image and turns it into a background that can be used in a Scene."
    :example
    [{:db/id -1 ;; note that this assumes that this file exists
      :resource/type :image

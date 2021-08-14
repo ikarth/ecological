@@ -1,6 +1,6 @@
 (ns ecological.views
   (:require [ecological.state :refer [app-state]]
-            [ecological.events :refer [increment decrement graph-display run-generator]]
+            [ecological.events :refer [increment decrement graph-display run-generator select-move]]
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
@@ -8,6 +8,8 @@
             [clojure.walk]
             [clojure.string]
             [goog.crypt :as crypt]
+            [re-com.core :as rc]
+            [re-com.box :as rc-box]
             ;[clojure.core.matrix :as matrix]
             ))
 
@@ -41,23 +43,79 @@
        ^{:key move} [:li move])]]]
   [:div])
 
+(defn add-unique-key-from-index [data]
+  (for [element (map-indexed vector data)]
+    (with-meta (second element) 
+      {:key (first element)})))
+
+(defn pretty-print-query [query]
+  (pr-str query)
+  ;; (map (fn [qelm]
+  ;;        (cond 
+  ;;              (keyword? qelm)
+  ;;              [:h5.f5 (pr-str qelm)]
+  ;;              :else
+  ;;              (pr-str qelm)               
+  ;;              )
+  ;;        )
+  ;;      query)
+  (add-unique-key-from-index
+   (for [qelm query]
+     (cond
+       (keyword? qelm)
+       [:span.b [:br] (pr-str qelm) " "]
+       (coll? qelm)
+       [:span
+        [:br]
+        "[ "
+        (map (fn [qe] ^{:key (pr-str qe)} [:span (pr-str qe) " "]) qelm)
+        "]"]
+       :else
+       ^{:key (pr-str qelm)} [:span.i " " (pr-str qelm)]))))
+
+;; (def panel-style  (merge (flex-child-style "1")
+                         ;; {:background-color "#fff4f4"
+                          ;; :border           "1px solid lightgray"
+                          ;; :border-radius    "4px"
+                          ;; :padding          "0px"
+                          ;; :overflow         "hidden"}))
 (defn operation-harness
   "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
   []
-  [:div.module-box
-   [:div.view-box.selection-list
-    [:ul
-     (for [move (distinct
-                 (map (fn [m]
-                        (:name m)) (:all-moves @app-state)))] 
-       ^{:key move} [:li move])]]
-   [:div.view-box
-    [:p    
-     "Input specification form"]]
-   [:div.view-box
-    [:h3
-     "TODO: Display output here"]]
-   ])
+  (let [selected-move (:selected-move @app-state)]
+    [:div.dt.dt--fixed
+     [:div.dtc.tc.pa3.pv1.bg-black-10
+      [:ul.list.pl0.ml0.center.mw6.ba.b--light--silver.br2
+       (for [move (:all-moves @app-state)]
+         (if (= (:name selected-move) (:name move))
+           ^{:key (:name move)} [:li.pv2.bg-orange.stripe-dark.hover-bg-gold.active-bg-gold.pointer {:on-click #(select-move % move)} (:name move)]
+           ^{:key (:name move)} [:li.pv2.hover-bg-gold.active-bg-gold.pointer {:on-click #(select-move % move)} (:name move)]
+           ))]]
+     
+     [:div.dtc.tc.pa3.pv2.bg-black-05.pa
+      [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
+      [:p.tl-l (if selected-move (:comment selected-move) "")
+       ]
+      ]
+     [:div.dtc.tc.pv4.bg-black-10
+      [:p
+       (if selected-move (pretty-print-query (:query selected-move)) "Query")
+       ]]
+     ])
+  ;; [rc/h-box :src (rc/at)
+  ;;  :gap "100px"
+  ;;  ;:style panel-style
+  ;;  :children [[rc/box :child
+  ;;              [rc/selection-list
+  ;;               :choices
+  ;;               (for [move (:all-moves @app-state)]
+  ;;                 {:label (:name move) :id-fn #(:name %) :on-change #(select-move % (:name move)) })
+  ;;               :parts []]
+  ;;              :size "auto"]
+  ;;             [rc/box :child "MoveDetails" :size "auto"]
+  ;;             [rc/box :child "MoveData"    :size "auto"]]
+  ;;  ]
+  )
 
 
 
@@ -347,6 +405,7 @@
    ;; (coll-pen.core/draw (:data @app-state)
    ;;                       {:el-per-page 30 :truncate false })
    (js/console.log (:data @app-state))
+   (js/console.log (:selected-move @app-state))
    (.stringify js/JSON (clj->js (:data @app-state)))
    (.stringify js/JSON (clj->js (:moves @app-state)))
    ])

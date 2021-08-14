@@ -12,6 +12,7 @@
     "p5": "^1.4.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
+    "tailwindcss": "^2.2.7",
     "wavefunctioncollapse": "^2.1.0",
     "ws": ">=5.2.3"
   },

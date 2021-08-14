@@ -159,3 +159,22 @@ th.jh-key{
     background-color: #ffee99;
     cursor: progress;
 }
+
+.hover-bg-gold.stripe-dark:nth-child(odd):hover {
+    background-color: #f0a700;
+}
+.hover-bg-gold:focus {
+    background-color: #e09700;
+}
+.hover-bg-gold:focus.stripe-dark:nth-child(odd) {
+    background-color: #e09700;
+}
+.active-bg-gold:active {
+    background-color: #fff0c0;
+}
+.active-bg-gold:active.stripe-dark:nth-child(odd) {
+    background-color: #fff0c0;
+}
+.bg-orange.stripe-dark:nth-child(odd) {
+    background-color: #ff6300;
+}
