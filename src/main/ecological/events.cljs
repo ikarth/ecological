@@ -21,6 +21,7 @@
   (.preventDefault event)
   (js/console.log "Selecting" (:name move))
   (swap! app-state assoc-in [:selected-move] move)
+  (swap! app-state update-in [:possible-moves] fetch-possible-moves)
   )
 
 ;; (defn test-constraint-solving [event]
@@ -42,7 +43,7 @@
   (.preventDefault event)
   (swap! app-state update-in [:gbs-output] fetch-gbs)
   (swap! app-state update-in [:data] fetch-database)
-  (swap! app-state update-in [:moves] fetch-possible-moves)
+  (swap! app-state update-in [:possible-moves] fetch-possible-moves)
   )
 
 

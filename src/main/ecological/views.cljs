@@ -73,6 +73,10 @@
        :else
        ^{:key (pr-str qelm)} [:span.i " " (pr-str qelm)]))))
 
+(defn list-move-bindings [design-move]
+  "bindings"
+  )
+
 ;; (def panel-style  (merge (flex-child-style "1")
                          ;; {:background-color "#fff4f4"
                           ;; :border           "1px solid lightgray"
@@ -83,41 +87,45 @@
   "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
   []
   (let [selected-move (:selected-move @app-state)]
-    [:div.dt.dt--fixed
-     [:div.dtc.tc.pa3.pv1.bg-black-10
-      [:ul.list.pl0.ml0.center.mw6.ba.b--light--silver.br2
-       (for [move (:all-moves @app-state)]
-         (if (= (:name selected-move) (:name move))
-           ^{:key (:name move)} [:li.pv2.bg-orange.stripe-dark.hover-bg-gold.active-bg-gold.pointer {:on-click #(select-move % move)} (:name move)]
-           ^{:key (:name move)} [:li.pv2.hover-bg-gold.active-bg-gold.pointer {:on-click #(select-move % move)} (:name move)]
-           ))]]
-     
-     [:div.dtc.tc.pa3.pv2.bg-black-05.pa
-      [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
-      [:p.tl-l (if selected-move (:comment selected-move) "")
-       ]
-      ]
-     [:div.dtc.tc.pv4.bg-black-10
-      [:p
-       (if selected-move (pretty-print-query (:query selected-move)) "Query")
-       ]]
-     ])
-  ;; [rc/h-box :src (rc/at)
-  ;;  :gap "100px"
-  ;;  ;:style panel-style
-  ;;  :children [[rc/box :child
-  ;;              [rc/selection-list
-  ;;               :choices
-  ;;               (for [move (:all-moves @app-state)]
-  ;;                 {:label (:name move) :id-fn #(:name %) :on-change #(select-move % (:name move)) })
-  ;;               :parts []]
-  ;;              :size "auto"]
-  ;;             [rc/box :child "MoveDetails" :size "auto"]
-  ;;             [rc/box :child "MoveData"    :size "auto"]]
-  ;;  ]
-  )
-
-
+    [:div
+     [:div.dt.dt--fixed
+      [:div.dtc.tc.pa3.pv1.bg-black-10
+       [:ul.list.pl0.ml0.center.mw6.ba.b--light--silver.br2
+        (for [move (:all-moves @app-state)]
+          (if (= (:name selected-move) (:name move))
+            ^{:key (:name move)} [:li.pv2.bg-orange.stripe-dark.hover-bg-gold.active-bg-gold.pointer {:on-click #(select-move % move)} (:name move)]
+            ^{:key (:name move)} [:li.pv2.hover-bg-gold.active-bg-gold.pointer {:on-click #(select-move % move)} (:name move)]
+            ))]]
+      
+      [:div.dtc.tc.pa3.pv2.bg-black-05.pa
+       [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
+       [:p.tl-l
+        (if selected-move (:comment selected-move) "")]
+       [:p.tl-l
+        (if selected-move (list-move-bindings selected-move) "")]]
+      [:div.dtc.tc.pv4.bg-black-10
+       [:p
+        (if selected-move (pretty-print-query (:query selected-move)) "Query")]]]
+     [:div.dt.dt--fixed
+      [:div.dtc.tc.pv4.bg-black-05
+       [:div.h5.overflow-auto
+         (if selected-move
+           (let [move-name   (:name selected-move)
+                 valid-moves (filter #(= (get (get % :move) :name) move-name) (:possible-moves @app-state))
+                 ]
+            [:div.ph3
+             (if (< 0 (count valid-moves))
+               [:ul.list.pl0.ml0.center.mw6.ba.b--list--silver.br2
+                (for [vmove (map-indexed vector valid-moves)]
+                  ^{:key (first vmove)}
+                  [(if (odd? (first vmove))
+                     :li.pointer.hover-bg-gold.active-bg-gold.pv1.bg-black-05
+                     :li.pointer.hover-bg-gold.active-bg-gold.pv1.bg-black-10)
+                   [:span.f7 (str (get-in (second vmove) [:move :name]))]
+                   [:br]
+                   (str (get (second vmove) :vars))])]
+               "no matching possible choices")])
+           "no move selected")]]]]))
 
 ; (.stringify js/JSON (:gbs-output @app-state))
 ;(.stringify js/JSON (clj->js {:data "test data"}))
@@ -407,6 +415,9 @@
    (js/console.log (:data @app-state))
    (js/console.log (:selected-move @app-state))
    (.stringify js/JSON (clj->js (:data @app-state)))
-   (.stringify js/JSON (clj->js (:moves @app-state)))
+   [:hr]
+   (.stringify js/JSON (clj->js (:possible-moves @app-state)))
+   [:br]
+   [:hr]
    ])
     

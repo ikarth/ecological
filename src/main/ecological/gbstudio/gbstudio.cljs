@@ -346,6 +346,7 @@
   "Return a list of all possible design moves for the provides `db`,
   as selected from the provided `design-moves` collection."
   [design-moves]
+  (js/console.log design-moves)
   (apply concat
    (map
     (fn [mov]
@@ -438,7 +439,12 @@
 
 (defn fetch-possible-moves []
   (let [moves (get-possible-design-move-from-moveset gbs-moves/design-moves)]
-    ;(cljs.pprint/pprint moves)
+    ;;(cljs.pprint/pprint moves)
+    (js/console.log moves)
+    moves))
+
+(defn fetch-some-moves []
+  (let [moves (get-possible-design-moves)]
     moves))
 
 (defn fetch-all-moves []
