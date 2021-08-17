@@ -26,9 +26,9 @@
   (js/console.log "Starting...")
                                         ;(spit (str "./test_start.txt") "Test text.")
   (let []
-    ;; (events/init-database nil)
     (assets/load-manifest)
     (assets/load-scene-sources)
+    (events/update-database-view nil)
     (r/render [views/app]
               (.getElementById js/document "app"))))
 

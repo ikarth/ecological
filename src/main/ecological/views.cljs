@@ -1,6 +1,13 @@
 (ns ecological.views
   (:require [ecological.state :refer [app-state]]
-            [ecological.events :refer [increment decrement graph-display run-generator select-move init-database]]
+            [ecological.events :refer [increment
+                                       decrement
+                                       graph-display
+                                       run-generator
+                                       select-move
+                                       select-bound-move
+                                       perform-bound-move
+                                       init-database]]
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
@@ -80,7 +87,7 @@
        ^{:key (pr-str qelm)} [:span.i " " (pr-str qelm)]))))
 
 (defn list-move-bindings [design-move]
-  "bindings"
+  "[bindings to be described here]"
   )
 
 ;; (def panel-style  (merge (flex-child-style "1")
@@ -92,7 +99,8 @@
 (defn operation-harness
   "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
   []
-  (let [selected-move (:selected-move @app-state)]
+  (let [selected-move (:selected-move @app-state)
+        bound-move (:selected-bound-move @app-state)]
     [:div
      [:div.dt.dt--fixed
       [:div.dtc.tc.pa3.pv1.bg-black-10
@@ -127,22 +135,27 @@
          (if selected-move
            (let [move-name   (:name selected-move)
                  valid-moves (filter #(= (get (get % :move) :name) move-name) (:possible-moves @app-state))
-                 ]
+                ]
             [:div.ph3
              (if (< 0 (count valid-moves))
                [:ul.list.pl0.ml0.center.mw6.ba.b--list--silver.br2
                 (for [vmove (map-indexed vector valid-moves)]
                   ^{:key (first vmove)}
-                  [(if (odd? (first vmove))
-                     :li.pointer.hover-bg-gold.active-bg-gold.pv1.bg-black-05
-                     :li.pointer.hover-bg-gold.active-bg-gold.pv1.bg-black-10)
+                  [(if (and
+                        (= (first vmove) (first bound-move))
+                        (= (get-in (second vmove) [:move :name]) (get-in (second bound-move) [:move :name])))
+                     :li.pointer.hover-bg-yellow.active-bg-gold.pv1.bg-orange
+                     (if (odd? (first vmove))
+                       :li.pointer.hover-bg-gold.active-bg-gold.pv1.bg-black-05
+                       :li.pointer.hover-bg-gold.active-bg-gold.pv1.bg-black-10))
+                   {:on-click #(select-bound-move % vmove)}
                    [:span.f7 (str (get-in (second vmove) [:move :name]))]
                    [:br]
                    (truncate-if-too-long (str (get (second vmove) :vars)) 61)])]
                "no matching possible choices")])
            "no move selected")]]
       [:div.dtc.tc.pv4.bg-black-10
-        [:button "Perform Move"]
+        [:button.btn.grow {:on-click #(perform-bound-move %)} "Perform Move"]
        ]
       [:div.dtc.tc.pv4.bg-black-05
 
@@ -159,8 +172,9 @@
 (defn generate-btn
   []
   [:div
-   [:button.btn.m2 {:on-click #(run-generator %)} "generate"]
-   [:button.btn.m2 {:on-click #(init-database %)} "empty project"]]
+   [:button.btn.ma2.grow {:on-click #(init-database %)} "empty project"]
+   [:button.btn.ma2.grow {:on-click #(run-generator %)} "generate"]]
+   
    )
 
 (defn http-post! [path body cb]
@@ -191,12 +205,12 @@
 (defn run-gbs-btn
   []
   [:div
-   [:button.btn {:on-click run-gbs} "run GB Studio"]])
+   [:button.btn.ma2.grow {:on-click run-gbs} "run GB Studio"]])
 
 (defn download-btn
   []
   [:div
-   [:button.btn {:on-click download-gbs} "download"]])
+   [:button.btn.grow {:on-click download-gbs} "download"]])
 ;; (defn gbs-graph []
 ;;   (let [flowgraph-data (get @app-state :flowgraph-demo)]
 ;;     [flowgraph flowgraph-data
@@ -417,19 +431,19 @@
 
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
-    [:div
-     ;[graph-display-button]
-     ;[:div#artifact-graph {:style {:min-height "100px"}}]
-     [:hr]
-     
-     (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
-     (comment
-       [:hr]
-       (coll-pen.core/draw (convert-data-for-display gen-state)
-                           {:el-per-page 30 :truncate false })
-       [:hr]
-       (.stringify js/JSON (clj->js gen-state)))
-     ])
+    [:div.self-center.content-center.items-center.justify-center.flex.bg-lightest-blue
+     [:div.mw9.ma2
+                                        ;[graph-display-button]
+                                        ;[:div#artifact-graph {:style {:min-height "100px"}}]
+      ;[:hr]
+      (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
+      (comment
+        [:hr]
+        (coll-pen.core/draw (convert-data-for-display gen-state)
+                            {:el-per-page 30 :truncate false })
+        [:hr]
+        (.stringify js/JSON (clj->js gen-state)))
+      ]])
   
    ;; (with-out-str) (cljs.pprint/pprint)
    ;; (clj->js (:gbs-output @app-state))

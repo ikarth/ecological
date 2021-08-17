@@ -4,7 +4,9 @@
                                                   fetch-generated-project!
                                                   fetch-database
                                                   fetch-possible-moves
-                                                  make-empty-project]]
+                                                  make-empty-project
+                                                  execute-one-design-move!
+                                                  ]]
             ["clingo-wasm" :default clingo]))
 
 (defn increment
@@ -26,6 +28,12 @@
     (swap! app-state update-in [:data] fetch-database)
     (swap! app-state update-in [:possible-moves] fetch-possible-moves)))
 
+(defn update-database-view [event]
+  (if (some? event)
+    (.preventDefault event))
+  (swap! app-state update-in [:gbs-output] fetch-gbs)
+  (swap! app-state update-in [:data] fetch-database)
+  (swap! app-state update-in [:possible-moves] fetch-possible-moves))
 
 (defn select-move
   "Makes the given design move be the currently selected one."
@@ -33,6 +41,21 @@
   (.preventDefault event)
   (js/console.log "Selecting" (:name move))
   (swap! app-state assoc-in [:selected-move] move)
+  )
+
+(defn select-bound-move
+  [event move]
+  (.preventDefault event)
+  (js/console.log "Selecting" move)
+  (swap! app-state assoc-in [:selected-bound-move] move)
+  )
+
+(defn perform-bound-move
+  [event]
+  (js/console.log (:selected-bound-move @app-state))
+  ;; TODO
+  (execute-one-design-move! (second (:selected-bound-move @app-state)))
+  (update-database-view nil)
   )
 
 (defn run-generator [event]

@@ -387,6 +387,19 @@
   (d/q '[:find ?any ?obj :where [?obj :type ?any]] @db)) ;todo: log to console...
 
 
+(defn execute-one-design-move!
+  [design-move]
+  (let [db db-conn
+        current-design-move-count 0]
+    (if-let [exec-func (get-in design-move [:move :exec] false)]
+      (let [move-name (get-in design-move [:move :name])
+            result (concat
+                    (exec-func db (:vars design-move))
+                    [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
+                      :design/move-count current-design-move-count ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
+                      :design/move-record move-name
+                      :design/move-parameters (get design-move :vars [])}])]
+        (d/transact! db result nil)))))
 
 ;; todo: implement other generation heuristics.
 (defn generate-level-random-heuristic
