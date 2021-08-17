@@ -1,9 +1,13 @@
 (ns ecological.events
   (:require [ecological.state :refer [app-state]]
-            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database fetch-possible-moves]]
-            ["clingo-wasm" :default clingo]
-            ;; ["p5" :default p5]
-            ))
+            [ecological.gbstudio.gbstudio :refer [fetch-gbs
+                                                  fetch-generated-project!
+                                                  fetch-database
+                                                  fetch-possible-moves
+                                                  make-empty-project
+                                                  execute-one-design-move!
+                                                  ]]
+            ["clingo-wasm" :default clingo]))
 
 (defn increment
   [event]
@@ -15,29 +19,73 @@
   (.preventDefault event)
   (swap! app-state update-in [:count] dec))
 
+(defn init-database [event]
+  (if (some? event)
+    (.preventDefault event))
+  (let []
+    (make-empty-project)
+    (swap! app-state update-in [:gbs-output] fetch-gbs)
+    (swap! app-state update-in [:data] fetch-database)
+    (swap! app-state update-in [:possible-moves] fetch-possible-moves)))
 
-;; (defn test-constraint-solving [event]
-;;   (.preventDefault event)
-;;   (js/console.log "Running constraint solver...")
-;;   (let [solution ;(fn [_] "TEST")
-;;         (fn [data]
-;;           ;(js/console.log clingo)
-;;           ;(. clingo run data)
-;;           (js/p5 5)
-;;           )
-;;         ]
-;;     (js/console.log (solution "a. b :- a."))
-;;     (swap! app-state update-in [:constraint-test] solution)
-;;     )
-;;   )
+(defn update-database-view [event]
+  (if (some? event)
+    (.preventDefault event))
+  (swap! app-state update-in [:gbs-output] fetch-gbs)
+  (swap! app-state update-in [:data] fetch-database)
+  (swap! app-state update-in [:possible-moves] fetch-possible-moves))
+
+(defn select-move
+  "Makes the given design move be the currently selected one."
+  [event move]
+  (.preventDefault event)
+  (js/console.log "Selecting" (:name move))
+  (swap! app-state assoc-in [:selected-move] move)
+  )
+
+(defn select-bound-move
+  [event move]
+  (.preventDefault event)
+  (js/console.log "Selecting" move)
+  (swap! app-state assoc-in [:selected-bound-move] move)
+  )
+
+(defn select-random-bindings
+  []
+  (swap! app-state update-in [:possible-moves] fetch-possible-moves)
+  (if (:selected-move @app-state)
+    (let [valid-moves (:possible-moves @app-state)
+          selected-move-name (get-in (:selected-move @app-state) [:name])
+          possible-moves (filter #(= (get-in % [:move :name]) selected-move-name) valid-moves)
+          chosen-move (rand-nth possible-moves)]
+      (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
+      true)
+    false))
+
+(defn perform-bound-move
+  [event]
+  (if (some? event)
+    (.preventDefault event))
+  (js/console.log (:selected-bound-move @app-state))
+  ;; TODO
+  (execute-one-design-move! (second (:selected-bound-move @app-state)))
+  (update-database-view nil))
+
+(defn perform-random-move
+  [event]
+  (if (some? event)
+    (.preventDefault event))
+  (let [valid-moves (:possible-moves @app-state)
+        chosen-move (rand-nth valid-moves)]
+    (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
+    (perform-bound-move nil)))
 
 (defn run-generator [event]
   (.preventDefault event)
-  (swap! app-state update-in [:gbs-output] fetch-gbs)
+  (swap! app-state update-in [:gbs-output] fetch-generated-project!)
   (swap! app-state update-in [:data] fetch-database)
-  (swap! app-state update-in [:moves] fetch-possible-moves)
+  (swap! app-state update-in [:possible-moves] fetch-possible-moves)
   )
-
 
 
 

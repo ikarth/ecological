@@ -1,12 +1,14 @@
 (ns ecological.state
   (:require [reagent.core :refer [atom]]
-            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database fetch-possible-moves]]))
+            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database fetch-possible-moves fetch-all-moves]]))
 
 (defonce app-state
   (atom {:count 0
          :gbs-output (fetch-gbs)
          :data (fetch-database)
-         :moves (fetch-possible-moves)
+         :possible-moves (fetch-possible-moves)
+         :all-moves (fetch-all-moves)
+         :selected-moves nil
           }))
 
 

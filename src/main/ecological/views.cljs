@@ -1,6 +1,15 @@
 (ns ecological.views
   (:require [ecological.state :refer [app-state]]
-            [ecological.events :refer [increment decrement graph-display run-generator]]
+            [ecological.events :refer [increment
+                                       decrement
+                                       graph-display
+                                       run-generator
+                                       select-move
+                                       select-bound-move
+                                       perform-bound-move
+                                       perform-random-move
+                                       select-random-bindings
+                                       init-database]]
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
@@ -8,6 +17,8 @@
             [clojure.walk]
             [clojure.string]
             [goog.crypt :as crypt]
+            [re-com.core :as rc]
+            [re-com.box :as rc-box]
             ;[clojure.core.matrix :as matrix]
             ))
 
@@ -27,32 +38,143 @@
    [:button {:disabled true} (get @app-state :count)]
    [:button.btn {:on-click #(increment %)} "+"]])
 
+(defn truncate-if-too-long
+  "Return "
+  [to-truncate max-length]     
+  (let [trunc (clojure.string/join "" to-truncate)]
+    (if (< (count trunc) max-length)
+      trunc
+      (concat "" (subs trunc 0 (min (count trunc) max-length)) "..." ))))
 
-
-
-
-(defn operation-harness
-  "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
+(defn manual-operation
+  "An interface for manually interacting with design moves."
   []
-  [:div.module-box
+  [:div
    [:div.view-box.selection-list
     [:ul
      (for [move (distinct
                  (map (fn [m]
-                        (:name (:move m))) (:moves @app-state)))] 
-       ^{:key move} [:li move])]]
-   [:div.view-box
-    [:p    
-     "Input specification form"]]
-   [:div.view-box
-    [:h3
-     "TODO: Display output here"]]
-   ])
+                        (:name m)) (:all-moves @app-state)))] 
+       ^{:key move} [:li move])]]]
+  [:div])
+
+(defn add-unique-key-from-index [data]
+  (for [element (map-indexed vector data)]
+    (with-meta (second element) 
+      {:key (first element)})))
+
+(defn pretty-print-query [query]
+  (pr-str query)
+  ;; (map (fn [qelm]
+  ;;        (cond 
+  ;;              (keyword? qelm)
+  ;;              [:h5.f5 (pr-str qelm)]
+  ;;              :else
+  ;;              (pr-str qelm)               
+  ;;              )
+  ;;        )
+  ;;      query)
+  (add-unique-key-from-index
+   (for [qelm query]
+     (cond
+       (keyword? qelm)
+       [:span.b [:br] (pr-str qelm) " "]
+       (coll? qelm)
+       [:span
+        [:br]
+        "[ "
+        (map (fn [qe] ^{:key (pr-str qe)} [:span (pr-str qe) " "]) qelm)
+        "]"]
+       :else
+       ^{:key (pr-str qelm)} [:span.i " " (pr-str qelm)]))))
+
+(defn list-move-bindings [design-move]
+  "[bindings to be described here]"
+  )
+
+;; (def panel-style  (merge (flex-child-style "1")
+                         ;; {:background-color "#fff4f4"
+                          ;; :border           "1px solid lightgray"
+                          ;; :border-radius    "4px"
+                          ;; :padding          "0px"
+;; :overflow         "hidden"}))
+
+(defn valid-move-count [selected-move poss-moves]
+  (let [move-name   (:name selected-move)
+        valid-moves (filter #(= (get (get % :move) :name) move-name) poss-moves)]
+    (count valid-moves)))
+
+(defn operation-harness
+  "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
+  []
+  (let [selected-move (:selected-move @app-state)
+        bound-move (:selected-bound-move @app-state)
+        possible-moves (:possible-moves @app-state)]
+    [:div
+     [:div.dt.dt--fixed
+      [:div.dtc.tc.pa3.pv1.bg-black-10
+       [:ul.list.pl0.ml0.center.mw6.ba.b--light--silver.br2
+        (for [vecmove (map-indexed vector (:all-moves @app-state))]
+          (let [move (second vecmove)
+                move-index (first vecmove)]
+            (let [move-li-key
+                  (cond
+                    (= (:name selected-move) (:name move))
+                    :li.pv2.pointer.hover-bg-yellow.active-bg-gold.bg-orange
+                    (odd? move-index)
+                    :li.pv2.pointer.hover-bg-gold.bg-black-10
+                    :else
+                    :li.pv2.pointer.hover-bg-gold.bg-black-05
+                    )]
+              ^{:key (:name move)} [move-li-key {:on-click #(select-move % move)} ()(:name move) " (" (valid-move-count move possible-moves) ")"]
+              
+              )))]]      
+      [:div.dtc.tc.pa3.pv2.bg-black-05.pa
+       [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
+       [:p.tl-l
+        (if selected-move (:comment selected-move) "")]
+       [:p.tl-l
+        (if selected-move (list-move-bindings selected-move) "")]]
+      [:div.dtc.tc.pv4.bg-black-10
+       [:p
+        (if selected-move (pretty-print-query (:query selected-move)) "Query")]]]
+     [:div.dt.dt--fixed
+      [:div.dtc.tc.pv4.bg-black-05
+       [:div.h5.overflow-auto
+         (if selected-move
+           (let [move-name   (:name selected-move)
+                 valid-moves (filter #(= (get (get % :move) :name) move-name) possible-moves)
+                ]
+            [:div.ph3
+             (if (< 0 (count valid-moves))
+               [:ul.list.pl0.ml0.center.mw6.ba.b--list--silver.br2
+                (for [vmove (map-indexed vector valid-moves)]
+                  ^{:key (first vmove)}
+                  [(if (and
+                        (= (first vmove) (first bound-move))
+                        (= (get-in (second vmove) [:move :name]) (get-in (second bound-move) [:move :name])))
+                     :li.pointer.hover-bg-yellow.active-bg-gold.pv1.bg-orange
+                     (if (odd? (first vmove))
+                       :li.pointer.hover-bg-gold.active-bg-gold.pv1.bg-black-05
+                       :li.pointer.hover-bg-gold.active-bg-gold.pv1.bg-black-10))
+                   {:on-click #(select-bound-move % vmove)}
+                   [:span.f7 (str (get-in (second vmove) [:move :name]))]
+                   [:br]
+                   (truncate-if-too-long (str (get (second vmove) :vars)) 61)])]
+               "no matching possible choices")])
+           "no move selected")]]
+      [:div.dtc.tc.pv4.bg-black-10
+       [:button.btn.grow.ma2 {:on-click #(perform-random-move %)} "Perform random design move" ]
+       [:button.btn.grow.ma2 {:on-click #(perform-bound-move %)} "Perform selected move with selected bindings)"]
+       [:button.btn.grow.ma2 {:on-click #(if (select-random-bindings)
+                                           (perform-bound-move %))}
+        "Perform Selected Move (random bindings)"]
+       ]
+      [:div.dtc.tc.pv4.bg-black-05
+
+       ]]]))
 
 
-
-; (.stringify js/JSON (:gbs-output @app-state))
-;(.stringify js/JSON (clj->js {:data "test data"}))
 
 (defn constraint-solving-test-btn
   []
@@ -63,7 +185,9 @@
 (defn generate-btn
   []
   [:div
-   [:button.btn {:on-click #(run-generator %)} "generate"]]
+   [:button.btn.ma2.grow.bg-green.white.bold.hover-bg-gold {:on-click #(init-database %)} "start empty project"]
+   [:button.btn.ma2.grow.bg-light-yellow.hover-bg-gold {:on-click #(run-generator %)} "generate complete project"]]
+   
    )
 
 (defn http-post! [path body cb]
@@ -94,12 +218,12 @@
 (defn run-gbs-btn
   []
   [:div
-   [:button.btn {:on-click run-gbs} "run GB Studio"]])
+   [:button.btn.ma2.grow {:on-click run-gbs} "run GB Studio"]])
 
 (defn download-btn
   []
   [:div
-   [:button.btn {:on-click download-gbs} "download"]])
+   [:button.btn.grow {:on-click download-gbs} "download"]])
 ;; (defn gbs-graph []
 ;;   (let [flowgraph-data (get @app-state :flowgraph-demo)]
 ;;     [flowgraph flowgraph-data
@@ -223,6 +347,20 @@
          (str c-byte " -> offset: " c-offset " -> mask:" c-mask " -> val:" c-val)
          (> c-val 0))))))
 
+(defn vector-render-bits-viz
+  "Given a vector of GBS collision data, turn it into a visualization"
+  [data-segments]
+  (let [height (nth data-segments 1)
+        width (nth data-segments 0)
+        just-data (nth data-segments 2)
+        image-path (nth data-segments 3)
+        bits (into []
+                   (flatten (mapv hex-string-to-byte
+                                  (mapv clojure.string/join (partition 2 just-data)))))
+        draw-index (range (* width height))]
+    [:div]
+    ))
+
 (defn render-bits-viz [data]
   (let [data-segments (clojure.string/split data #"\|")]
     ;;(js/console.log data-segments)
@@ -233,12 +371,9 @@
             image-path (nth data-segments 3)
             bits (into [] (flatten (mapv hex-string-to-byte (mapv clojure.string/join (partition 2 just-data)))))
             draw-index (range (* width height))]
-        ;(js/console.log bits)
-        ;;(js/console.log image-path)
-        ;"http://localhost:8020/collisions-viz%7C20%7C18%7Ce10000fe0770e000030c30cf81f118108903913030000f02e0207ee0e30302ff30f00780ff0ff8ffffffffffff%7C./data/assets/backgrounds/Forest_01_2c.png"
+       
         [:div
-        ;; [:p (str image-path)]
-         ;;[:p (clojure.string/join " " bits)]
+        
          [:svg {:style {:background "pink" :width (str (* 8 width) "px") :height (str (* 8 height) "px")}}
           [:image {:href image-path :width (str (* 8 width) "px") :height (str (* 8 height) "px") :preserveAspectRatio "xMinYMin" :x 0 :y 0 }]
           (->> draw-index
@@ -290,7 +425,9 @@
               (or (clojure.string/includes? data "./")
                   (clojure.string/includes? data ".\\")))
          [:div [:img {:src data}]]
-          :else data)
+         :else data)
+       (and (vector? data) (= (first data) :collisions-viz))
+       (vector-render-bits-viz (rest data))       
        :else data)
      )
    hic))
@@ -307,16 +444,19 @@
 
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
-    [:div
-     ;[graph-display-button]
-     ;[:div#artifact-graph {:style {:min-height "100px"}}]
-     [:hr]
-     (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
-     [:hr]
-     (coll-pen.core/draw (convert-data-for-display gen-state)
-                         {:el-per-page 30 :truncate false })
-     [:hr]
-     (.stringify js/JSON (clj->js gen-state))])
+    [:div.self-center.content-center.items-center.justify-center.flex.bg-lightest-blue
+     [:div.mw9.ma2
+                                        ;[graph-display-button]
+                                        ;[:div#artifact-graph {:style {:min-height "100px"}}]
+      ;[:hr]
+      (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
+      (comment
+        [:hr]
+        (coll-pen.core/draw (convert-data-for-display gen-state)
+                            {:el-per-page 30 :truncate false })
+        [:hr]
+        (.stringify js/JSON (clj->js gen-state)))
+      ]])
   
    ;; (with-out-str) (cljs.pprint/pprint)
    ;; (clj->js (:gbs-output @app-state))
@@ -326,17 +466,22 @@
 (defn app []
   [:div
    [header]
+   [manual-operation]
    [operation-harness]
    [generate-btn]
    [constraint-solving-test-btn]
-   [run-gbs-btn]
+   ;[run-gbs-btn]
    ;[counter]
    [display-gbs]
    [:hr]
    ;; (coll-pen.core/draw (:data @app-state)
    ;;                       {:el-per-page 30 :truncate false })
-   (js/console.log (:data @app-state))
+   ;(js/console.log (:data @app-state))
+   ;(js/console.log (:selected-move @app-state))
    (.stringify js/JSON (clj->js (:data @app-state)))
-   (.stringify js/JSON (clj->js (:moves @app-state)))
+   [:hr]
+   (.stringify js/JSON (clj->js (:possible-moves @app-state)))
+   [:br]
+   [:hr]
    ])
     

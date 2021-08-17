@@ -2,6 +2,7 @@
   (:require [reagent.dom :as r]
             [ecological.views :as views]
             [ecological.gbstudio.assets :as assets]
+            [ecological.events :as events]
             [shadow.resource :as resource]))
 
 (js/console.log "Ecological Generator, 2021")
@@ -24,13 +25,16 @@
 (defn start []
   (js/console.log "Starting...")
                                         ;(spit (str "./test_start.txt") "Test text.")
-  (assets/load-manifest)
-  (assets/load-scene-sources)
-  (r/render [views/app]
-            (.getElementById js/document "app")))
+  (let []
+    (assets/load-manifest)
+    (assets/load-scene-sources)
+    (events/update-database-view nil)
+    (r/render [views/app]
+              (.getElementById js/document "app"))))
 
 ; This is the `ecological.core.init()` that's triggered in the html
 (defn ^:export init []
+  
   (start))
 
 ;; (defn ^:export main
