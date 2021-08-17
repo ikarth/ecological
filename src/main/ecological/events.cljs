@@ -1,6 +1,6 @@
 (ns ecological.events
   (:require [ecological.state :refer [app-state]]
-            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database fetch-possible-moves]]
+            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database fetch-possible-moves initialize-database!]]
             ["clingo-wasm" :default clingo]
             ;; ["p5" :default p5]
             ))
@@ -46,7 +46,14 @@
   (swap! app-state update-in [:possible-moves] fetch-possible-moves)
   )
 
-
+(defn init-database [event]
+  (if (some? event)
+    (.preventDefault event))
+  (let []
+    (initialize-database!)
+    (swap! app-state update-in [:gbs-output] fetch-gbs)
+    (swap! app-state update-in [:data] fetch-database)
+    (swap! app-state update-in [:possible-moves] fetch-possible-moves)))
 
 
 ;; from https://blog.klipse.tech/visualization/2021/02/16/graph-playground-cytoscape.html

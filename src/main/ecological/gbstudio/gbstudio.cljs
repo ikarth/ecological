@@ -338,7 +338,7 @@
   []
   (-> gbs-basic
       (update :z_design-moves export-design-moves)
-      ;;(update :resources export-resources)
+      (update :resources export-resources)
       (update :backgrounds export-backgrounds)
       (update :scenes export-scenes)))
 
@@ -346,7 +346,6 @@
   "Return a list of all possible design moves for the provides `db`,
   as selected from the provided `design-moves` collection."
   [design-moves]
-  (js/console.log design-moves)
   (apply concat
    (map
     (fn [mov]
@@ -431,6 +430,17 @@
 (defn fetch-database []
   @db-conn
   )
+
+(defn initialize-database!
+  "If the database isn't initialized yet, make a database with just the resources loaded."
+  []
+  (if true
+    [(reset-the-database!)
+     (d/transact! db-conn (load-resources) nil)
+     (d/transact! db-conn (load-gbs-projects) nil)
+     ]
+    (js/console.log @db-conn)
+    ))
 
 (defn fetch-gbs []
   (generate)

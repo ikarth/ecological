@@ -125,7 +125,13 @@
                    [:br]
                    (str (get (second vmove) :vars))])]
                "no matching possible choices")])
-           "no move selected")]]]]))
+           "no move selected")]]
+      [:div.dtc.tc.pv4.bg-black-10
+        [:button "Perform Move"]
+       ]
+      [:div.dtc.tc.pv4.bg-black-05
+
+       ]]]))
 
 ; (.stringify js/JSON (:gbs-output @app-state))
 ;(.stringify js/JSON (clj->js {:data "test data"}))

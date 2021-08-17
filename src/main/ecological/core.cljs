@@ -2,6 +2,7 @@
   (:require [reagent.dom :as r]
             [ecological.views :as views]
             [ecological.gbstudio.assets :as assets]
+            [ecological.events :as events]
             [shadow.resource :as resource]))
 
 (js/console.log "Ecological Generator, 2021")
@@ -24,8 +25,10 @@
 (defn start []
   (js/console.log "Starting...")
                                         ;(spit (str "./test_start.txt") "Test text.")
+  (events/init-database nil)
   (assets/load-manifest)
   (assets/load-scene-sources)
+
   (r/render [views/app]
             (.getElementById js/document "app")))
 
