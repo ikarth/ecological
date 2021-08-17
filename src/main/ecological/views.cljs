@@ -185,8 +185,8 @@
 (defn generate-btn
   []
   [:div
-   [:button.btn.ma2.grow {:on-click #(init-database %)} "empty project"]
-   [:button.btn.ma2.grow {:on-click #(run-generator %)} "generate"]]
+   [:button.btn.ma2.grow.bg-green.white.bold.hover-bg-gold {:on-click #(init-database %)} "start empty project"]
+   [:button.btn.ma2.grow.bg-light-yellow.hover-bg-gold {:on-click #(run-generator %)} "generate complete project"]]
    
    )
 
@@ -470,7 +470,7 @@
    [operation-harness]
    [generate-btn]
    [constraint-solving-test-btn]
-   [run-gbs-btn]
+   ;[run-gbs-btn]
    ;[counter]
    [display-gbs]
    [:hr]
