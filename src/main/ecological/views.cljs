@@ -1,6 +1,6 @@
 (ns ecological.views
   (:require [ecological.state :refer [app-state]]
-            [ecological.events :refer [increment decrement graph-display run-generator select-move]]
+            [ecological.events :refer [increment decrement graph-display run-generator select-move init-database]]
             [reagent.core :as r]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
@@ -29,7 +29,13 @@
    [:button {:disabled true} (get @app-state :count)]
    [:button.btn {:on-click #(increment %)} "+"]])
 
-
+(defn truncate-if-too-long
+  "Return "
+  [to-truncate max-length]     
+  (let [trunc (clojure.string/join "" to-truncate)]
+    (if (< (count trunc) max-length)
+      trunc
+      (concat "" (subs trunc 0 (min (count trunc) max-length)) "..." ))))
 
 (defn manual-operation
   "An interface for manually interacting with design moves."
@@ -91,12 +97,21 @@
      [:div.dt.dt--fixed
       [:div.dtc.tc.pa3.pv1.bg-black-10
        [:ul.list.pl0.ml0.center.mw6.ba.b--light--silver.br2
-        (for [move (:all-moves @app-state)]
-          (if (= (:name selected-move) (:name move))
-            ^{:key (:name move)} [:li.pv2.bg-orange.stripe-dark.hover-bg-gold.active-bg-gold.pointer {:on-click #(select-move % move)} (:name move)]
-            ^{:key (:name move)} [:li.pv2.hover-bg-gold.active-bg-gold.pointer {:on-click #(select-move % move)} (:name move)]
-            ))]]
-      
+        (for [vecmove (map-indexed vector (:all-moves @app-state))]
+          (let [move (second vecmove)
+                move-index (first vecmove)]
+            (let [move-li-key
+                  (cond
+                    (= (:name selected-move) (:name move))
+                    :li.pv2.pointer.hover-bg-yellow.active-bg-gold.bg-orange
+                    (odd? move-index)
+                    :li.pv2.pointer.hover-bg-gold.bg-black-10
+                    :else
+                    :li.pv2.pointer.hover-bg-gold.bg-black-05
+                    )]
+              ^{:key (:name move)} [move-li-key {:on-click #(select-move % move)} (:name move)]
+              
+              )))]]      
       [:div.dtc.tc.pa3.pv2.bg-black-05.pa
        [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
        [:p.tl-l
@@ -123,7 +138,7 @@
                      :li.pointer.hover-bg-gold.active-bg-gold.pv1.bg-black-10)
                    [:span.f7 (str (get-in (second vmove) [:move :name]))]
                    [:br]
-                   (str (get (second vmove) :vars))])]
+                   (truncate-if-too-long (str (get (second vmove) :vars)) 61)])]
                "no matching possible choices")])
            "no move selected")]]
       [:div.dtc.tc.pv4.bg-black-10
@@ -145,7 +160,8 @@
 (defn generate-btn
   []
   [:div
-   [:button.btn {:on-click #(run-generator %)} "generate"]]
+   [:button.btn.m2 {:on-click #(run-generator %)} "generate"]
+   [:button.btn.m2 {:on-click #(init-database %)} "empty project"]]
    )
 
 (defn http-post! [path body cb]
@@ -305,6 +321,20 @@
          (str c-byte " -> offset: " c-offset " -> mask:" c-mask " -> val:" c-val)
          (> c-val 0))))))
 
+(defn vector-render-bits-viz
+  "Given a vector of GBS collision data, turn it into a visualization"
+  [data-segments]
+  (let [height (nth data-segments 1)
+        width (nth data-segments 0)
+        just-data (nth data-segments 2)
+        image-path (nth data-segments 3)
+        bits (into []
+                   (flatten (mapv hex-string-to-byte
+                                  (mapv clojure.string/join (partition 2 just-data)))))
+        draw-index (range (* width height))]
+    [:div]
+    ))
+
 (defn render-bits-viz [data]
   (let [data-segments (clojure.string/split data #"\|")]
     ;;(js/console.log data-segments)
@@ -372,7 +402,9 @@
               (or (clojure.string/includes? data "./")
                   (clojure.string/includes? data ".\\")))
          [:div [:img {:src data}]]
-          :else data)
+         :else data)
+       (and (vector? data) (= (first data) :collisions-viz))
+       (vector-render-bits-viz (rest data))       
        :else data)
      )
    hic))
@@ -393,12 +425,15 @@
      ;[graph-display-button]
      ;[:div#artifact-graph {:style {:min-height "100px"}}]
      [:hr]
+     
      (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
-     [:hr]
-     (coll-pen.core/draw (convert-data-for-display gen-state)
-                         {:el-per-page 30 :truncate false })
-     [:hr]
-     (.stringify js/JSON (clj->js gen-state))])
+     (comment
+       [:hr]
+       (coll-pen.core/draw (convert-data-for-display gen-state)
+                           {:el-per-page 30 :truncate false })
+       [:hr]
+       (.stringify js/JSON (clj->js gen-state)))
+     ])
   
    ;; (with-out-str) (cljs.pprint/pprint)
    ;; (clj->js (:gbs-output @app-state))
@@ -418,8 +453,8 @@
    [:hr]
    ;; (coll-pen.core/draw (:data @app-state)
    ;;                       {:el-per-page 30 :truncate false })
-   (js/console.log (:data @app-state))
-   (js/console.log (:selected-move @app-state))
+   ;(js/console.log (:data @app-state))
+   ;(js/console.log (:selected-move @app-state))
    (.stringify js/JSON (clj->js (:data @app-state)))
    [:hr]
    (.stringify js/JSON (clj->js (:possible-moves @app-state)))

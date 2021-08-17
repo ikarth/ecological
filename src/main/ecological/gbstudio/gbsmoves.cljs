@@ -1,4 +1,3 @@
-
 (ns ecological.gbstudio.gbsmoves
   (:require [datascript.core :as d]
             ["clingo-wasm" :as clingo]

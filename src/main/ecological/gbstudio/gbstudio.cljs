@@ -10,7 +10,8 @@
             [clojure.string]
             [goog.crypt :as crypt]
             [ecological.gbstudio.gbsmoves :as gbs-moves]
-            [ecological.gbstudio.assets :refer [asset-manifest scene-manifest]]
+            [ecological.gbstudio.assets :refer [asset-manifest scene-manifest load-manifest load-scene-sources
+                                                ]]
             ))
 
 
@@ -311,7 +312,18 @@
                                         ;(export-triggers (first scene))
                                         ;(export-scripts (first scene))
                                     ))
-              (update-in ["collisions-viz"] (fn [colls] (str "collisions-viz|" (first (nth scene 8)) "|" (second (nth scene 8)) "|" (bytes-to-hex-string colls) "|" (nth scene 6))))))
+              (update-in ["collisions-viz"]
+                         (fn [colls]
+                           (comment
+                             [:collisions-viz
+                              (first (nth scene 8))
+                              (second (nth scene 8))
+                              (bytes-to-hex-string colls)
+                              (nth scene 6)
+                              ])
+                           (str "collisions-viz|" (first (nth scene 8)) "|" (second (nth scene 8)) "|" (bytes-to-hex-string colls) "|" (nth scene 6))
+                           
+                           ))))
            scenes)))
 
 (defn export-resources
@@ -398,7 +410,8 @@
          (let [poss-move (rand-nth moves)] ;; todo: make determanistic
            (if-let [exec-func (get (get poss-move :move) :exec false)]
              (let [move-name (get (get poss-move :move) :name)]
-               (cljs.pprint/pprint move-name)
+               ;;(cljs.pprint/pprint move-name)
+               ;(js/console.log move-name)
                (let [result (concat
                              (exec-func db (:vars poss-move))
                              [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
@@ -418,7 +431,7 @@
   (reset-the-database!)
   (d/transact! db-conn (load-resources) nil)
   (d/transact! db-conn (load-gbs-projects) nil)
-  (generate-level-random-heuristic db-conn 8 0)
+  (generate-level-random-heuristic db-conn 98 0)
   )
 
 (comment (reset-the-database!)
@@ -431,26 +444,42 @@
   @db-conn
   )
 
+(defn make-empty-project []
+  (reset-the-database!)
+  (d/transact! db-conn (load-resources) nil)
+  (d/transact! db-conn (load-gbs-projects) nil)
+  )
+
 (defn initialize-database!
   "If the database isn't initialized yet, make a database with just the resources loaded."
   []
-  (if true
-    [(reset-the-database!)
-     (d/transact! db-conn (load-resources) nil)
-     (d/transact! db-conn (load-gbs-projects) nil)
-     ]
-    (js/console.log @db-conn)
-    ))
+  ;;(cljs.pprint/pprint @db-conn)
+  ;;(js/console.log @db-conn)
+  ;; (if (empty? @db-conn)
+  ;;   (let []
+  ;;     (reset-the-database!)
+  ;;     (d/transact! db-conn (load-resources) nil)
+  ;;     (d/transact! db-conn (load-gbs-projects) nil)
+  ;;      )
+    ;;(js/console.log @db-conn)
+  ;; )
+  
+  )
+
+(defn fetch-generated-project []
+  (generate)
+  (export-gbs-project)
+  )
 
 (defn fetch-gbs []
-  (generate)
+  ;(generate)
   ;(clj->js (map clj->js (export-gbs-project)))
   (export-gbs-project))
 
 (defn fetch-possible-moves []
   (let [moves (get-possible-design-move-from-moveset gbs-moves/design-moves)]
     ;;(cljs.pprint/pprint moves)
-    (js/console.log moves)
+    ;(js/console.log moves)
     moves))
 
 (defn fetch-some-moves []

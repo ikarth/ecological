@@ -178,3 +178,7 @@ th.jh-key{
 .bg-orange.stripe-dark:nth-child(odd) {
     background-color: #ff6300;
 }
+.bg-orange.stripe-dark:nth-child(even) {
+    background-color: #ff6300;
+}
+

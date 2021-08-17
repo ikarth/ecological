@@ -1,6 +1,10 @@
 (ns ecological.events
   (:require [ecological.state :refer [app-state]]
-            [ecological.gbstudio.gbstudio :refer [fetch-gbs fetch-database fetch-possible-moves initialize-database!]]
+            [ecological.gbstudio.gbstudio :refer [fetch-gbs
+                                                  fetch-generated-project
+                                                  fetch-database
+                                                  fetch-possible-moves
+                                                  make-empty-project]]
             ["clingo-wasm" :default clingo]
             ;; ["p5" :default p5]
             ))
@@ -15,13 +19,24 @@
   (.preventDefault event)
   (swap! app-state update-in [:count] dec))
 
+(defn init-database [event]
+  (if (some? event)
+    (.preventDefault event))
+  (let []
+    (make-empty-project)
+    (swap! app-state update-in [:gbs-output] fetch-gbs)
+    (swap! app-state update-in [:data] fetch-database)
+    (swap! app-state update-in [:possible-moves] fetch-possible-moves)))
+
+
 (defn select-move
   "Makes the given design move be the currently selected one."
   [event move]
   (.preventDefault event)
   (js/console.log "Selecting" (:name move))
+  ;;(init-database nil)
   (swap! app-state assoc-in [:selected-move] move)
-  (swap! app-state update-in [:possible-moves] fetch-possible-moves)
+  ;;(swap! app-state update-in [:possible-moves] fetch-possible-moves)
   )
 
 ;; (defn test-constraint-solving [event]
@@ -41,19 +56,11 @@
 
 (defn run-generator [event]
   (.preventDefault event)
-  (swap! app-state update-in [:gbs-output] fetch-gbs)
+  (swap! app-state update-in [:gbs-output] fetch-generated-project)
   (swap! app-state update-in [:data] fetch-database)
   (swap! app-state update-in [:possible-moves] fetch-possible-moves)
   )
 
-(defn init-database [event]
-  (if (some? event)
-    (.preventDefault event))
-  (let []
-    (initialize-database!)
-    (swap! app-state update-in [:gbs-output] fetch-gbs)
-    (swap! app-state update-in [:data] fetch-database)
-    (swap! app-state update-in [:possible-moves] fetch-possible-moves)))
 
 
 ;; from https://blog.klipse.tech/visualization/2021/02/16/graph-playground-cytoscape.html

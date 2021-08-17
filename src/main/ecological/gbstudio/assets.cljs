@@ -13,7 +13,7 @@
     (.open req "GET" path)
     (.send req)))
 
-(def asset-state (atom {}))
+(defonce asset-state (atom {}))
 
 ;; (load-file! ".\\data\\assets\\asset_manifest.edn"
 ;;             (fn [response]

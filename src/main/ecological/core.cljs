@@ -25,15 +25,16 @@
 (defn start []
   (js/console.log "Starting...")
                                         ;(spit (str "./test_start.txt") "Test text.")
-  (events/init-database nil)
-  (assets/load-manifest)
-  (assets/load-scene-sources)
-
-  (r/render [views/app]
-            (.getElementById js/document "app")))
+  (let []
+    ;; (events/init-database nil)
+    (assets/load-manifest)
+    (assets/load-scene-sources)
+    (r/render [views/app]
+              (.getElementById js/document "app"))))
 
 ; This is the `ecological.core.init()` that's triggered in the html
 (defn ^:export init []
+  
   (start))
 
 ;; (defn ^:export main
