@@ -50,13 +50,35 @@
   (swap! app-state assoc-in [:selected-bound-move] move)
   )
 
+(defn select-random-bindings
+  []
+  (swap! app-state update-in [:possible-moves] fetch-possible-moves)
+  (if (:selected-move @app-state)
+    (let [valid-moves (:possible-moves @app-state)
+          selected-move-name (get-in (:selected-move @app-state) [:name])
+          possible-moves (filter #(= (get-in % [:move :name]) selected-move-name) valid-moves)
+          chosen-move (rand-nth possible-moves)]
+      (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
+      true)
+    false))
+
 (defn perform-bound-move
   [event]
+  (if (some? event)
+    (.preventDefault event))
   (js/console.log (:selected-bound-move @app-state))
   ;; TODO
   (execute-one-design-move! (second (:selected-bound-move @app-state)))
-  (update-database-view nil)
-  )
+  (update-database-view nil))
+
+(defn perform-random-move
+  [event]
+  (if (some? event)
+    (.preventDefault event))
+  (let [valid-moves (:possible-moves @app-state)
+        chosen-move (rand-nth valid-moves)]
+    (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
+    (perform-bound-move nil)))
 
 (defn run-generator [event]
   (.preventDefault event)

@@ -7,6 +7,8 @@
                                        select-move
                                        select-bound-move
                                        perform-bound-move
+                                       perform-random-move
+                                       select-random-bindings
                                        init-database]]
             [reagent.core :as r]
             [cljs.pprint]
@@ -95,12 +97,19 @@
                           ;; :border           "1px solid lightgray"
                           ;; :border-radius    "4px"
                           ;; :padding          "0px"
-                          ;; :overflow         "hidden"}))
+;; :overflow         "hidden"}))
+
+(defn valid-move-count [selected-move poss-moves]
+  (let [move-name   (:name selected-move)
+        valid-moves (filter #(= (get (get % :move) :name) move-name) poss-moves)]
+    (count valid-moves)))
+
 (defn operation-harness
   "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
   []
   (let [selected-move (:selected-move @app-state)
-        bound-move (:selected-bound-move @app-state)]
+        bound-move (:selected-bound-move @app-state)
+        possible-moves (:possible-moves @app-state)]
     [:div
      [:div.dt.dt--fixed
       [:div.dtc.tc.pa3.pv1.bg-black-10
@@ -117,7 +126,7 @@
                     :else
                     :li.pv2.pointer.hover-bg-gold.bg-black-05
                     )]
-              ^{:key (:name move)} [move-li-key {:on-click #(select-move % move)} (:name move)]
+              ^{:key (:name move)} [move-li-key {:on-click #(select-move % move)} ()(:name move) " (" (valid-move-count move possible-moves) ")"]
               
               )))]]      
       [:div.dtc.tc.pa3.pv2.bg-black-05.pa
@@ -134,7 +143,7 @@
        [:div.h5.overflow-auto
          (if selected-move
            (let [move-name   (:name selected-move)
-                 valid-moves (filter #(= (get (get % :move) :name) move-name) (:possible-moves @app-state))
+                 valid-moves (filter #(= (get (get % :move) :name) move-name) possible-moves)
                 ]
             [:div.ph3
              (if (< 0 (count valid-moves))
@@ -155,7 +164,11 @@
                "no matching possible choices")])
            "no move selected")]]
       [:div.dtc.tc.pv4.bg-black-10
-        [:button.btn.grow {:on-click #(perform-bound-move %)} "Perform Move"]
+       [:button.btn.grow.ma2 {:on-click #(perform-random-move %)} "Perform random design move" ]
+       [:button.btn.grow.ma2 {:on-click #(perform-bound-move %)} "Perform selected move with selected bindings)"]
+       [:button.btn.grow.ma2 {:on-click #(if (select-random-bindings)
+                                           (perform-bound-move %))}
+        "Perform Selected Move (random bindings)"]
        ]
       [:div.dtc.tc.pv4.bg-black-05
 

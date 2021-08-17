@@ -347,8 +347,8 @@
   "Export the entire project as a GBS-compatible EDN."
   []
   (-> gbs-basic
-      (update :z_design-moves export-design-moves)
-      (update :resources export-resources)
+      (update :_design-moves export-design-moves)
+      (update :z_resources export-resources)
       (update :backgrounds export-backgrounds)
       (update :scenes export-scenes)))
 
