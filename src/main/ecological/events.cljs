@@ -1,13 +1,11 @@
 (ns ecological.events
   (:require [ecological.state :refer [app-state]]
             [ecological.gbstudio.gbstudio :refer [fetch-gbs
-                                                  fetch-generated-project
+                                                  fetch-generated-project!
                                                   fetch-database
                                                   fetch-possible-moves
                                                   make-empty-project]]
-            ["clingo-wasm" :default clingo]
-            ;; ["p5" :default p5]
-            ))
+            ["clingo-wasm" :default clingo]))
 
 (defn increment
   [event]
@@ -34,29 +32,12 @@
   [event move]
   (.preventDefault event)
   (js/console.log "Selecting" (:name move))
-  ;;(init-database nil)
   (swap! app-state assoc-in [:selected-move] move)
-  ;;(swap! app-state update-in [:possible-moves] fetch-possible-moves)
   )
-
-;; (defn test-constraint-solving [event]
-;;   (.preventDefault event)
-;;   (js/console.log "Running constraint solver...")
-;;   (let [solution ;(fn [_] "TEST")
-;;         (fn [data]
-;;           ;(js/console.log clingo)
-;;           ;(. clingo run data)
-;;           (js/p5 5)
-;;           )
-;;         ]
-;;     (js/console.log (solution "a. b :- a."))
-;;     (swap! app-state update-in [:constraint-test] solution)
-;;     )
-;;   )
 
 (defn run-generator [event]
   (.preventDefault event)
-  (swap! app-state update-in [:gbs-output] fetch-generated-project)
+  (swap! app-state update-in [:gbs-output] fetch-generated-project!)
   (swap! app-state update-in [:data] fetch-database)
   (swap! app-state update-in [:possible-moves] fetch-possible-moves)
   )

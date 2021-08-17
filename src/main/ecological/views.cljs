@@ -148,8 +148,7 @@
 
        ]]]))
 
-; (.stringify js/JSON (:gbs-output @app-state))
-;(.stringify js/JSON (clj->js {:data "test data"}))
+
 
 (defn constraint-solving-test-btn
   []
@@ -345,12 +344,9 @@
             image-path (nth data-segments 3)
             bits (into [] (flatten (mapv hex-string-to-byte (mapv clojure.string/join (partition 2 just-data)))))
             draw-index (range (* width height))]
-        ;(js/console.log bits)
-        ;;(js/console.log image-path)
-        ;"http://localhost:8020/collisions-viz%7C20%7C18%7Ce10000fe0770e000030c30cf81f118108903913030000f02e0207ee0e30302ff30f00780ff0ff8ffffffffffff%7C./data/assets/backgrounds/Forest_01_2c.png"
+       
         [:div
-        ;; [:p (str image-path)]
-         ;;[:p (clojure.string/join " " bits)]
+        
          [:svg {:style {:background "pink" :width (str (* 8 width) "px") :height (str (* 8 height) "px")}}
           [:image {:href image-path :width (str (* 8 width) "px") :height (str (* 8 height) "px") :preserveAspectRatio "xMinYMin" :x 0 :y 0 }]
           (->> draw-index

@@ -65,8 +65,6 @@
 
 (def gbs-basic (js->clj (.parse js/JSON "{ \"author\": \"https://github.com/ikarth/ecological\", \"name\": \"Generated Game Boy ROM\", \"_version\": \"2.0.0\", \"scenes\": [], \"backgrounds\": [], \"variables\": [], \"spriteSheets\": [], \"music\": [], \"customEvents\": [], \"palettes\": [], \"settings\": { \"showCollisions\": true, \"showConnections\": true, \"worldScrollX\": 0, \"worldScrollY\": 0, \"zoom\": 100, \"customColorsWhite\": \"E8F8E0\", \"customColorsLight\": \"B0F088\", \"customColorsDark\": \"509878\", \"customColorsBlack\": \"202850\", \"defaultBackgroundPaletteIds\": [ \"default-bg-1\", \"default-bg-2\", \"default-bg-3\", \"default-bg-4\", \"default-bg-5\", \"default-bg-6\" ], \"defaultSpritePaletteId\": \"default-sprite\", \"defaultUIPaletteId\": \"default-ui\", \"startX\": 0, \"startY\": 0, \"startDirection\": 0, \"startSceneId\": 0, \"playerSpriteSheetId\": \"581d34d0-9591-4e6e-a609-1d94f203b0cd\" } }" ) :keywordize-keys true))
 
-;(.parse js/JSON "{\"author\": \"test\", \"music\": []}")
-
 (def genboy-schema
   {:signal/signal             {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/keyword
    :scene/background          {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
@@ -410,8 +408,6 @@
          (let [poss-move (rand-nth moves)] ;; todo: make determanistic
            (if-let [exec-func (get (get poss-move :move) :exec false)]
              (let [move-name (get (get poss-move :move) :name)]
-               ;;(cljs.pprint/pprint move-name)
-               ;(js/console.log move-name)
                (let [result (concat
                              (exec-func db (:vars poss-move))
                              [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
@@ -450,36 +446,35 @@
   (d/transact! db-conn (load-gbs-projects) nil)
   )
 
-(defn initialize-database!
-  "If the database isn't initialized yet, make a database with just the resources loaded."
-  []
-  ;;(cljs.pprint/pprint @db-conn)
-  ;;(js/console.log @db-conn)
-  ;; (if (empty? @db-conn)
-  ;;   (let []
-  ;;     (reset-the-database!)
-  ;;     (d/transact! db-conn (load-resources) nil)
-  ;;     (d/transact! db-conn (load-gbs-projects) nil)
-  ;;      )
-    ;;(js/console.log @db-conn)
-  ;; )
-  
-  )
+(comment
+  (defn initialize-database!
+    "If the database isn't initialized yet, make a database with just the resources loaded."
+    []    
+    (cljs.pprint/pprint @db-conn)
+    (js/console.log @db-conn)
+    (if (empty? @db-conn)
+      (let []
+        (reset-the-database!)
+        (d/transact! db-conn (load-resources) nil)
+        (d/transact! db-conn (load-gbs-projects) nil)
+        )
+      (js/console.log @db-conn)
+      )))
 
-(defn fetch-generated-project []
+(defn fetch-generated-project!
+  "Generate a new project and return it"
+  []
   (generate)
   (export-gbs-project)
   )
 
-(defn fetch-gbs []
-  ;(generate)
-  ;(clj->js (map clj->js (export-gbs-project)))
+(defn fetch-gbs
+  "Return the current state of the project"
+  []
   (export-gbs-project))
 
 (defn fetch-possible-moves []
   (let [moves (get-possible-design-move-from-moveset gbs-moves/design-moves)]
-    ;;(cljs.pprint/pprint moves)
-    ;(js/console.log moves)
     moves))
 
 (defn fetch-some-moves []
