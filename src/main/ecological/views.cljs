@@ -489,8 +489,9 @@
          (.stringify js/JSON (clj->js (:possible-moves @app-state)))
          [:br]
          [:hr]]
-        tab-defs [{:id ::image-tab :label "Images" :contents image-tab}
-                  {:id ::tab-gbs :label "GBS" :contents gbs-tab}]
+        tab-defs [{:id ::tab-gbs :label "GBS" :contents gbs-tab}
+                  {:id ::image-tab :label "Images" :contents image-tab}
+                  ]
         selected-tab (get @app-state :selected-tab (first tab-defs))
         ]
     [:div
