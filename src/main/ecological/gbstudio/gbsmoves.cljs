@@ -215,7 +215,7 @@
              [{:db/id -1
                :background/uuid (str (random-uuid)) ; todo: use hash to speed comparisons?
                :background/size image-tiles
-               :background/imageSize image-size
+               ;:background/imageSize image-size
                :background/filename image-filename
                :background/resource resource-id}] ))})
 

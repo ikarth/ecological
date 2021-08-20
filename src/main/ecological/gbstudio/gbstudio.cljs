@@ -76,7 +76,7 @@
    :background/filename       {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/string
    :background/image          {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
    :background/size           {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
-   :background/imageSize      {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
+   ;:background/imageSize      {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
    :background/uuid           {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
    :resource/filename         {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
    :resource/type             {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/keyword

@@ -9,6 +9,7 @@
                                        perform-bound-move
                                        perform-random-move
                                        select-random-bindings
+                                       select-tab
                                        init-database]]
             [reagent.core :as r]
             [cljs.pprint]
@@ -19,6 +20,7 @@
             [goog.crypt :as crypt]
             [re-com.core :as rc]
             [re-com.box :as rc-box]
+            [re-com.util :as rc-util]
             ;[clojure.core.matrix :as matrix]
             ))
 
@@ -126,7 +128,7 @@
                     :else
                     :li.pv2.pointer.hover-bg-gold.bg-black-05
                     )]
-              ^{:key (:name move)} [move-li-key {:on-click #(select-move % move)} ()(:name move) " (" (valid-move-count move possible-moves) ")"]
+              ^{:key (:name move)} [move-li-key {:on-click #(select-move % move)} (:name move) " (" (valid-move-count move possible-moves) ")"]
               
               )))]]      
       [:div.dtc.tc.pa3.pv2.bg-black-05.pa
@@ -165,7 +167,7 @@
            "no move selected")]]
       [:div.dtc.tc.pv4.bg-black-10
        [:button.btn.grow.ma2 {:on-click #(perform-random-move %)} "Perform random design move" ]
-       [:button.btn.grow.ma2 {:on-click #(perform-bound-move %)} "Perform selected move with selected bindings)"]
+       [:button.btn.grow.ma2 {:on-click #(perform-bound-move %)} "Perform selected move (with selected bindings)"]
        [:button.btn.grow.ma2 {:on-click #(if (select-random-bindings)
                                            (perform-bound-move %))}
         "Perform Selected Move (random bindings)"]
@@ -463,25 +465,59 @@
    )
 ;(.stringify js/JSON)
 
+(defn image-header []
+  [:h1 "Ecological Generator Output Visualization"])
+
 (defn app []
-  [:div
-   [header]
-   [manual-operation]
-   [operation-harness]
-   [generate-btn]
-   [constraint-solving-test-btn]
-   ;[run-gbs-btn]
-   ;[counter]
-   [display-gbs]
-   [:hr]
-   ;; (coll-pen.core/draw (:data @app-state)
-   ;;                       {:el-per-page 30 :truncate false })
-   ;(js/console.log (:data @app-state))
-   ;(js/console.log (:selected-move @app-state))
-   (.stringify js/JSON (clj->js (:data @app-state)))
-   [:hr]
-   (.stringify js/JSON (clj->js (:possible-moves @app-state)))
-   [:br]
-   [:hr]
-   ])
+  (let [image-tab [:div
+                   [image-header]]
+        gbs-tab
+        [:div
+         [header]
+         [manual-operation]
+         [operation-harness]
+         [generate-btn]
+         [constraint-solving-test-btn]
+         [display-gbs]
+         [:hr]
+         ;; (coll-pen.core/draw (:data @app-state)
+         ;;                       {:el-per-page 30 :truncate false })
+                                        ;(js/console.log (:data @app-state))
+                                        ;(js/console.log (:selected-move @app-state))
+         (.stringify js/JSON (clj->js (:data @app-state)))
+         [:hr]
+         (.stringify js/JSON (clj->js (:possible-moves @app-state)))
+         [:br]
+         [:hr]]
+        tab-defs [{:id ::tab-gbs :label "GBS" :contents gbs-tab}
+                  {:id ::image-tab :label "Images" :contents image-tab}
+                  ]
+        selected-tab (get @app-state :selected-tab (first tab-defs))
+        ]
+    [:div
+     [:div.tabs.bg-light-blue
+      (for [tab tab-defs]
+        ^{:key (:id tab)} [(if (= (:id selected-tab) (:id tab))
+                              :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw2.b--black-60.hover-orange.bg-white
+                              :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30
+                              ) {:on-click #(select-tab % tab)} (:label tab)])
+      ]
+     [:div
+       ;(js/console.log tab-defs)
+      (get selected-tab :contents [:div])
+
+      ]
+     
+     ;; [rc/horizontal-tabs
+     ;;  :src (rc/at)
+     ;;  :tabs tab-defs
+     ;;  :model selected-tab-id
+     ;;  :on-change #((js/console.log %
+     ;;                               )
+     ;;               (reset! selected-tab-id %))]
+     ;; [rc/h-box
+     ;;  :src (rc/at)
+     ;;  :children [:div (:contents (rc-util/item-for-id @selected-tab-id tab-defs))]]
+     ]
+      ))
     
