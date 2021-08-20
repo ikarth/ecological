@@ -9,6 +9,9 @@
          :possible-moves (fetch-possible-moves)
          :all-moves (fetch-all-moves)
          :selected-moves nil
+         :selected-tab nil
+         :data-image nil
+         :output-image nil
           }))
 
 

@@ -35,12 +35,19 @@
   (swap! app-state update-in [:data] fetch-database)
   (swap! app-state update-in [:possible-moves] fetch-possible-moves))
 
+(defn select-tab
+  [event tab]
+  (.preventDefault event)
+  (js/console.log "Selecting" tab)
+  (swap! app-state assoc-in [:selected-tab] tab) 
+  )
+
 (defn select-move
   "Makes the given design move be the currently selected one."
   [event move]
   (.preventDefault event)
   (js/console.log "Selecting" (:name move))
-  (swap! app-state assoc-in [:selected-move] move)
+  (swap! app-state assoc-in [:selected-move] move) 
   )
 
 (defn select-bound-move
@@ -76,9 +83,10 @@
   (if (some? event)
     (.preventDefault event))
   (let [valid-moves (:possible-moves @app-state)
-        chosen-move (rand-nth valid-moves)]
-    (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
-    (perform-bound-move nil)))
+        chosen-move (if (< 0 (count valid-moves)) (rand-nth valid-moves) nil)]
+    (if (not (nil? chosen-move))
+      (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
+      (perform-bound-move nil))))
 
 (defn run-generator [event]
   (.preventDefault event)
