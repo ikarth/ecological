@@ -184,12 +184,17 @@
    ;[:button.btn {:on-click #(test-constraint-solving %)} "test constraint solver"]
    ])
 
+(defn image-generate-btn
+  []
+  [:div
+   [:button.btn.ma2.grow.bg-green.white.bold.hover-bg-gold {:on-click #(init-database %)} "start empty project"]
+   [:button.btn.ma2.grow.bg-light-yellow.hover-bg-gold {:on-click #(run-generator %)} "generate complete project"]])
+
 (defn generate-btn
   []
   [:div
    [:button.btn.ma2.grow.bg-green.white.bold.hover-bg-gold {:on-click #(init-database %)} "start empty project"]
    [:button.btn.ma2.grow.bg-light-yellow.hover-bg-gold {:on-click #(run-generator %)} "generate complete project"]]
-   
    )
 
 (defn http-post! [path body cb]
@@ -470,7 +475,11 @@
 
 (defn app []
   (let [image-tab [:div
-                   [image-header]]
+                   [image-header]
+                   ;[manual-operation]
+                   [operation-harness]
+                   [image-generate-btn]
+                   ]
         gbs-tab
         [:div
          [header]
