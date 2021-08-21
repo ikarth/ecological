@@ -387,6 +387,27 @@
   (d/q '[:find ?any ?obj :where [?obj :type ?any]] @db)) ;todo: log to console...
 
 
+(defn assemble-exec-result [db design-move]
+  (let [move-name (get-in design-move [:move :name])
+        exec-func (get-in design-move [:move :exec])
+        _ (assert (fn? exec-func) (str move-name "has no :exec function!"))
+        result (exec-func db (:vars design-move))
+        history-record [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
+                         ;:design/move-count current-design-move-count ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
+                         :design/move-record move-name
+                         ;:design/move-parameters (get design-move :vars [])
+                         }
+                        ]
+        tx-data (into [] (concat result history-record))
+        ]
+    (println tx-data)
+    tx-data))
+
+(defn execute-design-move! [design-move]
+  (println db-conn)
+  (d/transact! db-conn (assemble-exec-result @db-conn design-move))
+  )
+
 (defn execute-one-design-move!
   [design-move]
   (let [db db-conn
@@ -396,9 +417,10 @@
             result (concat
                     (exec-func db (:vars design-move))
                     [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
-                      :design/move-count current-design-move-count ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
+                      ;:design/move-count current-design-move-count ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
                       :design/move-record move-name
-                      :design/move-parameters (get design-move :vars [])}])]
+                      ;:design/move-parameters (get design-move :vars [])
+                      }])]
         (d/transact! db result nil)))))
 
 ;; todo: implement other generation heuristics.
@@ -424,9 +446,10 @@
                (let [result (concat
                              (exec-func db (:vars poss-move))
                              [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
-                               :design/move-count (inc i) ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
+                               ;:design/move-count (inc i) ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
                                :design/move-record move-name
-                               :design/move-parameters (get poss-move :vars [])}])]
+                               ;:design/move-parameters (get poss-move :vars [])
+                               }])]
                  ;; todo: do something to check for errors when executing the move...
                  ;(cljs.pprint/pprint result)
                  (d/transact! db result nil))) ; todo: do something with the transaction report, such as checking for errors
@@ -473,6 +496,7 @@
         )
       (js/console.log @db-conn)
       )))
+
 
 (defn fetch-generated-project!
   "Generate a new project and return it"
