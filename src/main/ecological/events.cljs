@@ -6,6 +6,7 @@
                                                   fetch-possible-moves
                                                   make-empty-project
                                                   execute-one-design-move!
+                                                  execute-design-move!
                                                   ]]
             ["clingo-wasm" :default clingo]))
 
@@ -75,7 +76,7 @@
     (.preventDefault event))
   (js/console.log (:selected-bound-move @app-state))
   ;; TODO
-  (execute-one-design-move! (second (:selected-bound-move @app-state)))
+  (execute-design-move! (second (:selected-bound-move @app-state)))
   (update-database-view nil))
 
 (defn perform-random-move
@@ -83,8 +84,10 @@
   (if (some? event)
     (.preventDefault event))
   (let [valid-moves (:possible-moves @app-state)
-        chosen-move (if (< 0 (count valid-moves)) (rand-nth valid-moves) nil)]
-    (if (not (nil? chosen-move))
+        chosen-move (if (< 0 (count valid-moves)) (rand-nth valid-moves) nil)
+        ]
+    (println chosen-move)
+    (when chosen-move
       (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
       (perform-bound-move nil))))
 

@@ -486,11 +486,13 @@
          [manual-operation]
          [operation-harness]
          [generate-btn]
+         (println (:data @app-state))
+         (coll-pen.core/draw (:data @app-state)
+                                {:el-per-page 30 :truncate false })
          [constraint-solving-test-btn]
          [display-gbs]
          [:hr]
-         ;; (coll-pen.core/draw (:data @app-state)
-         ;;                       {:el-per-page 30 :truncate false })
+         
                                         ;(js/console.log (:data @app-state))
                                         ;(js/console.log (:selected-move @app-state))
          (.stringify js/JSON (clj->js (:data @app-state)))
@@ -498,10 +500,10 @@
          (.stringify js/JSON (clj->js (:possible-moves @app-state)))
          [:br]
          [:hr]]
-        tab-defs [{:id ::tab-gbs :label "GBS" :contents gbs-tab}
-                  {:id ::image-tab :label "Images" :contents image-tab}
+        tab-defs [;{:id ::image-tab :label "Images" :contents image-tab}
+                  {:id ::tab-gbs :label "GBS" :contents gbs-tab}
                   ]
-        selected-tab (get @app-state :selected-tab (first tab-defs))
+        selected-tab (get @app-state :selected-tab (second tab-defs))
         ]
     [:div
      [:div.tabs.bg-light-blue

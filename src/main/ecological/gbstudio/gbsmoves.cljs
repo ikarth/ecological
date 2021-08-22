@@ -181,7 +181,7 @@
 
 (def move-place-greenfield-scene
   {:name "place-greenfield-scene"
-   :exec (fn [_] ; takes parameters but ignores them
+   :exec (fn [db _] ; takes parameters but ignores them
            [{:db/id -1
              :scene/uuid (str (random-uuid))             
              :scene/editor-position [20 20]
@@ -296,10 +296,10 @@
 (def design-moves
   [
    ;move-load-resources-from-disk
-   move-create-background-from-image
+   ;move-create-background-from-image
    ;move-load-gbs-projects-from-disk
-   move-generate-scene-from-template
-   ;move-place-greenfield-scene
+   ;move-generate-scene-from-template
+   move-place-greenfield-scene
    ;move-add-existing-background-to-scene
    ])
 
