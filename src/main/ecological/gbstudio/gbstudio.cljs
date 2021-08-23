@@ -388,7 +388,9 @@
 
 
 (defn assemble-exec-result [db design-move]
-  (let [move-name (get-in design-move [:move :name])
+  (let [_ (assert (map? design-move) "Need a design move before we can execute the design move function.")
+        move-name (get-in design-move [:move :name])
+        _ (assert (string? move-name) (str "Design move (" move-name ") not found in " design-move "."))
         exec-func (get-in design-move [:move :exec])
         _ (assert (fn? exec-func) (str move-name "has no :exec function!"))
         result (exec-func db (:vars design-move))
@@ -404,7 +406,9 @@
     tx-data))
 
 (defn execute-design-move! [design-move]
+  (assert (map? design-move) "Design move is missing, so can't be executed.")
   (println db-conn)
+  (println design-move)
   (d/transact! db-conn (assemble-exec-result @db-conn design-move))
   )
 
@@ -521,3 +525,8 @@
 (defn fetch-all-moves []
   (let [moves gbs-moves/design-moves]
     moves))
+
+(defn fetch-data-view []
+  (vec (map (fn [dat]
+              (let [[e a v tx add] dat]
+                [e a v tx add])) (d/datoms @db-conn :eavt))))

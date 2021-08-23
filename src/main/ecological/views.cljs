@@ -11,7 +11,7 @@
                                        select-random-bindings
                                        select-tab
                                        init-database]]
-            [reagent.core :as r]
+            [reagent.core :as r]            
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
             [coll-pen.core]
@@ -479,16 +479,19 @@
                    ;[manual-operation]
                    [operation-harness]
                    [image-generate-btn]
+                   ;(println (:data @app-state))
+                   ;(js/console.log @app-state)
+                   ;[:hr]
+                   ;(.stringify js/JSON (clj->js (:data @app-state)))      
                    ]
         gbs-tab
         [:div
          [header]
-         [manual-operation]
+         ;[manual-operation]
          [operation-harness]
          [generate-btn]
          (println (:data @app-state))
-         (coll-pen.core/draw (:data @app-state)
-                                {:el-per-page 30 :truncate false })
+         
          [constraint-solving-test-btn]
          [display-gbs]
          [:hr]
@@ -500,21 +503,27 @@
          (.stringify js/JSON (clj->js (:possible-moves @app-state)))
          [:br]
          [:hr]]
-        tab-defs [;{:id ::image-tab :label "Images" :contents image-tab}
-                  {:id ::tab-gbs :label "GBS" :contents gbs-tab}
+        tab-defs [{:id :tab-image :label "Images" :contents image-tab}
+                  {:id :tab-gbs :label "GBS" :contents gbs-tab}
                   ]
-        selected-tab (get @app-state :selected-tab (second tab-defs))
+        selected-tab (get @app-state :selected-tab (first tab-defs))
         ]
     [:div
      [:div.tabs.bg-light-blue
+      
       (for [tab tab-defs]
-        ^{:key (:id tab)} [(if (= (:id selected-tab) (:id tab))
-                              :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw2.b--black-60.hover-orange.bg-white
-                              :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30
-                              ) {:on-click #(select-tab % tab)} (:label tab)])
+        (let []
+          (js/console.log (:id tab))
+          ^{:key (:id tab)} [
+                               (if (= (:id selected-tab) (:id tab))
+                                 :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw2.b--black-60.hover-orange.bg-white
+                                 :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30
+                                 ) {:on-click #(select-tab % tab)} (:label tab)]))
       ]
      [:div
-       ;(js/console.log tab-defs)
+                                        ;(js/console.log tab-defs)
+      (coll-pen.core/draw (:data-view @app-state)
+                                      {:el-per-page 30 :truncate false})
       (get selected-tab :contents [:div])
 
       ]
