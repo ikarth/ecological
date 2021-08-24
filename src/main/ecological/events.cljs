@@ -1,6 +1,7 @@
 (ns ecological.events
   (:require [ecological.state :refer [app-state]]
             [ecological.gbstudio.gbstudio :as gbs
+             
              ;; :refer [fetch-gbs
              ;;                                      fetch-generated-project!
              ;;                                      fetch-database
@@ -10,25 +11,30 @@
              ;;                                      execute-design-move!
              ;;                                              ]
              ]
-            ["clingo-wasm" :default clingo]))
+            [ecological.imaging.imaging :as imaging]
+            ["clingo-wasm" :default clingo]
+            
+            ))
 
 
 (def database-interface
   {:tab-gbs {:fetch-data-output        gbs/fetch-gbs
              :fetch-database           gbs/fetch-database
              :fetch-possible-moves     gbs/fetch-possible-moves
+             :fetch-all-moves     gbs/fetch-all-moves
              :make-empty-project       gbs/make-empty-project
              :execute-design-move!     gbs/execute-design-move!
              :fetch-generated-project! gbs/fetch-generated-project!
              :fetch-data-view                gbs/fetch-data-view}
-   :tab-images
-   {:fetch-data-output        gbs/fetch-gbs
-    :fetch-database           gbs/fetch-database
-    :fetch-possible-moves     gbs/fetch-possible-moves
-    :make-empty-project       gbs/make-empty-project
-    :execute-design-move!     gbs/execute-design-move!
-    :fetch-generated-project! gbs/fetch-generated-project!
-    :fetch-data-view                gbs/fetch-data-view}
+   :tab-image
+   {:fetch-data-output        imaging/fetch-data-output
+    :fetch-database           imaging/fetch-database
+    :fetch-possible-moves     imaging/fetch-possible-moves
+    :fetch-all-moves          imaging/fetch-all-moves
+    :make-empty-project       imaging/make-empty-project
+    :execute-design-move!     imaging/execute-design-move!
+    :fetch-generated-project! imaging/fetch-generated-project!
+    :fetch-data-view          imaging/fetch-data-view}
    })
 
 (defn interface-with-database [interface-func]
@@ -61,6 +67,7 @@
     (.preventDefault event))
   (let []
     (interface-with-database :make-empty-project)
+    (swap! app-state update-in [:all-moves] (interface-with-database :fetch-all-moves))
     (swap! app-state update-in [:gbs-output] (interface-with-database :fetch-data-output))
     (swap! app-state update-in [:data] (interface-with-database :fetch-database))
     (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
@@ -70,6 +77,7 @@
 (defn update-database-view [event]
   (if (some? event)
     (.preventDefault event))
+  (swap! app-state update-in [:all-moves] (interface-with-database :fetch-all-moves))
   (swap! app-state update-in [:gbs-output] (interface-with-database :fetch-data-output))
   (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
   (swap! app-state update-in [:data] (interface-with-database :fetch-database))
@@ -81,6 +89,7 @@
     (.preventDefault event))
   (js/console.log "Selecting" tab)
   (swap! app-state assoc-in [:selected-tab] tab)
+  (update-database-view nil)
   ;(swap! app-state update-in [:data] (interface-with-database :fetch-database))
   )
 
@@ -135,6 +144,7 @@
 
 (defn run-generator [event]
   (.preventDefault event)
+  (swap! app-state update-in [:all-moves] (interface-with-database :fetch-all-moves))
   (swap! app-state update-in [:gbs-output] (interface-with-database :fetch-generated-project!))
   (swap! app-state update-in [:data] (interface-with-database :fetch-database))
   (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))

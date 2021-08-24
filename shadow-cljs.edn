@@ -18,7 +18,7 @@
   ;; [aysylu/loom "1.0.2"]
   ;; [aerial.hanami "0.12.1"]
   ;; [net.drib/strokes "0.5.1"]
-  ;; [quil "3.1.0"]
+  [quil "3.1.0"]
   [coll-pen "0.2.1"]
   [re-com "2.13.2"]
   [re-frame "1.2.0"]

@@ -11,7 +11,8 @@
                                        select-random-bindings
                                        select-tab
                                        init-database]]
-            [reagent.core :as r]            
+            [reagent.core :as r]
+            [reagent.dom :as rd]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
             [coll-pen.core]
@@ -21,6 +22,9 @@
             [re-com.core :as rc]
             [re-com.box :as rc-box]
             [re-com.util :as rc-util]
+            [quil.core :as qc]
+            [quil.middleware :as qm]
+            [cljs.core.async :as a]
             ;[clojure.core.matrix :as matrix]
             ))
 
@@ -439,15 +443,34 @@
      )
    hic))
 
+(defn convert-viz-imaging
+  "Takes a hiccup construct and converts it for display in-browser."
+  [hic]
+  (clojure.walk/postwalk
+   (fn [data]
+     (cond
+       (and (vector? data) (= (first data) :imaging))
+       data
+       :else
+       data))
+   hic))
+
 (defn filter-gen-state [g-state]
   (clojure.walk/postwalk
-   (fn [node]
-     (cond
-       (and (map? node) (contains? node "collisions"))
-       (dissoc node "collisions" "editor-position")
-       :else node)
-     )
-   g-state))
+     (fn [node]
+       (cond
+         (and (map? node) (contains? node "collisions"))
+         (dissoc node "collisions" "editor-position")
+         :else node)
+       )
+     g-state))
+
+(defn display-imaging []
+  (let [img-state (:gbs-output @app-state)]
+    [:div.self-center.content-center.items-center.justify-center.flex.bg-washed-green
+     [:div.mw9.ma2
+      (convert-viz-imaging (json->hiccup (clj->js (filter-gen-state img-state))))]]))
+
 
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
@@ -473,12 +496,100 @@
 (defn image-header []
   [:h1 "Ecological Generator Output Visualization"])
 
+;; (defn q-draw [{:keys [circles]}]
+;;   (qc/background 205)
+;;   (doseq [{[x y] :pos [r g b] :color} circles]
+;;     (qc/fill r g b)
+;;     (qc/ellipse x y 10 10)))
+
+;; (defn q-update [{:keys [width height] :as state}]
+;;   (update state :circles conj {:pos [(+ 20 (rand-int (- width 40)))
+;;                                      (+ 20 (rand-int (- height 40)))]
+;;                                :color (repeatedly 3 #(rand-int 250))}))
+
+;; (def qcs  
+;;   (qc/sketch
+;;    :host "foo"
+;;    :draw q-draw
+;;    :setup (fn [] {:width 300 :height 300 :circles []})
+;;    :update q-update
+;;    :size [300 300]
+;;    :no-start true
+;;    :middleware [qm/fun-mode]))
+
+;; (defn canvas []
+;;   (r/create-class
+;;    {:componet-did-mount
+;;     qcs
+;;     :reagent-render
+;;     (fn [] [:canvas#foo {:width 300 :height 300}])})) 
+
+
+;; https://github.com/simon-katz/nomisdraw/blob/master/src/cljs/nomisdraw/utils/nomis_quil_on_reagent.cljs
+(defn q-sketch
+  [& {:as sketch-args}]
+  (assert (not (contains? sketch-args :host))
+          ":host should not be provided, since a unique canvas id will be used instead.")
+  (let [size (:size sketch-args)
+        _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                  (str ":size should be nil or a vector of size 2, but instead it is " size))
+        [w h] (if (nil? size) [600 600] size)
+        canvas-id (str "qsketch" w h) ;;(str (random-uuid))
+        canvas-tag-&-id (keyword (str "div#" canvas-id))
+        sketch-args* (merge sketch-args {:host canvas-id})
+        saved-sketch-atom (atom ::not-set-yet)
+        ]
+    [r/create-class
+     {:reagent-render
+      (fn []
+        [canvas-tag-&-id {:style {:max-width w}
+                          :width w
+                          :height h}
+         "contents"
+         ])
+      :component-did-mount
+      (fn []
+        (js/console.log sketch-args)
+        (a/go (reset! saved-sketch-atom (apply qc/sketch (apply concat sketch-args*)))))
+      :component-will-unmount
+      (fn []
+        (a/go-loop []
+          ;(let [saved-sketch @saved-sketch-atom])
+          (if (= @saved-sketch-atom ::not-set-yet)
+            (do
+              (a/<! (a/timeout 100))
+              (recur))
+            (qc/with-sketch @saved-sketch-atom
+              (qc/exit)))))}]))
+
+(defn my-sketch [w h]
+  (letfn [(initial-state [] {:time 0})
+          (update-state [state] (update state :time inc))
+          (draw [state]
+            (let [t (:time state)]
+              (qc/background 255 100 100)
+              (qc/fill 230)
+              (qc/ellipse (rem t w) (rem t h) 50 50)
+              ))]
+    (q-sketch :setup initial-state
+              :update update-state
+              :draw draw
+              :middleware [qm/fun-mode]
+              :size [w h])))
+
 (defn app []
   (let [image-tab [:div
+                   [rc/v-box
+                    :children
+                    (for [i (range 1)]
+                      ^{:key i}
+                      (my-sketch 300 300))]
                    [image-header]
                    ;[manual-operation]
                    [operation-harness]
                    [image-generate-btn]
+                   
+                   [display-imaging]
                    ;(println (:data @app-state))
                    ;(js/console.log @app-state)
                    ;[:hr]
@@ -522,8 +633,8 @@
       ]
      [:div
                                         ;(js/console.log tab-defs)
-      (coll-pen.core/draw (:data-view @app-state)
-                                      {:el-per-page 30 :truncate false})
+      [:div.ma2.pa2.mh4
+       (coll-pen.core/draw (:data-view @app-state) {:el-per-page 30 :truncate false})]
       (get selected-tab :contents [:div])
 
       ]
