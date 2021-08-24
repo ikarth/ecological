@@ -10,7 +10,9 @@
                                        perform-random-move
                                        select-random-bindings
                                        select-tab
-                                       init-database]]
+                                       init-database
+                                       set-active-sketch
+                                       ]]
             [reagent.core :as r]
             [reagent.dom :as rd]
             [cljs.pprint]
@@ -369,8 +371,7 @@
                    (flatten (mapv hex-string-to-byte
                                   (mapv clojure.string/join (partition 2 just-data)))))
         draw-index (range (* width height))]
-    [:div]
-    ))
+    [:div]))
 
 (defn render-bits-viz [data]
   (let [data-segments (clojure.string/split data #"\|")]
@@ -417,8 +418,7 @@
                )
           ]]
         )
-      (str (count data-segments));data
-      )))
+      (str (count data-segments)))))
 
 (defn convert-viz [hic]
   (clojure.walk/postwalk
@@ -461,8 +461,7 @@
        (cond
          (and (map? node) (contains? node "collisions"))
          (dissoc node "collisions" "editor-position")
-         :else node)
-       )
+         :else node))
      g-state))
 
 (defn display-imaging []
@@ -496,35 +495,7 @@
 (defn image-header []
   [:h1 "Ecological Generator Output Visualization"])
 
-;; (defn q-draw [{:keys [circles]}]
-;;   (qc/background 205)
-;;   (doseq [{[x y] :pos [r g b] :color} circles]
-;;     (qc/fill r g b)
-;;     (qc/ellipse x y 10 10)))
-
-;; (defn q-update [{:keys [width height] :as state}]
-;;   (update state :circles conj {:pos [(+ 20 (rand-int (- width 40)))
-;;                                      (+ 20 (rand-int (- height 40)))]
-;;                                :color (repeatedly 3 #(rand-int 250))}))
-
-;; (def qcs  
-;;   (qc/sketch
-;;    :host "foo"
-;;    :draw q-draw
-;;    :setup (fn [] {:width 300 :height 300 :circles []})
-;;    :update q-update
-;;    :size [300 300]
-;;    :no-start true
-;;    :middleware [qm/fun-mode]))
-
-;; (defn canvas []
-;;   (r/create-class
-;;    {:componet-did-mount
-;;     qcs
-;;     :reagent-render
-;;     (fn [] [:canvas#foo {:width 300 :height 300}])})) 
-
-
+;; Inspired by
 ;; https://github.com/simon-katz/nomisdraw/blob/master/src/cljs/nomisdraw/utils/nomis_quil_on_reagent.cljs
 (defn q-sketch
   [& {:as sketch-args}]
@@ -534,7 +505,7 @@
         _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                   (str ":size should be nil or a vector of size 2, but instead it is " size))
         [w h] (if (nil? size) [600 600] size)
-        canvas-id (str "qsketch" w h) ;;(str (random-uuid))
+        canvas-id "quil-canvas" ;(str (random-uuid))
         canvas-tag-&-id (keyword (str "div#" canvas-id))
         sketch-args* (merge sketch-args {:host canvas-id})
         saved-sketch-atom (atom ::not-set-yet)
@@ -545,11 +516,11 @@
         [canvas-tag-&-id {:style {:max-width w}
                           :width w
                           :height h}
-         "contents"
+         ;;"contents"
          ])
       :component-did-mount
       (fn []
-        (js/console.log sketch-args)
+        ;;(js/console.log sketch-args)
         (a/go (reset! saved-sketch-atom (apply qc/sketch (apply concat sketch-args*)))))
       :component-will-unmount
       (fn []
@@ -562,93 +533,68 @@
             (qc/with-sketch @saved-sketch-atom
               (qc/exit)))))}]))
 
-(defn my-sketch [w h]
-  (letfn [(initial-state [] {:time 0})
+(defn visualize-generator-sketch [w h]
+  (letfn [(initial-state []
+            (qc/pixel-density 1)
+            {:time 0})
           (update-state [state] (update state :time inc))
           (draw [state]
             (let [t (:time state)]
-              (qc/background 255 100 100)
-              (qc/fill 230)
+              (qc/background 80 170 100)
+              (qc/fill 100 120 230)
               (qc/ellipse (rem t w) (rem t h) 50 50)
               ))]
     (q-sketch :setup initial-state
               :update update-state
               :draw draw
               :middleware [qm/fun-mode]
-              :size [w h])))
+              :size [w h])
+    ))
 
 (defn app []
   (let [image-tab [:div
-                   [rc/v-box
-                    :children
-                    (for [i (range 1)]
-                      ^{:key i}
-                      (my-sketch 300 300))]
                    [image-header]
                    ;[manual-operation]
                    [operation-harness]
                    [image-generate-btn]
-                   
-                   [display-imaging]
-                   ;(println (:data @app-state))
-                   ;(js/console.log @app-state)
-                   ;[:hr]
-                   ;(.stringify js/JSON (clj->js (:data @app-state)))      
-                   ]
+                   [#(visualize-generator-sketch 400 300)]
+                   [:div.ma2.pa2.mh4 (coll-pen.core/draw (:data-view @app-state) {:el-per-page 30 :truncate false})]
+                   [display-imaging]]
         gbs-tab
         [:div
          [header]
          ;[manual-operation]
          [operation-harness]
          [generate-btn]
-         (println (:data @app-state))
-         
+         ;;(println (:data @app-state))        
          [constraint-solving-test-btn]
+         [:div.ma2.pa2.mh4 (coll-pen.core/draw (:data-view @app-state) {:el-per-page 30 :truncate false})]
          [display-gbs]
-         [:hr]
-         
-                                        ;(js/console.log (:data @app-state))
-                                        ;(js/console.log (:selected-move @app-state))
-         (.stringify js/JSON (clj->js (:data @app-state)))
-         [:hr]
-         (.stringify js/JSON (clj->js (:possible-moves @app-state)))
-         [:br]
-         [:hr]]
-        tab-defs [{:id :tab-image :label "Images" :contents image-tab}
-                  {:id :tab-gbs :label "GBS" :contents gbs-tab}
-                  ]
-        selected-tab (get @app-state :selected-tab (first tab-defs))
-        ]
+         ;; [:hr]      
+         ;;                                ;(js/console.log (:data @app-state))
+         ;;                                ;(js/console.log (:selected-move @app-state))
+         ;; (.stringify js/JSON (clj->js (:data @app-state)))
+         ;; [:hr]
+         ;; (.stringify js/JSON (clj->js (:possible-moves @app-state)))
+         ;; [:br]
+         ;; [:hr]
+         ]
+        tab-defs [{:id nil :label "None" :contents [:div "Select A Generator Above..."]}
+                  {:id :tab-image :label "Images" :contents image-tab}
+                  {:id :tab-gbs :label "GBS" :contents gbs-tab}]
+        selected-tab (get @app-state :selected-tab (first tab-defs))]
     [:div
-     [:div.tabs.bg-light-blue
-      
+     [:div.tabs.bg-light-blue      
       (for [tab tab-defs]
         (let []
-          (js/console.log (:id tab))
-          ^{:key (:id tab)} [
-                               (if (= (:id selected-tab) (:id tab))
-                                 :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw2.b--black-60.hover-orange.bg-white
-                                 :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30
-                                 ) {:on-click #(select-tab % tab)} (:label tab)]))
-      ]
+          (if (:id tab)
+            ;;(js/console.log (:id tab))
+            ^{:key (:id tab)}
+            [(if (= (:id selected-tab) (:id tab))
+               :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw2.b--black-60.hover-orange.bg-white
+               :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30)
+             {:on-click #(select-tab % tab)} (:label tab)])))]
      [:div
-                                        ;(js/console.log tab-defs)
-      [:div.ma2.pa2.mh4
-       (coll-pen.core/draw (:data-view @app-state) {:el-per-page 30 :truncate false})]
-      (get selected-tab :contents [:div])
-
-      ]
-     
-     ;; [rc/horizontal-tabs
-     ;;  :src (rc/at)
-     ;;  :tabs tab-defs
-     ;;  :model selected-tab-id
-     ;;  :on-change #((js/console.log %
-     ;;                               )
-     ;;               (reset! selected-tab-id %))]
-     ;; [rc/h-box
-     ;;  :src (rc/at)
-     ;;  :children [:div (:contents (rc-util/item-for-id @selected-tab-id tab-defs))]]
-     ]
-      ))
+      [:div.ma2.pa2.mh4 (coll-pen.core/draw (:data-view @app-state) {:el-per-page 30 :truncate false})]
+      (get selected-tab :contents [:div])]]))
     

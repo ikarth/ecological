@@ -21,11 +21,11 @@
   {:tab-gbs {:fetch-data-output        gbs/fetch-gbs
              :fetch-database           gbs/fetch-database
              :fetch-possible-moves     gbs/fetch-possible-moves
-             :fetch-all-moves     gbs/fetch-all-moves
+             :fetch-all-moves          gbs/fetch-all-moves
              :make-empty-project       gbs/make-empty-project
              :execute-design-move!     gbs/execute-design-move!
              :fetch-generated-project! gbs/fetch-generated-project!
-             :fetch-data-view                gbs/fetch-data-view}
+             :fetch-data-view          gbs/fetch-data-view}
    :tab-image
    {:fetch-data-output        imaging/fetch-data-output
     :fetch-database           imaging/fetch-database
@@ -46,6 +46,10 @@
           db-func (get-in database-interface [database-label interface-func] nil)
           _ (assert (fn? db-func) (str "(" database-label " " interface-func ") is not a known function"))]
       db-func)))
+
+(defn set-active-sketch [active-sketch]
+  (swap! app-state update-in [:active-sketch] active-sketch)
+  )
 
 (defn increment
   [event]
@@ -87,11 +91,13 @@
   [event tab]
   (if (some? event)
     (.preventDefault event))
-  (js/console.log "Selecting" tab)
-  (swap! app-state assoc-in [:selected-tab] tab)
-  (update-database-view nil)
-  ;(swap! app-state update-in [:data] (interface-with-database :fetch-database))
-  )
+  (if tab
+    (let []
+      (js/console.log "Selecting" tab)
+      (swap! app-state assoc-in [:selected-tab] tab)
+      (update-database-view nil)
+      ;(swap! app-state update-in [:data] (interface-with-database :fetch-database))
+      )))
 
 (defn select-move
   "Makes the given design move be the currently selected one."
