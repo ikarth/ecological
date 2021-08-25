@@ -322,6 +322,7 @@
         sketch-args* (merge sketch-args {:host canvas-id})
         saved-sketch-atom (atom ::not-set-yet)
         ]
+    (js/console.log [w h])
     ^{:key canvas-id}
     [r/create-class
      {:reagent-render
@@ -348,37 +349,30 @@
 
 (defn visualize-image [img-data]
   (js/console.log img-data)
-  (letfn [(initial-state []
-            (qc/background-image img-data)
-            {:image img-data}
-            )
+  (letfn [(img-size [] [(. img-data -width) (. img-data -height)])
+          (initial-state []
+            (let [[w h] (img-size)]
+              (qc/resize-sketch w h)
+              (qc/background-image img-data)
+              (qc/no-loop)
+              {:image img-data}))
           (update-state [state]
             state
             )
           (draw [state]
-            (let [img (:image state)]
-              
-              )
-            )
-          
+            (let [img (:image state)]))
+
           ]
     (q-sketch :setup initial-state
              :update update-state
              :draw draw
              :host nil
              :middleware [qm/fun-mode]
-             :size [356 356]
+             :size (img-size)
              )))
 
 (defn display-loose-images [g-state]
   (let [image (get "image-data" g-state)]
-    (doall
-     (for [i-entry g-state]
-       (if (map? i-entry)
-         (let [idat (get i-entry "image-data")]
-           ;(js/console.log idat)
-           (visualize-image idat)
-           ))))
     (map (fn [i-entry]
            (if (map? i-entry)
              (let [idat (get i-entry "image-data")]

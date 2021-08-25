@@ -17,9 +17,14 @@
 
 (defn op-create-image [w h]
   (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
-    (qc/create-image w h)))
+    (let [image-target (qc/create-image w h)]
+      (dotimes [x w]
+        (dotimes [y h]
+          (qc/set-pixel image-target x y (qc/color 0 0 0))))
+      (qc/update-pixels image-target)
+      image-target)))
 
-(defn op-create-random-noise [w h]
+(defn op-create-test-graphics [w h]
   (let [graphics (qc/create-graphics w h)]
     (qc/with-graphics graphics
       (qc/background 127 127 255)
@@ -27,18 +32,51 @@
     graphics))
 
 (defn op-create-perlin-image [w h]
-  ;; (let [graphics (qc/create-graphics w h)]
-  ;;   (qc/with-graphics graphics
-  ;;     (qc/background 127 127 255)
-  ;;     (qc/ellipse 50 50 50 50))
-  ;;   graphics)
   (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
     (let [image-target (qc/create-image w h)
-          ;;image-pixels (qc/pixels image-target)
-          ]
+          noise-offset [0 0 0]
+          noise-scale [0.05 0.05 0.05]
+          noise-octaves 4
+          noise-falloff 0.5]
+      (qc/noise-detail noise-octaves noise-falloff)
       (dotimes [x w]
         (dotimes [y h]
-          (qc/set-pixel image-target x y (qc/color (rem x 255) (rem y 255) 127))))
+          (let [intensity (* 255 (qc/noise (+ (first noise-offset) (* x (first noise-scale)))
+                                           (+ (second noise-offset)(* y (second noise-scale)))))]
+            (qc/set-pixel image-target x y (qc/color intensity intensity intensity))
+            ;(qc/set-pixel image-target x y (qc/color (rem x 256) (rem y 256) 127))
+            )))
+      (qc/update-pixels image-target)
+      image-target)))
+
+(defn op-create-random-noise [w h]
+  (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
+    (let [image-target (qc/create-image w h)]
+      (dotimes [x w]
+        (dotimes [y h]
+          (let [intensity (qc/random 1.0)]
+            (qc/set-pixel image-target x y (qc/color (* 255 intensity) (* 255 intensity) (* 255 intensity))))))
+      (qc/update-pixels image-target)
+      image-target)))
+
+(defn op-create-uv-pattern [w h]
+  (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
+    (let [image-target (qc/create-image w h)]
+      (dotimes [x w]
+        (dotimes [y h]
+          (let [u (/ x w)
+                v (/ y h)
+                ]
+            (qc/set-pixel image-target x y (qc/color (* 255 u) (* 255 v) 0)))))
+      (qc/update-pixels image-target)
+      image-target)))
+
+(defn op-create-test-pattern [w h]
+  (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
+    (let [image-target (qc/create-image w h)]
+      (dotimes [x w]
+        (dotimes [y h]
+          (qc/set-pixel image-target x y (qc/color (rem x 256) (rem y 256) 127))))
       (qc/update-pixels image-target)
       image-target)))
 
@@ -84,6 +122,54 @@
          :raster/uuid (str (random-uuid))
          }]))})
 
+(def move-generate-random-noise-raster
+  {:name "generate-random-noise-raster"
+   :comment "Create a raster grid filled with 0 to 255 based on UV -> RG coordinates."
+   ;;:query nil
+   :exec
+   (fn [db & {:keys [size]}]
+     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                     (str ":size should be nil or a vector of size 2, but instead it is " size))
+           [w h] (if (nil? size) default-image-size size)
+           perlin-image (op-create-random-noise w h)]       
+       [{:db/id -1
+         :raster/matrix perlin-image
+         :raster/size [w h]
+         :raster/uuid (str (random-uuid))
+         }]))})
+
+(def move-generate-uv-pattern-raster
+  {:name "generate-uv-pattern-raster"
+   :comment "Create a raster grid filled with 0 to 255 based on UV -> RG coordinates."
+   ;;:query nil
+   :exec
+   (fn [db & {:keys [size]}]
+     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                     (str ":size should be nil or a vector of size 2, but instead it is " size))
+           [w h] (if (nil? size) default-image-size size)
+           perlin-image (op-create-uv-pattern w h)]       
+       [{:db/id -1
+         :raster/matrix perlin-image
+         :raster/size [w h]
+         :raster/uuid (str (random-uuid))
+         }]))})
+
+(def move-generate-test-pattern-raster
+  {:name "generate-test-pattern-raster"
+   :comment "Create a raster grid filled with a repeating text pattern of the given size."
+   ;;:query nil
+   :exec
+   (fn [db & {:keys [size]}]
+     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                     (str ":size should be nil or a vector of size 2, but instead it is " size))
+           [w h] (if (nil? size) default-image-size size)
+           perlin-image (op-create-test-pattern w h)]       
+       [{:db/id -1
+         :raster/matrix perlin-image
+         :raster/size [w h]
+         :raster/uuid (str (random-uuid))
+         }]))})
+
 (def move-generate-blank-image-function
   {:name "generate-blank-image-function"
    :comment "Create a function that returns a blank image of the given size."
@@ -104,8 +190,11 @@
 
 (def image-design-moves
   [;move-generate-blank-image-function
-   ;move-generate-blank-raster-image
+   move-generate-blank-raster-image
    move-generate-perlin-noise-raster
+   move-generate-uv-pattern-raster
+   move-generate-test-pattern-raster
+   move-generate-random-noise-raster
    ])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
