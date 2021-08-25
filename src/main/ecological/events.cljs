@@ -38,14 +38,16 @@
    })
 
 (defn interface-with-database [interface-func]
-  (let [selected-tab (get @app-state :selected-tab :tab-gbs)]
-    
-    (let [selected-tab (get @app-state :selected-tab {:id :tab-gbs})
-          database-label (get selected-tab :id :tab-gbs)
-          _ (assert (keyword? database-label) (str database-label " is not a recognized database name."))
-          db-func (get-in database-interface [database-label interface-func] nil)
-          _ (assert (fn? db-func) (str "(" database-label " " interface-func ") is not a known function"))]
-      db-func)))
+  ;(let [selected-tab (get @app-state :selected-tab :tab-gbs)])
+  (let [selected-tab (get @app-state :selected-tab {:id :tab-gbs})
+        _ (assert (not (:map? selected-tab)) (str "No valid tab selected: " selected-tab))
+        ;_ (println (str "selected tab: " selected-tab))
+        database-label (get selected-tab :id :tab-gbs)
+        _ (assert (keyword? database-label) (str database-label " is not a recognized database name."))
+        db-func (get-in database-interface [database-label interface-func] nil)
+        ;_ (println (str "db function: " database-label " " interface-func " " db-func))
+        _ (assert (fn? db-func) (str "(" database-label " " interface-func ") is not a known function"))]
+    db-func))
 
 (defn set-active-sketch [active-sketch]
   (swap! app-state update-in [:active-sketch] active-sketch)
@@ -67,15 +69,21 @@
     ))
 
 (defn init-database [event]
-  (if (some? event)
-    (.preventDefault event))
   (let []
-    (interface-with-database :make-empty-project)
+    (if (some? event)
+      (.preventDefault event))
+    ;(println "init-database")
+    ;(js/console.log (:selected-tab @app-state))
+    ((interface-with-database :make-empty-project))
+    ;(println "...")
+    ;(js/console.log (:data @app-state))
+    ;(println "---")
     (swap! app-state update-in [:all-moves] (interface-with-database :fetch-all-moves))
     (swap! app-state update-in [:gbs-output] (interface-with-database :fetch-data-output))
     (swap! app-state update-in [:data] (interface-with-database :fetch-database))
     (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
     (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
+    ;(js/console.log (:data @app-state))
     ))
 
 (defn update-database-view [event]
@@ -105,6 +113,7 @@
   (.preventDefault event)
   (js/console.log "Selecting" (:name move))
   (swap! app-state assoc-in [:selected-move] move)
+  (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
   )
 
 (defn select-bound-move

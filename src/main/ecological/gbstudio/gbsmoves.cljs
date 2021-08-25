@@ -296,11 +296,11 @@
 (def design-moves
   [
    ;move-load-resources-from-disk
-   ;move-create-background-from-image
+   move-create-background-from-image
    ;move-load-gbs-projects-from-disk
-   ;move-generate-scene-from-template
+   move-generate-scene-from-template
    move-place-greenfield-scene
-   ;move-add-existing-background-to-scene
+   move-add-existing-background-to-scene
    ])
 
 (def design-moves-finalizing

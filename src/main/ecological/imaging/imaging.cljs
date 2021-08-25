@@ -103,9 +103,9 @@
 
 
 (def image-design-moves
-  [move-generate-blank-image-function
+  [;move-generate-blank-image-function
    move-generate-blank-raster-image
-   ;move-generate-perlin-noise-raster
+   move-generate-perlin-noise-raster
    ])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -132,13 +132,14 @@
 (defn export-result-image
   []
   ;; TODO
+  []
   )
 
 (defn export-all-images []
   (let [element-labels ["_datascript_internal_id"
                         "uuid"
                         "size"
-                        "data"]
+                        "image-data"]
         elements
         (d/q '[:find ?element ?uuid ?size ?raster
                :in $
@@ -154,6 +155,7 @@
   "Export the result after applying the design moves."
   []
   (-> {}
+      (update :raster export-all-images)
       (update :output-image export-result-image)))
 
 
@@ -210,8 +212,8 @@
 
 (defn execute-design-move! [design-move]
   (assert (map? design-move) "Design move is missing, so can't be executed.")
-  (println db-conn)
-  (println design-move)
+  ;(println db-conn)
+  ;(println design-move)
   (d/transact! db-conn (assemble-exec-result @db-conn design-move)))
 
 
@@ -226,6 +228,7 @@
   )
 
 (defn make-empty-project []
+  ;(println "Make Empty Project: Imaging")
   (reset-the-database!))
 
 
@@ -238,7 +241,7 @@
 
 (defn fetch-possible-moves []
   (let [moves (get-possible-design-move-from-moveset image-design-moves)]
-    (js/console.log moves)
+    ;(js/console.log moves)
     moves))
 
 (defn fetch-some-moves []

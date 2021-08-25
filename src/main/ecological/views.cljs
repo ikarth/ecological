@@ -371,7 +371,8 @@
                    (flatten (mapv hex-string-to-byte
                                   (mapv clojure.string/join (partition 2 just-data)))))
         draw-index (range (* width height))]
-    [:div]))
+    [:div ;; TODO
+     ])) 
 
 (defn render-bits-viz [data]
   (let [data-segments (clojure.string/split data #"\|")]
@@ -421,6 +422,7 @@
       (str (count data-segments)))))
 
 (defn convert-viz [hic]
+  (println "(convert-viz)")
   (clojure.walk/postwalk
    (fn [data]
      (cond
@@ -436,10 +438,20 @@
               (or (clojure.string/includes? data "./")
                   (clojure.string/includes? data ".\\")))
          [:div [:img {:src data}]]
+         (clojure.string/includes? data "image-data")
+         [:div (str data)]
          :else data)
        (and (vector? data) (= (first data) :collisions-viz))
-       (vector-render-bits-viz (rest data))       
-       :else data)
+       (vector-render-bits-viz (rest data))
+       ;; (and (vector? data) (= (first data) :td.jh-value))
+       ;; (let []
+       ;;   (println ":td")
+       ;;   data
+       ;;   )
+       :else
+       (let []
+         ;(js/console.log data)
+         data))
      )
    hic))
 
@@ -449,10 +461,18 @@
   (clojure.walk/postwalk
    (fn [data]
      (cond
-       (and (vector? data) (= (first data) :imaging))
-       data
+       ;; (and (vector? data) (= (first data) :imaging))
+       ;; data
+       ;; false;(clojure.string/includes? data "image-data")
+       ;; (let []
+       ;;   (println (str "converting image data: " data))
+       ;;   data
+       ;;   )
        :else
-       data))
+       (let []
+         ;(println (str "viz-data: " data))
+         data)
+       ))
    hic))
 
 (defn filter-gen-state [g-state]
@@ -464,11 +484,29 @@
          :else node))
      g-state))
 
+(defn filter-gen-state-img [g-state]
+  (clojure.walk/postwalk
+     (fn [node]
+       (cond
+         (and (map? node) (contains? node "collisions"))
+         (dissoc node "collisions" "editor-position")
+         (and (map? node) (contains? node "image-data"))
+         (let []
+           (println (str "image-data: " node))
+           [:div (get-in node ["image-data"])]
+           node)
+         :else
+         (let []
+           ;(println (str "node: " node))
+           node)))
+     g-state))
+
 (defn display-imaging []
   (let [img-state (:gbs-output @app-state)]
     [:div.self-center.content-center.items-center.justify-center.flex.bg-washed-green
      [:div.mw9.ma2
-      (convert-viz-imaging (json->hiccup (clj->js (filter-gen-state img-state))))]]))
+      (println (str "image-state: " img-state))
+      (convert-viz (json->hiccup (clj->js (filter-gen-state-img img-state))))]]))
 
 
 (defn display-gbs []
@@ -477,10 +515,12 @@
      [:div.mw9.ma2
                                         ;[graph-display-button]
                                         ;[:div#artifact-graph {:style {:min-height "100px"}}]
-      ;[:hr]
+                                        ;[:hr]
+
       (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
       (comment
         [:hr]
+        "display gbs"
         (coll-pen.core/draw (convert-data-for-display gen-state)
                             {:el-per-page 30 :truncate false })
         [:hr]
@@ -499,13 +539,18 @@
 ;; https://github.com/simon-katz/nomisdraw/blob/master/src/cljs/nomisdraw/utils/nomis_quil_on_reagent.cljs
 (defn q-sketch
   [& {:as sketch-args}]
-  (assert (not (contains? sketch-args :host))
-          ":host should not be provided, since a unique canvas id will be used instead.")
-  (let [size (:size sketch-args)
+  ;; (assert (not (contains? sketch-args :host))
+  ;;         ":host should not be provided, since a unique canvas id will be used instead.")
+  (let [host (if (not (contains? sketch-args :host))
+               (str (random-uuid))
+               (if (not (= nil (:host sketch-args)))
+                 (:host sketch-args)
+                 (str (random-uuid))))
+        size (:size sketch-args)
         _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                   (str ":size should be nil or a vector of size 2, but instead it is " size))
         [w h] (if (nil? size) [600 600] size)
-        canvas-id "quil-canvas" ;(str (random-uuid))
+        canvas-id host ;"quil-canvas" ;(str (random-uuid))
         canvas-tag-&-id (keyword (str "div#" canvas-id))
         sketch-args* (merge sketch-args {:host canvas-id})
         saved-sketch-atom (atom ::not-set-yet)
@@ -533,23 +578,31 @@
             (qc/with-sketch @saved-sketch-atom
               (qc/exit)))))}]))
 
-(defn visualize-generator-sketch [w h]
-  (letfn [(initial-state []
-            (qc/pixel-density 1)
-            {:time 0})
-          (update-state [state] (update state :time inc))
-          (draw [state]
-            (let [t (:time state)]
-              (qc/background 80 170 100)
-              (qc/fill 100 120 230)
-              (qc/ellipse (rem t w) (rem t h) 50 50)
-              ))]
-    (q-sketch :setup initial-state
-              :update update-state
-              :draw draw
-              :middleware [qm/fun-mode]
-              :size [w h])
-    ))
+(defn visuaulize-image [div-id img-data]
+  (js/console.log img-data)
+  ;(letfn      )
+  )
+
+(defn visualize-generator-sketch
+  ([w h]
+   (visualize-generator-sketch w h nil))
+  ([w h name]
+   (letfn
+       [(initial-state []
+          (qc/pixel-density 1)
+          {:time 0})
+        (update-state [state] (update state :time inc))
+        (draw [state]
+          (let [t (:time state)]
+            (qc/background 80 170 100)
+            (qc/fill 100 120 230)
+            (qc/ellipse (rem t w) (rem t h) 50 50)))]
+     (q-sketch :setup initial-state
+               :update update-state
+               :draw draw
+               :host name
+               :middleware [qm/fun-mode]
+               :size [w h]))))
 
 (defn app []
   (let [image-tab [:div
@@ -557,9 +610,16 @@
                    ;[manual-operation]
                    [operation-harness]
                    [image-generate-btn]
-                   [#(visualize-generator-sketch 400 300)]
-                   [:div.ma2.pa2.mh4 (coll-pen.core/draw (:data-view @app-state) {:el-per-page 30 :truncate false})]
-                   [display-imaging]]
+                   [#(visualize-generator-sketch 400 300 "quil-canvas")]
+                   [display-imaging]
+                   ;; (let [dv (:data-view @app-state)]
+                   ;;   (js/console.log dv)
+                   ;;   [:div.ma2.pa2.mh4 "display img"
+                   ;;    (coll-pen.core/draw dv
+                   ;;                        {:key :pen-img-display :el-per-page 30 :truncate false})
+                   ;;    (coll-pen.core/draw dv
+                   ;;                        {:key :pen-img-display2 :el-per-page 30 :truncate false})])
+                   ]
         gbs-tab
         [:div
          [header]
@@ -568,7 +628,8 @@
          [generate-btn]
          ;;(println (:data @app-state))        
          [constraint-solving-test-btn]
-         [:div.ma2.pa2.mh4 (coll-pen.core/draw (:data-view @app-state) {:el-per-page 30 :truncate false})]
+         ;; [:div.ma2.pa2.mh4 "gbs" (coll-pen.core/draw (:data-view @app-state) {:key :pen-gbs-display :el-per-page 30 :truncate false})]
+         ;; [:div.ma2.pa2.mh4 "gbs" (coll-pen.core/draw (:data-view @app-state) {:key :pen-gbs-display2 :el-per-page 30 :truncate false})]
          [display-gbs]
          ;; [:hr]      
          ;;                                ;(js/console.log (:data @app-state))
@@ -588,13 +649,18 @@
       (for [tab tab-defs]
         (let []
           (if (:id tab)
-            ;;(js/console.log (:id tab))
             ^{:key (:id tab)}
             [(if (= (:id selected-tab) (:id tab))
                :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw2.b--black-60.hover-orange.bg-white
                :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30)
              {:on-click #(select-tab % tab)} (:label tab)])))]
      [:div
-      [:div.ma2.pa2.mh4 (coll-pen.core/draw (:data-view @app-state) {:el-per-page 30 :truncate false})]
+      [:div.ma2.pa2.mh4
+       ;; (let []
+       ;;   ;(get selected-tab :contents [:div])
+       ;;   ;(js/console.log (:data-view @app-state))
+       ;;   )
+       "data-view"
+       (coll-pen.core/draw (:data-view @app-state) {:key :pen-data-display :el-per-page 10 :truncate false})]
       (get selected-tab :contents [:div])]]))
     

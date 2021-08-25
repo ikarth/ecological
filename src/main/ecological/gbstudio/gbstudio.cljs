@@ -105,7 +105,9 @@
 (defn load-resources
   "Load resources from disk that we need to generate things..."
   []
+
   (let [manifest (asset-manifest)]
+      (println "(load-resources)")
        (if (empty? manifest)
          (let []
            (js/console.log "Missing asset manifest")
@@ -132,6 +134,7 @@
 (defn load-gbs-projects
   "Load projects and convert them into a databse format to eventually use to create templates."
   []
+  (println "(load-gbs-projects)")
   (let [sep (scene-manifest)
            scenes-to-add
            (mapv (fn [key asset]
@@ -281,7 +284,8 @@
 (defn export-scenes
   "Export all of the scenes from the database and return EDN that can eventually be interperted by GBS."
   []
-    (let [scene-labels
+  ;; collisions and collisions-viz are separate because we want to have one for GBS and one for our internal display. TODO: However, we might be able to construct collisions-viz after the query.
+  (let [scene-labels
           ["_datascript_internal_id" "backgroundId" "editor-position" "name" "id" "collisions" "background-image" "collisions-viz" "size"]
           scenes
           (d/q '[:find ?scene ?backgroundUUID ?editor-position ?name ?uuid ?collisions ?bkg-resource-path ?collisions ?size
@@ -481,6 +485,7 @@
   )
 
 (defn make-empty-project []
+  ;(println "Make Empty Project: GBS")
   (reset-the-database!)
   (d/transact! db-conn (load-resources) nil)
   (d/transact! db-conn (load-gbs-projects) nil)
