@@ -104,7 +104,7 @@
 
 (def image-design-moves
   [;move-generate-blank-image-function
-   move-generate-blank-raster-image
+   ;move-generate-blank-raster-image
    move-generate-perlin-noise-raster
    ])
 

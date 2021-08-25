@@ -300,6 +300,119 @@
                    (bytes-to-bools
                     [(hex-string-to-byte h-val)]))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Inspired by
+;; https://github.com/simon-katz/nomisdraw/blob/master/src/cljs/nomisdraw/utils/nomis_quil_on_reagent.cljs
+(defn q-sketch
+  [& {:as sketch-args}]
+  ;; (assert (not (contains? sketch-args :host))
+  ;;         ":host should not be provided, since a unique canvas id will be used instead.")
+  (let [host (if (not (contains? sketch-args :host))
+               (str (random-uuid))
+               (if (not (= nil (:host sketch-args)))
+                 (:host sketch-args)
+                 (str (random-uuid))))
+        size (:size sketch-args)
+        _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                  (str ":size should be nil or a vector of size 2, but instead it is " size))
+        [w h] (if (nil? size) [600 600] size)
+        canvas-id host ;"quil-canvas" ;(str (random-uuid))
+        canvas-tag-&-id (keyword (str "div#" canvas-id))
+        sketch-args* (merge sketch-args {:host canvas-id})
+        saved-sketch-atom (atom ::not-set-yet)
+        ]
+    ^{:key canvas-id}
+    [r/create-class
+     {:reagent-render
+      (fn []
+        [canvas-tag-&-id {:style {:max-width w}
+                          :width w
+                          :height h}
+         ;;"contents"
+         ])
+      :component-did-mount
+      (fn []
+        ;;(js/console.log sketch-args)
+        (a/go (reset! saved-sketch-atom (apply qc/sketch (apply concat sketch-args*)))))
+      :component-will-unmount
+      (fn []
+        (a/go-loop []
+          ;(let [saved-sketch @saved-sketch-atom])
+          (if (= @saved-sketch-atom ::not-set-yet)
+            (do
+              (a/<! (a/timeout 100))
+              (recur))
+            (qc/with-sketch @saved-sketch-atom
+              (qc/exit)))))}]))
+
+(defn visualize-image [img-data]
+  (js/console.log img-data)
+  (letfn [(initial-state []
+            (qc/background-image img-data)
+            {:image img-data}
+            )
+          (update-state [state]
+            state
+            )
+          (draw [state]
+            (let [img (:image state)]
+              
+              )
+            )
+          
+          ]
+    (q-sketch :setup initial-state
+             :update update-state
+             :draw draw
+             :host nil
+             :middleware [qm/fun-mode]
+             :size [356 356]
+             )))
+
+(defn display-loose-images [g-state]
+  (let [image (get "image-data" g-state)]
+    (doall
+     (for [i-entry g-state]
+       (if (map? i-entry)
+         (let [idat (get i-entry "image-data")]
+           ;(js/console.log idat)
+           (visualize-image idat)
+           ))))
+    (map (fn [i-entry]
+           (if (map? i-entry)
+             (let [idat (get i-entry "image-data")]
+               (visualize-image idat)
+               )))
+         g-state)))
+
+(defn visualize-generator-sketch
+  ([w h]
+   (visualize-generator-sketch w h nil))
+  ([w h name]
+   (letfn
+       [(initial-state []
+          (qc/pixel-density 1)
+          {:time 0})
+        (update-state [state] (update state :time inc))
+        (draw [state]
+          (let [t (:time state)]
+            (qc/background 80 170 100)
+            (qc/fill 100 120 230)
+            (qc/ellipse (rem t w) (rem t h) 50 50)))]
+     (q-sketch :setup initial-state
+               :update update-state
+               :draw draw
+               :host name
+               :middleware [qm/fun-mode]
+               :size [w h]))))
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 ;; https://github.com/chrismaltby/gb-studio/blob/9cc3b4d341a6db6a6c10f7f35fb7f60e969f1d8c/src/consts.js#L50
 ;; export const COLLISION_TOP = 0x1;
@@ -490,23 +603,31 @@
        (cond
          (and (map? node) (contains? node "collisions"))
          (dissoc node "collisions" "editor-position")
-         (and (map? node) (contains? node "image-data"))
-         (let []
-           (println (str "image-data: " node))
-           [:div (get-in node ["image-data"])]
-           node)
+         ;; (and (map? node) (contains? node "image-data"))
+         ;; (let [img-data (get-in node ["image-data" "imageData"])]
+         ;;   (println (str "image-data: " node))
+         ;;   (js/console.log node)
+         ;;   (js/console.log (get node "image-data"))
+         ;;   [:div (get-in node ["image-data"])]
+         ;;   (js/console.log img-data)
+         ;;   [node img-data])
          :else
          (let []
-           ;(println (str "node: " node))
+           ;; (println (str "node: " node))
+           ;; (js/console.log node)
            node)))
      g-state))
 
 (defn display-imaging []
   (let [img-state (:gbs-output @app-state)]
-    [:div.self-center.content-center.items-center.justify-center.flex.bg-washed-green
-     [:div.mw9.ma2
-      (println (str "image-state: " img-state))
-      (convert-viz (json->hiccup (clj->js (filter-gen-state-img img-state))))]]))
+    [:div
+     (display-loose-images img-state)
+     [:div.self-center.content-center.items-center.justify-center.flex.bg-washed-green
+      [:div.mw9.ma2
+       (println (str "image-state: " img-state))
+       
+       (convert-viz (json->hiccup (clj->js (filter-gen-state-img img-state))))
+       ]]]))
 
 
 (defn display-gbs []
@@ -535,74 +656,7 @@
 (defn image-header []
   [:h1 "Ecological Generator Output Visualization"])
 
-;; Inspired by
-;; https://github.com/simon-katz/nomisdraw/blob/master/src/cljs/nomisdraw/utils/nomis_quil_on_reagent.cljs
-(defn q-sketch
-  [& {:as sketch-args}]
-  ;; (assert (not (contains? sketch-args :host))
-  ;;         ":host should not be provided, since a unique canvas id will be used instead.")
-  (let [host (if (not (contains? sketch-args :host))
-               (str (random-uuid))
-               (if (not (= nil (:host sketch-args)))
-                 (:host sketch-args)
-                 (str (random-uuid))))
-        size (:size sketch-args)
-        _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
-                  (str ":size should be nil or a vector of size 2, but instead it is " size))
-        [w h] (if (nil? size) [600 600] size)
-        canvas-id host ;"quil-canvas" ;(str (random-uuid))
-        canvas-tag-&-id (keyword (str "div#" canvas-id))
-        sketch-args* (merge sketch-args {:host canvas-id})
-        saved-sketch-atom (atom ::not-set-yet)
-        ]
-    [r/create-class
-     {:reagent-render
-      (fn []
-        [canvas-tag-&-id {:style {:max-width w}
-                          :width w
-                          :height h}
-         ;;"contents"
-         ])
-      :component-did-mount
-      (fn []
-        ;;(js/console.log sketch-args)
-        (a/go (reset! saved-sketch-atom (apply qc/sketch (apply concat sketch-args*)))))
-      :component-will-unmount
-      (fn []
-        (a/go-loop []
-          ;(let [saved-sketch @saved-sketch-atom])
-          (if (= @saved-sketch-atom ::not-set-yet)
-            (do
-              (a/<! (a/timeout 100))
-              (recur))
-            (qc/with-sketch @saved-sketch-atom
-              (qc/exit)))))}]))
-
-(defn visuaulize-image [div-id img-data]
-  (js/console.log img-data)
-  ;(letfn      )
-  )
-
-(defn visualize-generator-sketch
-  ([w h]
-   (visualize-generator-sketch w h nil))
-  ([w h name]
-   (letfn
-       [(initial-state []
-          (qc/pixel-density 1)
-          {:time 0})
-        (update-state [state] (update state :time inc))
-        (draw [state]
-          (let [t (:time state)]
-            (qc/background 80 170 100)
-            (qc/fill 100 120 230)
-            (qc/ellipse (rem t w) (rem t h) 50 50)))]
-     (q-sketch :setup initial-state
-               :update update-state
-               :draw draw
-               :host name
-               :middleware [qm/fun-mode]
-               :size [w h]))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn app []
   (let [image-tab [:div

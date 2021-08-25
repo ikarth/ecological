@@ -6,7 +6,7 @@
 
  :dependencies
  [[proto-repl "0.3.1"]
-  [binaryage/devtools "1.0.2"]
+  [binaryage/devtools "1.0.3"]
   [cider/cider-nrepl "0.25.6"]
   [reagent "1.0.0"]
   [datascript "1.0.4"]
@@ -44,7 +44,8 @@
         :asset-path "js"
         :modules {:main {:entries [ecological.core]}}
         ;;:compiler-options {:infer-externs :auto}
-        :devtools {:before-load ecological.core/stop 
+        :devtools {:preloads [devtools.preload]
+                   :before-load ecological.core/stop 
                    :after-load ecological.core/start
                    ;:before-load-async ecological.build/build-asset-data
                    :watch-dir "resources"
