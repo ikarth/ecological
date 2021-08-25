@@ -322,7 +322,6 @@
         sketch-args* (merge sketch-args {:host canvas-id})
         saved-sketch-atom (atom ::not-set-yet)
         ]
-    (js/console.log [w h])
     ^{:key canvas-id}
     [r/create-class
      {:reagent-render
@@ -334,12 +333,10 @@
          ])
       :component-did-mount
       (fn []
-        ;;(js/console.log sketch-args)
         (a/go (reset! saved-sketch-atom (apply qc/sketch (apply concat sketch-args*)))))
       :component-will-unmount
       (fn []
         (a/go-loop []
-          ;(let [saved-sketch @saved-sketch-atom])
           (if (= @saved-sketch-atom ::not-set-yet)
             (do
               (a/<! (a/timeout 100))
@@ -348,7 +345,7 @@
               (qc/exit)))))}]))
 
 (defn visualize-image [img-data]
-  (js/console.log img-data)
+  ;;(js/console.log img-data)
   (letfn [(img-size [] [(. img-data -width) (. img-data -height)])
           (initial-state []
             (let [[w h] (img-size)]
@@ -357,12 +354,9 @@
               (qc/no-loop)
               {:image img-data}))
           (update-state [state]
-            state
-            )
+            state)
           (draw [state]
-            (let [img (:image state)]))
-
-          ]
+            (let [img (:image state)]))]
     (q-sketch :setup initial-state
              :update update-state
              :draw draw
@@ -529,7 +523,7 @@
       (str (count data-segments)))))
 
 (defn convert-viz [hic]
-  (println "(convert-viz)")
+  ;;(println "(convert-viz)")
   (clojure.walk/postwalk
    (fn [data]
      (cond
@@ -597,18 +591,8 @@
        (cond
          (and (map? node) (contains? node "collisions"))
          (dissoc node "collisions" "editor-position")
-         ;; (and (map? node) (contains? node "image-data"))
-         ;; (let [img-data (get-in node ["image-data" "imageData"])]
-         ;;   (println (str "image-data: " node))
-         ;;   (js/console.log node)
-         ;;   (js/console.log (get node "image-data"))
-         ;;   [:div (get-in node ["image-data"])]
-         ;;   (js/console.log img-data)
-         ;;   [node img-data])
          :else
          (let []
-           ;; (println (str "node: " node))
-           ;; (js/console.log node)
            node)))
      g-state))
 
@@ -618,8 +602,7 @@
      (display-loose-images img-state)
      [:div.self-center.content-center.items-center.justify-center.flex.bg-washed-green
       [:div.mw9.ma2
-       (println (str "image-state: " img-state))
-       
+       ;;(println (str "image-state: " img-state))
        (convert-viz (json->hiccup (clj->js (filter-gen-state-img img-state))))
        ]]]))
 
@@ -628,10 +611,6 @@
   (let [gen-state (:gbs-output @app-state)]
     [:div.self-center.content-center.items-center.justify-center.flex.bg-lightest-blue
      [:div.mw9.ma2
-                                        ;[graph-display-button]
-                                        ;[:div#artifact-graph {:style {:min-height "100px"}}]
-                                        ;[:hr]
-
       (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
       (comment
         [:hr]
@@ -641,9 +620,6 @@
         [:hr]
         (.stringify js/JSON (clj->js gen-state)))
       ]])
-  
-   ;; (with-out-str) (cljs.pprint/pprint)
-   ;; (clj->js (:gbs-output @app-state))
    )
 ;(.stringify js/JSON)
 
@@ -655,26 +631,16 @@
 (defn app []
   (let [image-tab [:div
                    [image-header]
-                   ;[manual-operation]
                    [operation-harness]
                    [image-generate-btn]
                    [#(visualize-generator-sketch 400 300 "quil-canvas")]
                    [display-imaging]
-                   ;; (let [dv (:data-view @app-state)]
-                   ;;   (js/console.log dv)
-                   ;;   [:div.ma2.pa2.mh4 "display img"
-                   ;;    (coll-pen.core/draw dv
-                   ;;                        {:key :pen-img-display :el-per-page 30 :truncate false})
-                   ;;    (coll-pen.core/draw dv
-                   ;;                        {:key :pen-img-display2 :el-per-page 30 :truncate false})])
                    ]
         gbs-tab
         [:div
          [header]
-         ;[manual-operation]
          [operation-harness]
          [generate-btn]
-         ;;(println (:data @app-state))        
          [constraint-solving-test-btn]
          ;; [:div.ma2.pa2.mh4 "gbs" (coll-pen.core/draw (:data-view @app-state) {:key :pen-gbs-display :el-per-page 30 :truncate false})]
          ;; [:div.ma2.pa2.mh4 "gbs" (coll-pen.core/draw (:data-view @app-state) {:key :pen-gbs-display2 :el-per-page 30 :truncate false})]
@@ -704,10 +670,6 @@
              {:on-click #(select-tab % tab)} (:label tab)])))]
      [:div
       [:div.ma2.pa2.mh4
-       ;; (let []
-       ;;   ;(get selected-tab :contents [:div])
-       ;;   ;(js/console.log (:data-view @app-state))
-       ;;   )
        "data-view"
        (coll-pen.core/draw (:data-view @app-state) {:key :pen-data-display :el-per-page 10 :truncate false})]
       (get selected-tab :contents [:div])]]))

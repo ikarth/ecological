@@ -44,7 +44,6 @@
           (let [intensity (* 255 (qc/noise (+ (first noise-offset) (* x (first noise-scale)))
                                            (+ (second noise-offset)(* y (second noise-scale)))))]
             (qc/set-pixel image-target x y (qc/color intensity intensity intensity))
-            ;(qc/set-pixel image-target x y (qc/color (rem x 256) (rem y 256) 127))
             )))
       (qc/update-pixels image-target)
       image-target)))
