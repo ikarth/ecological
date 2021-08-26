@@ -87,7 +87,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Design moves
 
-
+(defn timestamp []
+  (.now js/Date))
 
 (def move-generate-blank-raster-image
   {:name "generate-blank-raster-image"
@@ -103,6 +104,7 @@
          :raster/matrix blank-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
+         :entity/timestamp (timestamp)
          }]))})
 
 (def move-generate-perlin-noise-raster
@@ -119,6 +121,7 @@
          :raster/matrix perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
+         :entity/timestamp (timestamp)
          }]))})
 
 (def move-generate-random-noise-raster
@@ -135,6 +138,7 @@
          :raster/matrix perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
+         :entity/timestamp (timestamp)
          }]))})
 
 (def move-generate-uv-pattern-raster
@@ -151,6 +155,7 @@
          :raster/matrix perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
+         :entity/timestamp (timestamp)
          }]))})
 
 (def move-generate-test-pattern-raster
@@ -167,6 +172,7 @@
          :raster/matrix perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
+         :entity/timestamp (timestamp)
          }]))})
 
 (def move-generate-blank-image-function
@@ -182,6 +188,7 @@
          :func/func-handle :op-create-image
          :func/parameters [w h :rgb]
          :func/uuid (str (random-uuid))
+         :entity/timestamp (timestamp)
          }]))})
 
 
@@ -227,17 +234,25 @@
   (let [element-labels ["_datascript_internal_id"
                         "uuid"
                         "size"
-                        "image-data"]
+                        "image-data"
+                        "timestamp"]
         elements
-        (d/q '[:find ?element ?uuid ?size ?raster
+        (d/q '[:find ?element ?uuid ?size ?raster ?timestamp
                :in $
                :where
                [?element :raster/uuid ?uuid]
                [?element :raster/size ?size]
-               [?element :raster/matrix ?raster]]
+               [?element :raster/matrix ?raster]
+               [?element :entity/timestamp ?timestamp]
+               ]
              @db-conn)]
     (map #(zipmap element-labels %)
          elements)))
+
+(defn export-most-recent-artifact []
+  (let [all-images (export-all-images)
+        images-sorted (sort-by #(get-in % ["timestamp"]) > all-images)]
+    (first images-sorted)))
 
 (defn export-output
   "Export the result after applying the design moves."
@@ -352,3 +367,8 @@
   (vec (map (fn [dat]
               (let [[e a v tx add] dat]
                 [e a v tx add])) (d/datoms @db-conn :eavt))))
+
+(defn fetch-most-recent-artifact
+  "Returns the most recently-created artifact."
+  []
+  (export-most-recent-artifact))

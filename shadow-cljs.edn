@@ -9,7 +9,7 @@
   [binaryage/devtools "1.0.3"]
   [cider/cider-nrepl "0.25.6"]
   [reagent "1.0.0"]
-  [datascript "1.0.4"]
+  [datascript "1.2.8"]
   [cljs-http "0.1.46"]
   [json-html "0.4.7"]
   ;;[reagent-flowgraph "0.1.1"]

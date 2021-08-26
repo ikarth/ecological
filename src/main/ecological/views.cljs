@@ -620,6 +620,15 @@
        (convert-viz (json->hiccup (clj->js (filter-gen-state-img img-state))))
        ]]]))
 
+(defn display-most-recent-artifact []
+  [:div
+   (let [recent-artifact  (:recent-artifact @app-state)]
+     ;; (js/console.log recent-artifact)
+     ;; (js/console.log (get recent-artifact "image-data"))
+     ;; (js/console.log (contains? recent-artifact "image-data"))
+     (if (contains? recent-artifact "image-data")
+       (visualize-image (get recent-artifact "image-data") {:key "most-recent-artifact"})))])
+
 
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
@@ -673,8 +682,10 @@
                :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30)
              {:on-click #(select-tab % tab)} (:label tab)])))]
      [:div
-      [:div.ma2.pa2.mh4
-       "data-view"
+      [:div.dib.ma2.pa2.left-0.top-0.v-top
+       [display-most-recent-artifact]]
+      [:div.dib.ma2.pa2.left-0.top-0.v-top; {:style "min-height: 200px"}
        (coll-pen.core/draw (:data-view @app-state) {:key :pen-data-display :el-per-page 10 :truncate false})]
+      
       (get selected-tab :contents [:div])]]))
     

@@ -25,16 +25,20 @@
              :make-empty-project       gbs/make-empty-project
              :execute-design-move!     gbs/execute-design-move!
              :fetch-generated-project! gbs/fetch-generated-project!
-             :fetch-data-view          gbs/fetch-data-view}
+             :fetch-data-view          gbs/fetch-data-view
+             :fetch-most-recent-artifact gbs/fetch-most-recent-artifact
+             }
    :tab-image
-   {:fetch-data-output        imaging/fetch-data-output
-    :fetch-database           imaging/fetch-database
-    :fetch-possible-moves     imaging/fetch-possible-moves
-    :fetch-all-moves          imaging/fetch-all-moves
-    :make-empty-project       imaging/make-empty-project
-    :execute-design-move!     imaging/execute-design-move!
-    :fetch-generated-project! imaging/fetch-generated-project!
-    :fetch-data-view          imaging/fetch-data-view}
+   {:fetch-data-output          imaging/fetch-data-output
+    :fetch-database             imaging/fetch-database
+    :fetch-possible-moves       imaging/fetch-possible-moves
+    :fetch-all-moves            imaging/fetch-all-moves
+    :make-empty-project         imaging/make-empty-project
+    :execute-design-move!       imaging/execute-design-move!
+    :fetch-generated-project!   imaging/fetch-generated-project!
+    :fetch-data-view            imaging/fetch-data-view
+    :fetch-most-recent-artifact imaging/fetch-most-recent-artifact
+    }
    })
 
 (defn interface-with-database [interface-func]
@@ -83,6 +87,7 @@
     (swap! app-state update-in [:data] (interface-with-database :fetch-database))
     (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
     (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
+    (swap! app-state update-in [:recent-artifact] (interface-with-database :fetch-most-recent-artifact))
     ;(js/console.log (:data @app-state))
     ))
 
@@ -93,7 +98,8 @@
   (swap! app-state update-in [:gbs-output] (interface-with-database :fetch-data-output))
   (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
   (swap! app-state update-in [:data] (interface-with-database :fetch-database))
-  (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view)))
+  (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
+  (swap! app-state update-in [:recent-artifact] (interface-with-database :fetch-most-recent-artifact)))
 
 (defn select-tab
   [event tab]

@@ -535,3 +535,8 @@
   (vec (map (fn [dat]
               (let [[e a v tx add] dat]
                 [e a v tx add])) (d/datoms @db-conn :eavt))))
+
+(defn fetch-most-recent-artifact
+  "Returns the most recently-created artifact."
+  []
+  nil)
