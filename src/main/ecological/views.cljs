@@ -344,7 +344,7 @@
             (qc/with-sketch @saved-sketch-atom
               (qc/exit)))))}]))
 
-(defn visualize-image [img-data]
+(defn visualize-image [img-data & {:keys [image-key use-canvas] :or {image-key (str (random-uuid)) use-canvas false}}]
   ;;(js/console.log img-data)
   (letfn [(img-size [] [(. img-data -width) (. img-data -height)])
           (initial-state []
@@ -357,20 +357,26 @@
             state)
           (draw [state]
             (let [img (:image state)]))]
-    (q-sketch :setup initial-state
-             :update update-state
-             :draw draw
-             :host nil
-             :middleware [qm/fun-mode]
-             :size (img-size)
-             )))
+    ;(js/console.log img-data)
+    (if (not use-canvas) ;; can display as just the image or as an animated sketch
+      (let [html-image-data (. (. img-data -canvas) toDataURL)]
+        ^{:key image-key}
+        [:img {:src html-image-data}])
+      (q-sketch :setup initial-state
+                :update update-state
+                :draw draw
+                :host nil
+                :middleware [qm/fun-mode]
+                :size (img-size)
+                ))))
 
 (defn display-loose-images [g-state]
   (let [image (get "image-data" g-state)]
     (map (fn [i-entry]
            (if (map? i-entry)
              (let [idat (get i-entry "image-data")]
-               (visualize-image idat)
+               ;(js/console.log i-entry)
+               (visualize-image idat {:key (get i-entry "uuid")})
                )))
          g-state)))
 
@@ -516,10 +522,7 @@
                                             }]
                       nil))))
                (filter #(not (nil? %)))
-               (into (list))
-               )
-          ]]
-        )
+               (into (list)))]])
       (str (count data-segments)))))
 
 (defn convert-viz [hic]
@@ -544,37 +547,36 @@
          :else data)
        (and (vector? data) (= (first data) :collisions-viz))
        (vector-render-bits-viz (rest data))
-       ;; (and (vector? data) (= (first data) :td.jh-value))
-       ;; (let []
-       ;;   (println ":td")
-       ;;   data
-       ;;   )
+       (and (vector? data) (string? (second data)) (= "data:image" (subs (second data) 0 10)))
+       (let []
+         [:img {:src (second data)}]
+         )
        :else
        (let []
-         ;(js/console.log data)
+         ;;(js/console.log data)
          data))
      )
    hic))
 
-(defn convert-viz-imaging
-  "Takes a hiccup construct and converts it for display in-browser."
-  [hic]
-  (clojure.walk/postwalk
-   (fn [data]
-     (cond
-       ;; (and (vector? data) (= (first data) :imaging))
-       ;; data
-       ;; false;(clojure.string/includes? data "image-data")
-       ;; (let []
-       ;;   (println (str "converting image data: " data))
-       ;;   data
-       ;;   )
-       :else
-       (let []
-         ;(println (str "viz-data: " data))
-         data)
-       ))
-   hic))
+;; (defn convert-viz-imaging
+;;   "Takes a hiccup construct and converts it for display in-browser."
+;;   [hic]
+;;   (clojure.walk/postwalk
+;;    (fn [data]
+;;      (cond
+;;        ;; (and (vector? data) (= (first data) :imaging))
+;;        ;; data
+;;        ;; false;(clojure.string/includes? data "image-data")
+;;        ;; (let []
+;;        ;;   (println (str "converting image data: " data))
+;;        ;;   data
+;;        ;;   )
+;;        :else
+;;        (let []
+;;          ;(println (str "viz-data: " data))
+;;          data)
+;;        ))
+;;    hic))
 
 (defn filter-gen-state [g-state]
   (clojure.walk/postwalk
@@ -591,15 +593,27 @@
        (cond
          (and (map? node) (contains? node "collisions"))
          (dissoc node "collisions" "editor-position")
+         (and (map-entry? node) (= (first node) "image-data"))
+         (let [;;_ (js/console.log node)
+               i-canvas (. (second node) -canvas)
+               html-image-data (. i-canvas toDataURL)
+               ]
+           ;;(js/console.log node)
+           ;(visualize-image (second node) {:key (str (random-uuid))})
+           ;;^{:key "578"}
+           [:image-data html-image-data]
+           ;[:img (:src html-image-data)]
+           )
          :else
-         (let []
+         (let []           
            node)))
      g-state))
 
 (defn display-imaging []
   (let [img-state (:gbs-output @app-state)]
     [:div
-     (display-loose-images img-state)
+     (comment
+       (display-loose-images img-state))
      [:div.self-center.content-center.items-center.justify-center.flex.bg-washed-green
       [:div.mw9.ma2
        ;;(println (str "image-state: " img-state))
@@ -630,11 +644,11 @@
 
 (defn app []
   (let [image-tab [:div
-                   [image-header]
+                   [image-header] ;; TODO: display most recent image here
                    [operation-harness]
                    [image-generate-btn]
-                   [#(visualize-generator-sketch 400 300 "quil-canvas")]
                    [display-imaging]
+                   [#(visualize-generator-sketch 400 300 "quil-canvas")] ;; NOTE: This is a load-bearing Quil/Processing sketch! Image generation ops don't work without some kind of canvas to use.                   
                    ]
         gbs-tab
         [:div
@@ -642,17 +656,7 @@
          [operation-harness]
          [generate-btn]
          [constraint-solving-test-btn]
-         ;; [:div.ma2.pa2.mh4 "gbs" (coll-pen.core/draw (:data-view @app-state) {:key :pen-gbs-display :el-per-page 30 :truncate false})]
-         ;; [:div.ma2.pa2.mh4 "gbs" (coll-pen.core/draw (:data-view @app-state) {:key :pen-gbs-display2 :el-per-page 30 :truncate false})]
          [display-gbs]
-         ;; [:hr]      
-         ;;                                ;(js/console.log (:data @app-state))
-         ;;                                ;(js/console.log (:selected-move @app-state))
-         ;; (.stringify js/JSON (clj->js (:data @app-state)))
-         ;; [:hr]
-         ;; (.stringify js/JSON (clj->js (:possible-moves @app-state)))
-         ;; [:br]
-         ;; [:hr]
          ]
         tab-defs [{:id nil :label "None" :contents [:div "Select A Generator Above..."]}
                   {:id :tab-image :label "Images" :contents image-tab}
