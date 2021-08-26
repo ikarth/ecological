@@ -31,13 +31,14 @@
       (qc/ellipse 50 50 50 50))
     graphics))
 
-(defn op-create-perlin-image [w h]
+(defn op-create-perlin-image [w h & {:keys [noise-offset noise-scale noise-octaves noise-falloff] :or {noise-offset [0 0] noise-scale [0.05 0.05] noise-octaves 4 noise-falloff 0.5}}]
   (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
     (let [image-target (qc/create-image w h)
-          noise-offset [0 0 0]
-          noise-scale [0.05 0.05 0.05]
-          noise-octaves 4
-          noise-falloff 0.5]
+          ;; noise-offset [0 0 0]
+          ;; noise-scale [0.05 0.05 0.05]
+          ;; noise-octaves 4
+          ;; noise-falloff 0.5
+          ]
       (qc/noise-detail noise-octaves noise-falloff)
       (dotimes [x w]
         (dotimes [y h]
@@ -79,9 +80,16 @@
       (qc/update-pixels image-target)
       image-target)))
 
+(defn op-image-filter [image & {:keys [filter-mode filter-level] :or {filter-mode :threshold filter-level 0.5}}]
+  (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
+    (qc/image-filter image filter-mode filter-level))
+  image
+  )
+
 (defn process-operations
   "Apply the list of operations to the given input and return the result"
   [input operation-list]
+  ;; TODO
   input)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -101,7 +109,7 @@
            [w h] (if (nil? size) default-image-size size)
            blank-image (op-create-image w h)]       
        [{:db/id -1
-         :raster/matrix blank-image
+         :raster/image blank-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
          :entity/timestamp (timestamp)
@@ -118,7 +126,7 @@
            [w h] (if (nil? size) default-image-size size)
            perlin-image (op-create-perlin-image w h)]       
        [{:db/id -1
-         :raster/matrix perlin-image
+         :raster/image perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
          :entity/timestamp (timestamp)
@@ -135,7 +143,7 @@
            [w h] (if (nil? size) default-image-size size)
            perlin-image (op-create-random-noise w h)]       
        [{:db/id -1
-         :raster/matrix perlin-image
+         :raster/image perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
          :entity/timestamp (timestamp)
@@ -152,7 +160,7 @@
            [w h] (if (nil? size) default-image-size size)
            perlin-image (op-create-uv-pattern w h)]       
        [{:db/id -1
-         :raster/matrix perlin-image
+         :raster/image perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
          :entity/timestamp (timestamp)
@@ -169,7 +177,31 @@
            [w h] (if (nil? size) default-image-size size)
            perlin-image (op-create-test-pattern w h)]       
        [{:db/id -1
-         :raster/matrix perlin-image
+         :raster/image perlin-image
+         :raster/size [w h]
+         :raster/uuid (str (random-uuid))
+         :entity/timestamp (timestamp)
+         }]))})
+
+;image & {:keys [filter-mode filter-level] :or {filter-mode :threshold filter-level 0.5}}
+(def move-filter-threshold
+  {:name "move-filter-threshold"
+   :comment "Converts an image to black and white pixels based on if they are above or below a threshold value."
+   :query
+   '[:find ?image-image ?image-size
+     :in $ %
+     :where
+     [?element :raster/image ?image-image]
+     [?element :raster/size   ?image-size]
+     ]
+   :exec
+   (fn [db [image-data size]]
+     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                     (str ":size should be nil or a vector of size 2, but instead it is " size))
+           [w h] (if (nil? size) default-image-size size)
+           result-image (op-image-filter image-data :filter-mode :threshold :filter-level 0.5)]       
+       [{:db/id -1
+         :raster/image result-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
          :entity/timestamp (timestamp)
@@ -201,12 +233,13 @@
    move-generate-uv-pattern-raster
    move-generate-test-pattern-raster
    move-generate-random-noise-raster
+   move-filter-threshold
    ])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def imaging-schema
-  {:raster/matrix    {:db/cardinality :db.cardinality/one}
+  {:raster/image    {:db/cardinality :db.cardinality/one}
    :raster/size      {:db/cardinality :db.cardinality/one}
    :raster/uuid      {:db/cardinality :db.cardinality/one}
    :func/func-handle {:db/cardinality :db.cardinality/one}
@@ -242,7 +275,7 @@
                :where
                [?element :raster/uuid ?uuid]
                [?element :raster/size ?size]
-               [?element :raster/matrix ?raster]
+               [?element :raster/image ?raster]
                [?element :entity/timestamp ?timestamp]
                ]
              @db-conn)]
