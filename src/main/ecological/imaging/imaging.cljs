@@ -119,7 +119,7 @@
          :raster/image blank-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
-         :entity/timestamp (timestamp)
+         
          }]))})
 
 (def move-generate-perlin-noise-raster
@@ -136,7 +136,7 @@
          :raster/image perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
-         :entity/timestamp (timestamp)
+         
          }]))})
 
 (def move-generate-random-noise-raster
@@ -153,7 +153,7 @@
          :raster/image perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
-         :entity/timestamp (timestamp)
+         
          }]))})
 
 (def move-generate-uv-pattern-raster
@@ -170,7 +170,7 @@
          :raster/image perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
-         :entity/timestamp (timestamp)
+         
          }]))})
 
 (def move-generate-test-pattern-raster
@@ -187,7 +187,7 @@
          :raster/image perlin-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
-         :entity/timestamp (timestamp)
+         
          }]))})
 
 ;image & {:keys [filter-mode filter-level] :or {filter-mode :threshold filter-level 0.5}}
@@ -211,7 +211,7 @@
          :raster/image result-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
-         :entity/timestamp (timestamp)
+         
          }]))})
 
 (def move-blend-blend
@@ -225,7 +225,7 @@
      [?e1 :raster/size  ?image-src-size]
      [?e2 :raster/image ?image-dest]
      [?e2 :raster/size  ?image-dest-size]
-     [(not (= ?e1 ?e2))]
+     [(not= ?e1 ?e2)]
      ]
    :exec
    (fn [db [image-src src-size image-dest size]]
@@ -237,7 +237,7 @@
          :raster/image result-image
          :raster/size [w h]
          :raster/uuid (str (random-uuid))
-         :entity/timestamp (timestamp)
+         
          }]))})
 
 (def move-generate-blank-image-function
@@ -253,7 +253,7 @@
          :func/func-handle :op-create-image
          :func/parameters [w h :rgb]
          :func/uuid (str (random-uuid))
-         :entity/timestamp (timestamp)
+         
          }]))})
 
 
@@ -395,14 +395,23 @@
         _ (assert (string? move-name) (str "Design move (" move-name ") not found in " design-move "."))
         exec-func (get-in design-move [:move :exec])
         _ (assert (fn? exec-func) (str move-name " has no :exec function!"))
+        current-time (timestamp)
         result (exec-func db (:vars design-move))
+        province-added (map (fn [transact]
+                              (merge transact {:entity/timestamp current-time
+                                                :province/cause move-name
+                                                ;:province/bindings (:vars design-move)
+                                                })
+                              )
+                            result)
         history-record [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
                          ;:design/move-count current-design-move-count ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
                          :design/move-record move-name
-                         ;:design/move-parameters (get design-move :vars [])
+                                        ;:design/move-parameters (get design-move :vars [])
+                         :design/timestamp current-time
                          }
                         ]
-        tx-data (into [] (concat result history-record))]
+        tx-data (into [] (concat province-added history-record))]
     ;;(println tx-data)
     tx-data))
 
