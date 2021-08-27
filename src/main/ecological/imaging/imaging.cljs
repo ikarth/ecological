@@ -302,15 +302,18 @@
                         "uuid"
                         "size"
                         "image-data"
-                        "timestamp"]
+                        "timestamp"
+                        "cause"
+                        ]
         elements
-        (d/q '[:find ?element ?uuid ?size ?raster ?timestamp
+        (d/q '[:find ?element ?uuid ?size ?raster ?timestamp ?cause
                :in $
                :where
                [?element :raster/uuid ?uuid]
                [?element :raster/size ?size]
                [?element :raster/image ?raster]
                [?element :entity/timestamp ?timestamp]
+               [?element :province/cause ?cause]
                ]
              @db-conn)]
     (map #(zipmap element-labels %)
@@ -321,15 +324,18 @@
                         "uuid"
                         "size"
                         "image-data"
-                        "timestamp"]
+                        "timestamp"
+                        "cause"
+                        ]
         elements
-        (d/q '[:find ?element ?uuid ?size ?raster (max ?timestamp) ;; this is only supposed to return one result but it is returning all instead of max, suggesting that my understanding of this is flawed
+        (d/q '[:find ?element ?uuid ?size ?raster (max ?timestamp) ?cause ;; this is only supposed to return one result but it is returning all instead of max, suggesting that my understanding of this is flawed
                :in $
                :where
                [?element :raster/uuid ?uuid]
                [?element :raster/size ?size]
                [?element :raster/image ?raster]
                [?element :entity/timestamp ?timestamp]
+               [?element :province/cause ?cause]
                ]
              @db-conn)]
     (map #(zipmap element-labels %)
@@ -399,7 +405,7 @@
         result (exec-func db (:vars design-move))
         province-added (map (fn [transact]
                               (merge transact {:entity/timestamp current-time
-                                                :province/cause move-name
+                                               :province/cause move-name
                                                 ;:province/bindings (:vars design-move)
                                                 })
                               )
