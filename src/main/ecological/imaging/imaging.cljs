@@ -83,8 +83,15 @@
 (defn op-image-filter [image & {:keys [filter-mode filter-level] :or {filter-mode :threshold filter-level 0.5}}]
   (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
     (qc/image-filter image filter-mode filter-level))
-  image
-  )
+  image)
+
+(defn op-image-blend [image-src image-dest & {:keys [filter-mode size] :or {filter-mode :blend size default-image-size}}]
+  (js/console.log size)
+  (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
+    (let [image-final (qc/create-image (first size) (second size))] ;[graphics-obj (qc/create-graphics (first size) (second size) :p2d)]
+      (qc/copy image-src image-final [0 0 (first size) (second size)] [0 0 (first size) (second size)])
+      (qc/blend image-dest image-final 0 0 (first size) (second size) 0 0 (first size) (second size) filter-mode)
+      image-final)))
 
 (defn process-operations
   "Apply the list of operations to the given input and return the result"
@@ -207,6 +214,32 @@
          :entity/timestamp (timestamp)
          }]))})
 
+(def move-blend-blend
+  {:name "move-blend-blend"
+   :comment "Converts an image to black and white pixels based on if they are above or below a threshold value."
+   :query
+   '[:find ?image-src ?image-src-size ?image-dest ?image-dest-size
+     :in $ %
+     :where
+     [?e1 :raster/image ?image-src]
+     [?e1 :raster/size  ?image-src-size]
+     [?e2 :raster/image ?image-dest]
+     [?e2 :raster/size  ?image-dest-size]
+     [(not (= ?e1 ?e2))]
+     ]
+   :exec
+   (fn [db [image-src src-size image-dest size]]
+     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                     (str ":size should be nil or a vector of size 2, but instead it is " size))
+           [w h] (if (nil? size) default-image-size size)
+           result-image (op-image-blend image-src image-dest :size size :filter-mode :overlay)]       
+       [{:db/id -1
+         :raster/image result-image
+         :raster/size [w h]
+         :raster/uuid (str (random-uuid))
+         :entity/timestamp (timestamp)
+         }]))})
+
 (def move-generate-blank-image-function
   {:name "generate-blank-image-function"
    :comment "Create a function that returns a blank image of the given size."
@@ -234,6 +267,7 @@
    move-generate-test-pattern-raster
    move-generate-random-noise-raster
    move-filter-threshold
+   move-blend-blend
    ])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
