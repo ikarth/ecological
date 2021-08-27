@@ -134,9 +134,18 @@
                     :else
                     :li.pv2.pointer.hover-bg-gold.bg-black-05
                     )]
-              ^{:key (:name move)} [move-li-key {:on-click #(select-move % move)} (:name move) " (" (valid-move-count move possible-moves) ")"]
-              
-              )))]]      
+              ^{:key (:name move)}
+              [move-li-key {:on-click #(select-move % move)}
+               (:name move)
+               " (" (valid-move-count move possible-moves) ")"
+               [:div.dib.pa0.pointer.center.b--light--silver.hover-bg-red.shadow-hover.ba
+                {:style {:width "10%" :height "60%" :left "1em"} 
+                 :on-click (fn [event]
+                             (select-move event move)
+                             (if (select-random-bindings)
+                               (perform-bound-move event)))}
+                "=>"
+                ]])))]]
       [:div.dtc.tc.pa3.pv2.bg-black-05.pa
        [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
        [:p.tl-l

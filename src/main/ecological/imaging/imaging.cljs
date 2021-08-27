@@ -103,7 +103,7 @@
 ;; Design moves
 
 (defn timestamp []
-  (.now js/Date))
+  (js/parseInt (.now js/Date)))
 
 (def move-generate-blank-raster-image
   {:name "generate-blank-raster-image"
@@ -316,9 +316,35 @@
     (map #(zipmap element-labels %)
          elements)))
 
+(defn export-most-recent-image []
+  (let [element-labels ["_datascript_internal_id"
+                        "uuid"
+                        "size"
+                        "image-data"
+                        "timestamp"]
+        elements
+        (d/q '[:find ?element ?uuid ?size ?raster (max ?timestamp) ;; this is only supposed to return one result but it is returning all instead of max, suggesting that my understanding of this is flawed
+               :in $
+               :where
+               [?element :raster/uuid ?uuid]
+               [?element :raster/size ?size]
+               [?element :raster/image ?raster]
+               [?element :entity/timestamp ?timestamp]
+               ]
+             @db-conn)]
+    (map #(zipmap element-labels %)
+         elements))) 
+
+
+
 (defn export-most-recent-artifact []
   (let [all-images (export-all-images)
+        ;most-recent (export-most-recent-image)
         images-sorted (sort-by #(get-in % ["timestamp"]) > all-images)]
+    ;(js/console.log most-recent)
+    ;(js/console.log images-sorted)
+    ;(assert (= (first most-recent) (first images-sorted)) (str "Mismatch between " (first most-recent) " and " (first images-sorted)))
+    ;(first most-recent)
     (first images-sorted)))
 
 (defn export-output
