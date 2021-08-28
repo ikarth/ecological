@@ -1,58 +1,70 @@
 (ns ecological.events
   (:require [ecological.state :refer [app-state]]
-            [ecological.gbstudio.gbstudio :as gbs
+            ;; [ecological.gbstudio.gbstudio :as gbs
              
-             ;; :refer [fetch-gbs
-             ;;                                      fetch-generated-project!
-             ;;                                      fetch-database
-             ;;                                      fetch-possible-moves
-             ;;                                      make-empty-project
-             ;;                                      execute-one-design-move!
-             ;;                                      execute-design-move!
-             ;;                                              ]
-             ]
-            [ecological.imaging.imaging :as imaging]
+            ;;  ;; :refer [fetch-gbs
+            ;;  ;;                                      fetch-generated-project!
+            ;;  ;;                                      fetch-database
+            ;;  ;;                                      fetch-possible-moves
+            ;;  ;;                                      make-empty-project
+            ;;  ;;                                      execute-one-design-move!
+            ;;  ;;                                      execute-design-move!
+            ;;  ;;                                              ]
+            ;;  ]
+            ;; [ecological.imaging.imaging :as imaging]
+            [ecological.generator.gencore :as generator]
             ["clingo-wasm" :default clingo]
             
             ))
 
 
-(def database-interface
-  {:tab-gbs {:fetch-data-output        gbs/fetch-gbs
-             :fetch-database           gbs/fetch-database
-             :fetch-possible-moves     gbs/fetch-possible-moves
-             :fetch-all-moves          gbs/fetch-all-moves
-             :make-empty-project       gbs/make-empty-project
-             :execute-design-move!     gbs/execute-design-move!
-             :fetch-generated-project! gbs/fetch-generated-project!
-             :fetch-data-view          gbs/fetch-data-view
-             :fetch-most-recent-artifact gbs/fetch-most-recent-artifact
-             }
-   :tab-image
-   {:fetch-data-output          imaging/fetch-data-output
-    :fetch-database             imaging/fetch-database
-    :fetch-possible-moves       imaging/fetch-possible-moves
-    :fetch-all-moves            imaging/fetch-all-moves
-    :make-empty-project         imaging/make-empty-project
-    :execute-design-move!       imaging/execute-design-move!
-    :fetch-generated-project!   imaging/fetch-generated-project!
-    :fetch-data-view            imaging/fetch-data-view
-    :fetch-most-recent-artifact imaging/fetch-most-recent-artifact
-    }
+;; (def database-interface
+;;   {:tab-gbs {:fetch-data-output        gbs/fetch-gbs
+;;              :fetch-database           gbs/fetch-database
+;;              :fetch-possible-moves     gbs/fetch-possible-moves
+;;              :fetch-all-moves          gbs/fetch-all-moves
+;;              :make-empty-project       gbs/make-empty-project
+;;              :execute-design-move!     gbs/execute-design-move!
+;;              :fetch-generated-project! gbs/fetch-generated-project!
+;;              :fetch-data-view          gbs/fetch-data-view
+;;              :fetch-most-recent-artifact gbs/fetch-most-recent-artifact
+;;              }
+;;    :tab-image
+;;    {:fetch-data-output          imaging/fetch-data-output
+;;     :fetch-database             imaging/fetch-database
+;;     :fetch-possible-moves       imaging/fetch-possible-moves
+;;     :fetch-all-moves            imaging/fetch-all-moves
+;;     :make-empty-project         imaging/make-empty-project
+;;     :execute-design-move!       imaging/execute-design-move!
+;;     :fetch-generated-project!   imaging/fetch-generated-project!
+;;     :fetch-data-view            imaging/fetch-data-view
+;;     :fetch-most-recent-artifact imaging/fetch-most-recent-artifact
+;;     }
+;;    })
+
+(def generator-interface
+  {:fetch-data-output          generator/fetch-data-output
+   :fetch-database             generator/fetch-database
+   :fetch-possible-moves       generator/fetch-possible-moves
+   :fetch-all-moves            generator/fetch-all-moves
+   :make-empty-project         generator/make-empty-project
+   :execute-design-move!       generator/execute-design-move!
+   :fetch-generated-project!   generator/fetch-generated-project!
+   :fetch-data-view            generator/fetch-data-view
+   :fetch-most-recent-artifact generator/fetch-most-recent-artifact
    })
 
 (defn interface-with-database [interface-func]
-  ;(let [selected-tab (get @app-state :selected-tab :tab-gbs)])
   (let [selected-tab (get @app-state :selected-tab {:id :tab-gbs})
         _ (assert (not (:map? selected-tab)) (str "No valid tab selected: " selected-tab))
-        ;_ (println (str "selected tab: " selected-tab))
-        database-label (get selected-tab :id :tab-gbs)
+        database-label (get selected-tab :id)
         _ (assert (keyword? database-label) (str database-label " is not a recognized database name."))
-        db-func (get-in database-interface [database-label interface-func] nil)
+        _ (generator/switch-database database-label)        
+        db-func (get-in generator-interface [interface-func] nil)
         ;_ (println (str "db function: " database-label " " interface-func " " db-func))
         _ (assert (fn? db-func) (str "(" database-label " " interface-func ") is not a known function"))]
     db-func))
-
+ 
 (defn set-active-sketch [active-sketch]
   (swap! app-state update-in [:active-sketch] active-sketch)
   )
@@ -99,7 +111,9 @@
   (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
   (swap! app-state update-in [:data] (interface-with-database :fetch-database))
   (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
-  (swap! app-state update-in [:recent-artifact] (interface-with-database :fetch-most-recent-artifact)))
+  (swap! app-state update-in [:recent-artifact] (interface-with-database :fetch-most-recent-artifact))
+  (js/console.log @app-state)
+  )
 
 (defn select-tab
   [event tab]
@@ -142,9 +156,12 @@
 
 (defn perform-bound-move
   [event]
+  (println "(perform-bound-move)")
   (if (some? event)
     (.preventDefault event))
-  ((interface-with-database :execute-design-move!) (second (:selected-bound-move @app-state)))
+  (js/console.log (:selected-bound-move @app-state))
+  ((interface-with-database :execute-design-move!)
+   (second (:selected-bound-move @app-state)))
   (update-database-view nil)
   ;; (js/console.log @app-state)
   ;; (select-tab nil (:selected-tab @app-state))
