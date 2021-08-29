@@ -598,6 +598,7 @@
      g-state))
 
 (defn filter-gen-state-img [g-state]
+  ;(js/console.log g-state)
   (clojure.walk/postwalk
      (fn [node]
        (cond
@@ -621,6 +622,7 @@
 
 (defn display-imaging []
   (let [img-state (:gbs-output @app-state)]
+    ;(js/console.log img-state)
     [:div
      (comment
        (display-loose-images img-state))
@@ -642,6 +644,7 @@
 
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
+    ;(js/console.log gen-state)
     [:div.self-center.content-center.items-center.justify-center.flex.bg-lightest-blue
      [:div.mw9.ma2
       (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
@@ -652,8 +655,7 @@
                             {:el-per-page 30 :truncate false })
         [:hr]
         (.stringify js/JSON (clj->js gen-state)))
-      ]])
-   )
+      ]]))
 ;(.stringify js/JSON)
 
 (defn image-header []

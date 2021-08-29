@@ -67,15 +67,13 @@
 (defn execute-design-move!
   "Executes the supplied design move in the context of the current-database."
   [design-move]
-  (js/console.log @current-database)
   (if-let [db-conn (get @current-database :db-conn)]
     (let []
-      (js/console.log db-conn)
       (assert (map? design-move) "Design move is missing, so can't be executed.")
       (d/transact! db-conn (assemble-exec-result @db-conn design-move)))
     (println "Current database is missing somehow.")
     ))
-
+ 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -100,9 +98,10 @@
 (defn fetch-data-output
   "Return the current state of the generated results"
   []
+ 
   (if-let [db-conn (get @current-database :db-conn)]
     (let [exporter-func (get @current-database :exporter (fn [_] (println "No exporter implemented for this database.")))]
-      ;;(export-all-images)
+
       (exporter-func db-conn))))
 
 (defn fetch-database []
@@ -134,18 +133,17 @@
   []
   (if-let [db-conn (get @current-database :db-conn)]
     []
-    )
-  ;; TODO
-  )
+      ;; TODO
+    ))
 
 (defn fetch-data-view []
-  (js/console.log @current-database)
+  ;(js/console.log @current-database)
+  ;(switch-database )
   (if-let [db-conn (get @current-database :db-conn)]
-     (vec (map (fn [dat]
+    (vec (map (fn [dat]
                 (let [[e a v tx add] dat]
                   [e a v tx add])) (d/datoms @db-conn :eavt)))
-    (println "Database connection missing when trying to fetch a new view.")
-    ))
+    (println "Database connection missing when trying to fetch a new view.")))
 
 (defn fetch-most-recent-artifact
   "Returns the most recently-created artifact."

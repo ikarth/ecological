@@ -6,36 +6,36 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn export-all-images [db-conn]
-  (let [element-labels ["_datascript_internal_id"
-                        "uuid"
-                        "size"
-                        "image-data"
-                        "timestamp"
-                        "cause"]
-        elements
-        (d/q '[:find ?element ?uuid ?size ?raster ?timestamp ?cause
-               :in $
-               :where
-               [?element :raster/uuid ?uuid]
-               [?element :raster/size ?size]
-               [?element :raster/image ?raster]
-               [?element :entity/timestamp ?timestamp]
-               [?element :province/cause ?cause]
-               ]
-             @db-conn)]
-    (js/console.log elements)
-    (map #(zipmap element-labels %)
-         elements)))
+;; (defn export-all-images [db-conn]
+;;   (let [element-labels ["_datascript_internal_id"
+;;                         "uuid"
+;;                         "size"
+;;                         "image-data"
+;;                         "timestamp"
+;;                         "cause"]
+;;         elements
+;;         (d/q '[:find ?element ?uuid ?size ?raster ?timestamp ?cause
+;;                :in $
+;;                :where
+;;                [?element :raster/uuid ?uuid]
+;;                [?element :raster/size ?size]
+;;                [?element :raster/image ?raster]
+;;                [?element :entity/timestamp ?timestamp]
+;;                [?element :province/cause ?cause]
+;;                ]
+;;              @db-conn)]
+;;     (js/console.log elements)
+;;     (map #(zipmap element-labels %)
+;;          elements)))
 
-(defn export-output
-  "Export the result after applying the design moves."
-  [db-conn]
-  (js/console.log @db-conn)
-  (-> {}
-      (update :raster #(export-all-images db-conn))
-      ;;(update :output-image #(export-result-image db-conn))
-      ))
+;; (defn export-output
+;;   "Export the result after applying the design moves."
+;;   [db-conn]
+;;   (js/console.log @db-conn)
+;;   (-> {}
+;;       (update :raster #(export-all-images db-conn))
+;;       ;;(update :output-image #(export-result-image db-conn))
+;;       ))
 
 
 
@@ -71,9 +71,7 @@
   {:db-conn db-conn
    :db-schema db-schema
    :design-moves design-moves
-   :exporter (fn []
-               (js/console.log db-conn)
-               #(export/export-output db-conn))
+   :exporter #(export/export-output db-conn)
    :export-most-recent #(export/export-most-recent-artifact db-conn)
    :initial-transaction initial-transaction
    })

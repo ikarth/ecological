@@ -100,7 +100,7 @@
     (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
     (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
     (swap! app-state update-in [:recent-artifact] (interface-with-database :fetch-most-recent-artifact))
-    ;(js/console.log (:data @app-state))
+    
     ))
 
 (defn update-database-view [event]
@@ -112,7 +112,7 @@
   (swap! app-state update-in [:data] (interface-with-database :fetch-database))
   (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
   (swap! app-state update-in [:recent-artifact] (interface-with-database :fetch-most-recent-artifact))
-  (js/console.log @app-state)
+  ;(js/console.log (:data-view @app-state))
   )
 
 (defn select-tab
@@ -121,7 +121,7 @@
     (.preventDefault event))
   (if tab
     (let []
-      (js/console.log "Selecting" tab)
+      ;(js/console.log "Selecting" tab)
       (swap! app-state assoc-in [:selected-tab] tab)
       (update-database-view nil)
       ;(swap! app-state update-in [:data] (interface-with-database :fetch-database))
@@ -131,7 +131,7 @@
   "Makes the given design move be the currently selected one."
   [event move]
   (.preventDefault event)
-  (js/console.log "Selecting" (:name move))
+  ;(js/console.log "Selecting" (:name move))
   (swap! app-state assoc-in [:selected-move] move)
   (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
   )
@@ -156,10 +156,10 @@
 
 (defn perform-bound-move
   [event]
-  (println "(perform-bound-move)")
+  ;(println "(perform-bound-move)")
   (if (some? event)
     (.preventDefault event))
-  (js/console.log (:selected-bound-move @app-state))
+  ;(js/console.log (:selected-bound-move @app-state))
   ((interface-with-database :execute-design-move!)
    (second (:selected-bound-move @app-state)))
   (update-database-view nil)

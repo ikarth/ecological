@@ -10,11 +10,11 @@
 ;;   ;; TODO
 ;;   )
 
-;; (defn export-result-image
-;;   [db-conn]
-;;   ;; TODO
-;;   []
-;;   )
+(defn export-result-image
+  [db-conn]
+  ;; TODO
+  []
+  )
 
 (defn export-all-images [db-conn]
   (let [element-labels ["_datascript_internal_id"
@@ -75,6 +75,6 @@
   "Export the result after applying the design moves."
   [db-conn]
   (-> {}
-      (update :raster #(export-all-images db-conn))
-      ;;(update :output-image #(export-result-image db-conn))
+      (assoc :raster (export-all-images db-conn))
+      ;(update :output-image #(export-most-recent-image db-conn))
       ))

@@ -127,7 +127,7 @@
   "Create a new image that is a blend between the first image and the second image.
   Implemented via quil.core/blend."
   [image-src image-dest & {:keys [filter-mode size] :or {filter-mode :blend size default-image-size}}]
-  (js/console.log size)
+  ;(js/console.log size)
   (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
     (let [image-final (qc/create-image (first size) (second size))] ;[graphics-obj (qc/create-graphics (first size) (second size) :p2d)]
       (qc/copy image-src image-final [0 0 (first size) (second size)] [0 0 (first size) (second size)])
