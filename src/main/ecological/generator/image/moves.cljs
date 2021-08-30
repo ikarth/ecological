@@ -26,6 +26,39 @@
   {:name "generate-perlin-noise-raster"
    :comment "Create a raster grid of Perlin noise of the given size."
    ;;:query nil
+   :parameters
+   {
+    :size
+    {:default ops/default-image-size
+     :form :vector2
+     :intent :size
+     :range [[512 512] [512 512]]
+     }
+    :noise-offset
+    {:default [0 0]
+     :form :vector2
+     :intent :position
+     :range [[-256 256] [-256 256]]
+     }
+    :noise-scale
+    {
+     :default [0.05 0.05]
+     :form :vector2
+     :intent :scale
+     :range [[0.01 0.9] [0.01 0.9]]
+     }
+    :noise-octaves
+    {:default 4
+     :form :scalar
+     :intent :detail
+     :range [[1 8]]
+     }
+    :noise-falloff
+    {:default 0.5
+     :form :scalar
+     :intent :detail
+     :range [[0.01 1.0]]
+     }}
    :exec
    (fn [db & {:keys [size]}]
      (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))

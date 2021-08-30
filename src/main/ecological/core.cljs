@@ -1,8 +1,8 @@
 (ns ecological.core
   (:require [reagent.dom :as r]
             [ecological.views :as views]
-            [ecological.gbstudio.assets :as assets]
             [ecological.events :as events]
+            [ecological.generator.gencore]
             [shadow.resource :as resource]))
 
 (js/console.log "Ecological Generator, 2021")
@@ -27,8 +27,7 @@
                                         ;(spit (str "./test_start.txt") "Test text.")
   (let []
     (events/init-database nil)
-    (assets/load-manifest)
-    (assets/load-scene-sources)
+    (ecological.generator.gencore/setup)
     (events/update-database-view nil)
     (r/render [views/app]
               (.getElementById js/document "app"))))

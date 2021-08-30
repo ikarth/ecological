@@ -42,28 +42,28 @@
 ;;     }
 ;;    })
 
-(def generator-interface
-  {:fetch-data-output          generator/fetch-data-output
-   :fetch-database             generator/fetch-database
-   :fetch-possible-moves       generator/fetch-possible-moves
-   :fetch-all-moves            generator/fetch-all-moves
-   :make-empty-project         generator/make-empty-project
-   :execute-design-move!       generator/execute-design-move!
-   :fetch-generated-project!   generator/fetch-generated-project!
-   :fetch-data-view            generator/fetch-data-view
-   :fetch-most-recent-artifact generator/fetch-most-recent-artifact
-   })
+;; (def generator-interface
+;;   {:fetch-data-output          generator/fetch-data-output
+;;    :fetch-database             generator/fetch-database
+;;    :fetch-possible-moves       generator/fetch-possible-moves
+;;    :fetch-all-moves            generator/fetch-all-moves
+;;    :make-empty-project         generator/make-empty-project
+;;    :execute-design-move!       generator/execute-design-move!
+;;    :fetch-generated-project!   generator/fetch-generated-project!
+;;    :fetch-data-view            generator/fetch-data-view
+;;    :fetch-most-recent-artifact generator/fetch-most-recent-artifact
+;;    })
 
-(defn interface-with-database [interface-func]
-  (let [selected-tab (get @app-state :selected-tab {:id :tab-gbs})
-        _ (assert (not (:map? selected-tab)) (str "No valid tab selected: " selected-tab))
-        database-label (get selected-tab :id)
-        _ (assert (keyword? database-label) (str database-label " is not a recognized database name."))
-        _ (generator/switch-database database-label)        
-        db-func (get-in generator-interface [interface-func] nil)
-        ;_ (println (str "db function: " database-label " " interface-func " " db-func))
-        _ (assert (fn? db-func) (str "(" database-label " " interface-func ") is not a known function"))]
-    db-func))
+;; (defn interface-with-database [interface-func]
+;;   (let [selected-tab (get @app-state :selected-tab {:id :tab-gbs})
+;;         _ (assert (not (:map? selected-tab)) (str "No valid tab selected: " selected-tab))
+;;         database-label (get selected-tab :id)
+;;         _ (assert (keyword? database-label) (str database-label " is not a recognized database name."))
+;;         _ (generator/switch-database database-label)        
+;;         db-func (get-in generator-interface [interface-func] nil)
+;;         ;_ (println (str "db function: " database-label " " interface-func " " db-func))
+;;         _ (assert (fn? db-func) (str "(" database-label " " interface-func ") is not a known function"))]
+;;     db-func))
  
 (defn set-active-sketch [active-sketch]
   (swap! app-state update-in [:active-sketch] active-sketch)
@@ -85,33 +85,43 @@
     ))
 
 (defn init-database [event]
-  (let []
-    (if (some? event)
-      (.preventDefault event))
-    ;(println "init-database")
-    ;(js/console.log (:selected-tab @app-state))
-    ((interface-with-database :make-empty-project))
+  (if (some? event)
+    (.preventDefault event))
+  (let [selected-tab (get @app-state :selected-tab {:id :tab-gbs})
+        _ (assert (not (:map? selected-tab)) (str "No valid tab selected: " selected-tab))
+        database-label (get selected-tab :id)
+        _ (assert (keyword? database-label) (str database-label " is not a recognized database name."))
+        _ (generator/switch-database database-label)]
+    (generator/make-empty-project database-label)
     ;(println "...")
-    ;(js/console.log (:data @app-state))
-    ;(println "---")
-    (swap! app-state update-in [:all-moves] (interface-with-database :fetch-all-moves))
-    (swap! app-state update-in [:gbs-output] (interface-with-database :fetch-data-output))
-    (swap! app-state update-in [:data] (interface-with-database :fetch-database))
-    (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
-    (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
-    (swap! app-state update-in [:recent-artifact] (interface-with-database :fetch-most-recent-artifact))
+    (js/console.log @app-state)
+    (if (not
+         (some? (:data @app-state)))
+      (println "No data found in app-state?"))
+    (println "---")
+    (swap! app-state assoc-in [:all-moves] (generator/fetch-all-moves))
+    (swap! app-state assoc-in [:gbs-output] (generator/fetch-data-output))
+    (swap! app-state assoc-in [:data] (generator/fetch-database))
+    (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
+    (swap! app-state assoc-in [:data-view] (generator/fetch-data-view))
+    (swap! app-state assoc-in [:recent-artifact] (generator/fetch-most-recent-artifact))
     
     ))
 
 (defn update-database-view [event]
   (if (some? event)
     (.preventDefault event))
-  (swap! app-state update-in [:all-moves] (interface-with-database :fetch-all-moves))
-  (swap! app-state update-in [:gbs-output] (interface-with-database :fetch-data-output))
-  (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
-  (swap! app-state update-in [:data] (interface-with-database :fetch-database))
-  (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
-  (swap! app-state update-in [:recent-artifact] (interface-with-database :fetch-most-recent-artifact))
+  (let [selected-tab (get @app-state :selected-tab {:id :tab-gbs})
+        _ (assert (not (:map? selected-tab)) (str "No valid tab selected: " selected-tab))
+        database-label (get selected-tab :id)
+        _ (assert (keyword? database-label) (str database-label " is not a recognized database name."))
+        _ (generator/switch-database database-label)])
+  (swap! app-state assoc-in [:all-moves] (generator/fetch-all-moves))
+  (swap! app-state assoc-in [:gbs-output] (generator/fetch-data-output))
+  (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
+  (swap! app-state assoc-in [:data] (generator/fetch-database))
+  (swap! app-state assoc-in [:data-view] (generator/fetch-data-view))
+  (swap! app-state assoc-in [:recent-artifact] (generator/fetch-most-recent-artifact))
   ;(js/console.log (:data-view @app-state))
   )
 
@@ -124,7 +134,7 @@
       ;(js/console.log "Selecting" tab)
       (swap! app-state assoc-in [:selected-tab] tab)
       (update-database-view nil)
-      ;(swap! app-state update-in [:data] (interface-with-database :fetch-database))
+      ;(swap! app-state update-in [:data] (generator/-with-database :fetch-database))
       )))
 
 (defn select-move
@@ -133,7 +143,7 @@
   (.preventDefault event)
   ;(js/console.log "Selecting" (:name move))
   (swap! app-state assoc-in [:selected-move] move)
-  (swap! app-state update-in [:data-view] (interface-with-database :fetch-data-view))
+  (swap! app-state assoc-in [:data-view] (generator/fetch-data-view))
   )
 
 (defn select-bound-move
@@ -144,7 +154,7 @@
 
 (defn select-random-bindings
   []
-  (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
+  (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
   (if (:selected-move @app-state)
     (let [valid-moves (:possible-moves @app-state)
           selected-move-name (get-in (:selected-move @app-state) [:name])
@@ -160,12 +170,12 @@
   (if (some? event)
     (.preventDefault event))
   ;(js/console.log (:selected-bound-move @app-state))
-  ((interface-with-database :execute-design-move!)
+  (generator/execute-design-move!
    (second (:selected-bound-move @app-state)))
   (update-database-view nil)
   ;; (js/console.log @app-state)
   ;; (select-tab nil (:selected-tab @app-state))
-  ;(swap! app-state update-in [:data] (interface-with-database :fetch-database))
+  ;(swap! app-state update-in [:data] (generator/-with-database :fetch-database))
   )
 
 (defn perform-random-move
@@ -182,10 +192,10 @@
 
 (defn run-generator [event]
   (.preventDefault event)
-  (swap! app-state update-in [:all-moves] (interface-with-database :fetch-all-moves))
-  (swap! app-state update-in [:gbs-output] (interface-with-database :fetch-generated-project!))
-  (swap! app-state update-in [:data] (interface-with-database :fetch-database))
-  (swap! app-state update-in [:possible-moves] (interface-with-database :fetch-possible-moves))
+  (swap! app-state assoc-in [:all-moves] (generator/fetch-all-moves))
+  (swap! app-state assoc-in [:gbs-output] (generator/fetch-generated-project!))
+  (swap! app-state assoc-in [:data] (generator/fetch-database))
+  (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
   )
 
 

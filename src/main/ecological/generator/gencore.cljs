@@ -1,6 +1,6 @@
 (ns ecological.generator.gencore
   (:require [datascript.core :as d]
-            [ecological.generator.library :refer [current-database update-database]]))
+            [ecological.generator.library :refer [current-database update-database setup-databases]]))
 
 
 (defn timestamp []
@@ -77,22 +77,59 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn setup []
+  (setup-databases))
+
 (defn switch-database [database-id]
+  (println (str "(switch-database " database-id ")") )
   (update-database database-id))
 
 (defn reset-the-database!
    "For when you want to start over. Returns an empty database that follows the schema."
-  []
+  [database-id]
+  (switch-database database-id)
   (if-let [db-conn (get @current-database :db-conn)]
     (let [db-schema (get @current-database :db-schema {})
-          initial-transaction (get @current-database :initial-transaction [])]
+          ]
+      (println "Resetting DB connection...")
       (d/reset-conn! db-conn (d/empty-db db-schema))
       ;; TODO: if there is an initial transaction, it goes here...
+      (js/console.log @db-conn)
+      (js/console.log @current-database)
+      (println "Performing initial transactions...")
+      (let [initial-transaction (get @current-database
+                                     :initial-transaction                                    
+                                     [])]
+        (js/console.log initial-transaction)
+        (js/console.log @current-database)
+        (doseq [act initial-transaction]
+          (if (fn? act)
+            (d/transact! db-conn (act))
+            (d/transact! db-conn act))))
+      ;; (doall
+      ;;  (for [act initial-transaction]
+      ;;    (let []
+      ;;      (js/console.log act)
+      ;;      (d/transact! db-conn (act)))))
+     (js/console.log @db-conn)
+      db-conn
       )))
 
+(defn generate []
+  ;;(reset-the-database! database-id)
+  (if-let [db-conn (get @current-database :db-conn)]
+    (if-let [autonomous-generator (get @current-database :auto-generator)]
+      (let []
+        (js/console.log autonomous-generator)
+        (autonomous-generator db-conn)
+        (log-db db-conn)))))
+
 (defn make-empty-project [database-id]
+  (println (str "Switching to: " database-id))
+  (assert (not (undefined? database-id)) "Tried to switch to an undefined generator database.")
   (switch-database database-id)
-  (reset-the-database!))
+  (println "Resetting database...")
+  (reset-the-database! database-id))
 
 
 (defn fetch-data-output
@@ -132,9 +169,9 @@
   "Generate a new project and return it"
   []
   (if-let [db-conn (get @current-database :db-conn)]
-    []
-      ;; TODO
-    ))
+    (let []
+      (generate)
+      (fetch-data-output))))
 
 (defn fetch-data-view []
   ;(js/console.log @current-database)
