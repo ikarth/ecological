@@ -53,7 +53,8 @@
   :noise-octaves Perlin noise octaves
   :noise-falloff Perlin noise falloff
   Implemented via quil/noise"
-  [& {:keys [size noise-offset noise-scale noise-octaves noise-falloff] :or {size default-image-size noise-offset [0 0] noise-scale [0.05 0.05] noise-octaves 4 noise-falloff 0.5}}]
+  [& {:keys [size noise-offset noise-scale noise-octaves noise-falloff]
+      :or {size default-image-size noise-offset [0 0] noise-scale [0.05 0.05] noise-octaves 4 noise-falloff 0.5}}]
   (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))

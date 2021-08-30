@@ -143,6 +143,7 @@
   (.preventDefault event)
   ;(js/console.log "Selecting" (:name move))
   (swap! app-state assoc-in [:selected-move] move)
+  (swap! app-state assoc-in [:selected-parameters] (generator/default-parameters move))
   (swap! app-state assoc-in [:data-view] (generator/fetch-data-view))
   )
 
@@ -150,7 +151,8 @@
   [event move]
   (.preventDefault event)
   (js/console.log "Selecting" move)
-  (swap! app-state assoc-in [:selected-bound-move] move))
+  (swap! app-state assoc-in [:selected-bound-move] move)
+  (swap! app-state assoc-in [:selected-parameters] (generator/default-parameters move)))
 
 (defn select-random-bindings
   []
@@ -161,6 +163,7 @@
           possible-moves (filter #(= (get-in % [:move :name]) selected-move-name) valid-moves)
           chosen-move (rand-nth possible-moves)]
       (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
+      (swap! app-state assoc-in [:selected-parameters] (generator/default-parameters chosen-move))
       true)
     false))
 
@@ -169,9 +172,17 @@
   ;(println "(perform-bound-move)")
   (if (some? event)
     (.preventDefault event))
-  ;(js/console.log (:selected-bound-move @app-state))
-  (generator/execute-design-move!
-   (second (:selected-bound-move @app-state)))
+                                        ;(js/console.log (:selected-bound-move @app-state))
+  (swap! app-state assoc-in [:selected-parameters] (generator/default-parameters (second (:selected-bound-move @app-state))))
+  (println (:selected-bound-move @app-state))
+  (println (str "Selected Parameters: " (:selected-parameters @app-state)))
+  (let [params (generator/default-parameters (:move (second (:selected-bound-move @app-state))))]
+    (println params)
+    (generator/execute-design-move!
+     (second (:selected-bound-move @app-state))
+     ;;(:selected-parameters @app-state)    ; TODO: get params
+     params ;(generator/default-parameters (second (:selected-bound-move @app-state)))
+     ))
   (update-database-view nil)
   ;; (js/console.log @app-state)
   ;; (select-tab nil (:selected-tab @app-state))
@@ -188,6 +199,7 @@
     (println chosen-move)
     (when chosen-move
       (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
+      (swap! app-state assoc-in [:selected-parameters] (generator/default-parameters chosen-move))
       (perform-bound-move nil))))
 
 (defn run-generator [event]

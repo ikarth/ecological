@@ -32,12 +32,13 @@
     {:default ops/default-image-size
      :form :vector2
      :intent :size
-     :range [[512 512] [512 512]]
+     :range [[(first  ops/default-image-size) (first  ops/default-image-size)]
+             [(second ops/default-image-size) (second ops/default-image-size)]]
      }
     :noise-offset
     {:default [0 0]
      :form :vector2
-     :intent :position
+     :intent :positIon
      :range [[-256 256] [-256 256]]
      }
     :noise-scale
@@ -45,7 +46,7 @@
      :default [0.05 0.05]
      :form :vector2
      :intent :scale
-     :range [[0.01 0.9] [0.01 0.9]]
+     :range [[0.03 0.08] [0.03 0.08]]
      }
     :noise-octaves
     {:default 4
@@ -57,14 +58,27 @@
     {:default 0.5
      :form :scalar
      :intent :detail
-     :range [[0.01 1.0]]
+     :range [[0.3 0.7]]
      }}
    :exec
-   (fn [db & {:keys [size]}]
-     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+   (fn [db _ params]
+     (println "(move-generate-perlin-noise-raster)")
+     (println params)
+     (let [noise-offset  (get params :noise-offset [0 0])
+           noise-scale   (get params :noise-scale [0.05 0.05])
+           noise-octaves (get params :noise-octaves 4)
+           noise-falloff (get params :noise-falloff 0.5)
+           size (:size params)
+           _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
-           perlin-image (ops/op-create-perlin-image [w h])]       
+           perlin-image (ops/op-create-perlin-image
+                         :size [w h]
+                         :noise-offset  noise-offset
+                         :noise-scale   noise-scale 
+                         :noise-octaves noise-octaves
+                         :noise-falloff noise-falloff
+                         )]
        [{:db/id -1
          :raster/image perlin-image
          :raster/size [w h]
@@ -76,8 +90,9 @@
    :comment "Create a raster grid filled with 0 to 255 based on UV -> RG coordinates."
    ;;:query nil
    :exec
-   (fn [db & {:keys [size]}]
-     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+   (fn [db _ params]
+     (let [size (:size params)
+           _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
            perlin-image (ops/op-create-random-noise [w h])]       
@@ -92,8 +107,9 @@
    :comment "Create a raster grid filled with 0 to 255 based on UV -> RG coordinates."
    ;;:query nil
    :exec
-   (fn [db & {:keys [size]}]
-     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+   (fn [db _ params]
+     (let [size (:size params)
+           _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
            perlin-image (ops/op-create-uv-pattern [w h])]       
@@ -108,8 +124,9 @@
    :comment "Create a raster grid filled with a repeating text pattern of the given size."
    ;;:query nil
    :exec
-   (fn [db & {:keys [size]}]
-     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+   (fn [db _ params]
+     (let [size (:size params)
+           _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
            perlin-image (ops/op-create-test-pattern [w h])]       
@@ -131,7 +148,7 @@
      [?element :raster/size   ?image-size]
      ]
    :exec
-   (fn [db [image-data size]]
+   (fn [db [image-data size] params]
      (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
@@ -146,6 +163,8 @@
 (def move-blend-blend
   {:name "move-blend-blend"
    :comment "Converts an image to black and white pixels based on if they are above or below a threshold value."
+   :parameters
+   {}
    :query
    '[:find ?image-src ?image-src-size ?image-dest ?image-dest-size
      :in $ %
@@ -154,11 +173,11 @@
      [?e1 :raster/size  ?image-src-size]
      [?e2 :raster/image ?image-dest]
      [?e2 :raster/size  ?image-dest-size]
-     [(not= ?e1 ?e2)]
-     ]
+     [(not= ?e1 ?e2)]]
    :exec
-   (fn [db [image-src src-size image-dest size]]
-     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+   (fn [db [image-src src-size image-dest size] params]
+     (let [;size (:size params) ; TODO: get from image size
+           _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
            result-image (ops/op-image-blend image-src image-dest :size size :filter-mode :overlay)]       
@@ -173,8 +192,9 @@
    :comment "Create a function that returns a blank image of the given size."
    ;:query nil
    :exec
-   (fn [db & {:keys [size]}]
-     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+   (fn [db bindings params]
+     (let [size (:size params)
+           _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)]       
        [{:db/id -1

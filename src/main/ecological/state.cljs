@@ -1,7 +1,8 @@
 (ns ecological.state
   (:require [reagent.core :refer [atom]]
-            [ecological.gbstudio.gbstudio :as gbs]
-            [ecological.imaging.imaging :as imaging]))
+            ;[ecological.generator.gbs :as gbs]
+            ;[ecological.imaging.imaging :as imaging]
+            ))
 
 ;; (def database-interface
 ;;   {:tab-gbs {:fetch-data-output        gbs/fetch-gbs
