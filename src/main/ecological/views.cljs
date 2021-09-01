@@ -131,6 +131,7 @@
                  [:input.parameters
                   {:style {:width "6em" :height "1.8em"}
                    :type "number"
+                   ;;:pattern "[0-9a-z]"
                    :step (if val-step val-step 1)
                    :precision (if val-prec val-prec 4)
                    ;;:min (apply min (if (coll? val-range) (nth val-range i) val-range))

@@ -1,6 +1,7 @@
 (ns ecological.generator.utilities
   (:require ;[datascript.core :as d]
-            [clojure.string]
+   [clojure.string]
+   [clojure.pprint]
             ;[goog.crypt :as crypt]
             ;[quil.core :as qc]
             ;[quil.middleware :as qm]
@@ -43,3 +44,6 @@
 
 (defn string-to-int [val]
   (js/parseInt val))
+
+(defn string-to-float [val]
+  (js/parseFloat val))

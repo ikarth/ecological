@@ -48,9 +48,9 @@
      :default [0.05 0.05]
      :form :vector2
      :intent :scale
-     :step 0.05
+     :step 0.01
      :precision 3
-     :range [[0.03 0.08] [0.03 0.08]]
+     :range [[0.01 0.28] [0.01 0.28]]
      }
     :noise-octaves
     {:default 4

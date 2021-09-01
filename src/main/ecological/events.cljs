@@ -169,8 +169,8 @@
 
 (defn alter-bound-move-parameters
   [event [param-name param-index] current-move]
-  (if (some? event)
-    (.preventDefault event))
+  ;; (if (some? event)
+  ;;   (.preventDefault event))
   (js/console.log event)
   (let [current-state (get-current-parameters current-move false)
         old-values (get current-state param-name [-1 -1])
@@ -181,7 +181,7 @@
           (not (== new-value-raw new-value-raw))
           (nth old-values param-index)
           (or (= :scalar form) (= :vector2 form))
-          (util/string-to-int new-value-raw)
+          (util/string-to-float new-value-raw)
           :else
           new-value-raw
           )]
