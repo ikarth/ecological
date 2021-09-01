@@ -182,3 +182,10 @@ th.jh-key{
     background-color: #ff6300;
 }
 
+.parameters {
+    width: 6em;
+    height: 1.8em;
+}
+.stripy:nth-child(even) {
+    background-color: #e0e0d8;
+}

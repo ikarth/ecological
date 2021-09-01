@@ -42,39 +42,39 @@
   (d/q '[:find ?any ?obj :where [?obj :type ?any]] @db)) ;todo: log to console...
 
 
-(defn default-parameters [design-move]
-  (println " (default-parameters) " )
-  (js/console.log design-move)
-  (println design-move)
+(defn default-parameters [design-move randomize-parameters]
+  ;(println " (default-parameters) " )
+  ;(js/console.log design-move)
+  ;(println design-move)
   (let [params (get design-move :parameters {})
         ;;defaults (zipmap (keys params) (map :default (vals params)))
         ;;ranges (zipmap (keys params) (map :range (vals params)))
         ]
-    (println params)
+    ;(println params)
     (let [defaults
           (map (fn [[name param]]
                  ;(println param)
                  {name
                     (cond
-                      (= :enum (:form param))
+                      (and randomize-parameters (= :enum (:form param)))
                       (rand-nth (:range param))
-                      (= :vector2 (:form param))
+                      (and randomize-parameters (= :vector2 (:form param)))
                       (mapv (fn [[low high]]
                                 (random-from-range low high)) (:range param))
-                      (= :scalar (:form param))
+                      (and randomize-parameters (= :scalar (:form param)))
                       (mapv (fn [[low high]]
                              (random-from-range low high)) (:range param))
                       :else
                       (:default param))})
                params)]
-      (println "results of default:")
+      ;(println "results of default:")
       ;(println defaults)
       ;(println (merge defaults))
-      (println (apply merge defaults))
+      ;(println (apply merge defaults))
       (apply merge defaults))))
 
 (defn assemble-exec-result [db design-move params]
-  (println (str "(assemble-exec-result)"  params))
+  ;(println (str "(assemble-exec-result)"  params))
   (let [_ (assert (map? design-move) "Need a design move before we can execute the design move function.")
         move-name (get-in design-move [:move :name])
         _ (assert (string? move-name) (str "Design move (" move-name ") not found in " design-move "."))
@@ -103,10 +103,10 @@
 (defn execute-design-move!
   "Executes the supplied design move in the context of the current-database."
   [design-move params]
-  (println (str " (execute-design-move!) " params " <---"))
+  ;;(println (str " (execute-design-move!) " design-move " , " params " <---"))
   (if-let [db-conn (get @current-database :db-conn)]
     (let []
-      (println "(execute-design-move!)")
+      ;;(println "(execute-design-move!)")
       (assert (map? design-move) "Design move is missing, so can't be executed.")
       (d/transact! db-conn (assemble-exec-result @db-conn design-move params)))
     (println "Current database is missing somehow.")
@@ -119,7 +119,7 @@
   (setup-databases))
 
 (defn switch-database [database-id]
-  (println (str "(switch-database " database-id ")") )
+  ;;(println (str "(switch-database " database-id ")") )
   (update-database database-id))
 
 (defn reset-the-database!
@@ -132,14 +132,14 @@
       (println "Resetting DB connection...")
       (d/reset-conn! db-conn (d/empty-db db-schema))
       ;; TODO: if there is an initial transaction, it goes here...
-      (js/console.log @db-conn)
-      (js/console.log @current-database)
+      ;(js/console.log @db-conn)
+      ;(js/console.log @current-database)
       (println "Performing initial transactions...")
       (let [initial-transaction (get @current-database
                                      :initial-transaction                                    
                                      [])]
-        (js/console.log initial-transaction)
-        (js/console.log @current-database)
+        ;(js/console.log initial-transaction)
+        ;(js/console.log @current-database)
         (doseq [act initial-transaction]
           (if (fn? act)
             (d/transact! db-conn (act))
@@ -149,7 +149,7 @@
       ;;    (let []
       ;;      (js/console.log act)
       ;;      (d/transact! db-conn (act)))))
-     (js/console.log @db-conn)
+     ;(js/console.log @db-conn)
       db-conn
       )))
 

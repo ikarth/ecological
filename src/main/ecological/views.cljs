@@ -12,6 +12,9 @@
                                        select-tab
                                        init-database
                                        set-active-sketch
+                                       get-current-parameters
+                                       alter-bound-move-parameters
+                                       is-current-move-altered
                                        ]]
             [reagent.core :as r]
             [reagent.dom :as rd]
@@ -98,7 +101,60 @@
 
 (defn list-move-bindings [design-move]
   "[bindings to be described here]"
-  )
+  (if-let [params (get design-move :parameters)]
+    (let [current-values (get-current-parameters design-move false)
+          current-move-is-altered (is-current-move-altered)
+          ]
+      [:div
+       (for [[val-name pram] params]
+         (let [val-updated (get current-values val-name)
+               val-default (if val-updated val-updated (:default pram))
+               val-range   (:range   pram)
+               val-step    (:step    pram)
+               val-prec    (:precision pram)
+               val-form    (:form    pram)]
+           ^{:key val-name}
+           [:div.stripy.pa1
+            ;;(println val-range)            
+            (cond
+              (or (= val-form :scalar) (= val-form :vector2))
+              (for [[i p] (map-indexed vector val-range)]
+                ^{:key i}
+                [:div.dib.pa0.pl1.pr1
+                 ;; (println "for")
+                 ;; (println  (min (if (coll? val-range) (nth val-range i) val-range)))
+                 ;; (println  (if (coll? val-range) (nth val-range i) val-range))
+                 ;; (println  (if (coll? val-range) (nth val-range i) nil))
+                 ;; (println  val-range)
+                 ;; (js/console.log pram)
+                 [:input.parameters
+                  {:type "number"
+                   :step (if val-step val-step 1)
+                   :precision (if val-prec val-prec 4)
+                   ;;:min (apply min (if (coll? val-range) (nth val-range i) val-range))
+                   ;;:max (apply max (if (coll? val-range) (nth val-range i) val-range))
+                   :value (if (coll? val-default)
+                                    (nth val-default i)
+                                    val-default)
+                   :on-change (fn [event]
+                                (alter-bound-move-parameters event
+                                                             [val-name i]
+                                                             design-move))}]])
+              :else
+              (str val-default))
+            [:span.b
+             (str (name val-name))]]))
+       [:div.tc
+        (if current-move-is-altered
+          [:button.btn.grow.ma2.bg-green {:on-click #(perform-bound-move %)} "Perform Move"]
+          [:button.btn.grow.ma2.bg-grey "Perform Move"])
+        [:button.btn.grow.ma2.bg-blue {:on-click #(if (select-random-bindings) (perform-bound-move %))} "Randomize Move"]
+        ]
+       ])
+    "No params?"
+    ))
+
+
 
 ;; (def panel-style  (merge (flex-child-style "1")
                          ;; {:background-color "#fff4f4"
@@ -151,7 +207,7 @@
        [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
        [:p.tl-l
         (if selected-move (:comment selected-move) "")]
-       [:p.tl-l
+       [:div.tl-l
         (if selected-move (list-move-bindings selected-move) "")]]
       [:div.dtc.tc.pv4.bg-black-10
        [:p

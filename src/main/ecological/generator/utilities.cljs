@@ -40,3 +40,6 @@
     (fn [b-val]
       (cljs.pprint/cl-format nil (str "~" 8 ",'0d") (.toString b-val 2)))
     array-of-bytes)))
+
+(defn string-to-int [val]
+  (js/parseInt val))

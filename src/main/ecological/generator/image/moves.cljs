@@ -32,13 +32,15 @@
     {:default ops/default-image-size
      :form :vector2
      :intent :size
+     :step 64
      :range [[(first  ops/default-image-size) (first  ops/default-image-size)]
              [(second ops/default-image-size) (second ops/default-image-size)]]
      }
     :noise-offset
     {:default [0 0]
      :form :vector2
-     :intent :positIon
+     :intent :position
+     :step 1
      :range [[-256 256] [-256 256]]
      }
     :noise-scale
@@ -46,28 +48,33 @@
      :default [0.05 0.05]
      :form :vector2
      :intent :scale
+     :step 0.05
+     :precision 3
      :range [[0.03 0.08] [0.03 0.08]]
      }
     :noise-octaves
     {:default 4
      :form :scalar
      :intent :detail
-     :range [[1 8]]
+     :step 1
+     :range [[3 8]]
      }
     :noise-falloff
     {:default 0.5
      :form :scalar
      :intent :detail
+     :precision 2
+     :step 0.1
      :range [[0.3 0.7]]
      }}
    :exec
    (fn [db _ params]
-     (println "(move-generate-perlin-noise-raster)")
-     (println params)
+     ;(println "(move-generate-perlin-noise-raster)")
+     ;(println params)
      (let [noise-offset  (get params :noise-offset [0 0])
            noise-scale   (get params :noise-scale [0.05 0.05])
-           noise-octaves (get params :noise-octaves 4)
-           noise-falloff (get params :noise-falloff 0.5)
+           noise-octaves (apply Math/round (get params :noise-octaves 4))
+           noise-falloff (first (get params :noise-falloff 0.5))
            size (:size params)
            _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
@@ -79,6 +86,8 @@
                          :noise-octaves noise-octaves
                          :noise-falloff noise-falloff
                          )]
+       (js/console.log noise-octaves)
+       (js/console.log noise-falloff)
        [{:db/id -1
          :raster/image perlin-image
          :raster/size [w h]
@@ -162,9 +171,9 @@
 
 (def move-blend-blend
   {:name "move-blend-blend"
-   :comment "Converts an image to black and white pixels based on if they are above or below a threshold value."
-   :parameters
-   {}
+   :comment "Blends two images together."
+   ;; :parameters
+   ;; {}
    :query
    '[:find ?image-src ?image-src-size ?image-dest ?image-dest-size
      :in $ %
