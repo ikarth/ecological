@@ -105,7 +105,7 @@
     (let [current-values (get-current-parameters design-move false)
           current-move-is-altered (is-current-move-altered)
           ]
-      [:div
+      [:div.stripy
        (for [[val-name pram] params]
          (let [val-updated (get current-values val-name)
                val-default (if val-updated val-updated (:default pram))
@@ -115,6 +115,7 @@
                val-form    (:form    pram)]
            ^{:key val-name}
            [:div.stripy.pa1
+            ;{:style {:background-color "#464646"}}
             ;;(println val-range)            
             (cond
               (or (= val-form :scalar) (= val-form :vector2))
@@ -128,7 +129,8 @@
                  ;; (println  val-range)
                  ;; (js/console.log pram)
                  [:input.parameters
-                  {:type "number"
+                  {:style {:width "6em" :height "1.8em"}
+                   :type "number"
                    :step (if val-step val-step 1)
                    :precision (if val-prec val-prec 4)
                    ;;:min (apply min (if (coll? val-range) (nth val-range i) val-range))

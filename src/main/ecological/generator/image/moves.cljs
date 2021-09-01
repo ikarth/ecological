@@ -57,7 +57,7 @@
      :form :scalar
      :intent :detail
      :step 1
-     :range [[3 8]]
+     :range [[3 6]]
      }
     :noise-falloff
     {:default 0.5
@@ -73,8 +73,8 @@
      ;(println params)
      (let [noise-offset  (get params :noise-offset [0 0])
            noise-scale   (get params :noise-scale [0.05 0.05])
-           noise-octaves (apply Math/round (get params :noise-octaves 4))
-           noise-falloff (first (get params :noise-falloff 0.5))
+           noise-octaves (get params :noise-octaves 4)
+           noise-falloff (get params :noise-falloff 0.5)
            size (:size params)
            _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
@@ -83,8 +83,12 @@
                          :size [w h]
                          :noise-offset  noise-offset
                          :noise-scale   noise-scale 
-                         :noise-octaves noise-octaves
-                         :noise-falloff noise-falloff
+                         :noise-octaves (if (coll? noise-octaves)
+                                          (apply Math/round noise-octaves)
+                                          (Math/round noise-octaves))
+                         :noise-falloff (if (coll? noise-falloff)
+                                          (first noise-falloff)
+                                          noise-falloff)
                          )]
        (js/console.log noise-octaves)
        (js/console.log noise-falloff)
