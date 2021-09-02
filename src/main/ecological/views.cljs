@@ -375,8 +375,6 @@
 ;; https://github.com/simon-katz/nomisdraw/blob/master/src/cljs/nomisdraw/utils/nomis_quil_on_reagent.cljs
 (defn q-sketch
   [& {:as sketch-args}]
-  ;; (assert (not (contains? sketch-args :host))
-  ;;         ":host should not be provided, since a unique canvas id will be used instead.")
   (let [host (if (not (contains? sketch-args :host))
                (str (random-uuid))
                (if (not (= nil (:host sketch-args)))
@@ -386,7 +384,7 @@
         _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                   (str ":size should be nil or a vector of size 2, but instead it is " size))
         [w h] (if (nil? size) [600 600] size)
-        canvas-id host ;"quil-canvas" ;(str (random-uuid))
+        canvas-id host 
         canvas-tag-&-id (keyword (str "div#" canvas-id))
         sketch-args* (merge sketch-args {:host canvas-id})
         saved-sketch-atom (atom ::not-set-yet)
@@ -397,15 +395,13 @@
       (fn []
         [canvas-tag-&-id {:style {:max-width w}
                           :width w
-                          :height h}
-         ;;"contents"
-         ])
+                          :height h}])
       :component-did-mount
       (fn []
         (a/go (reset! saved-sketch-atom (apply qc/sketch (apply concat sketch-args*)))))
       :component-will-unmount
       (fn []
-        (a/go-loop []
+        (a/go-loop [] ; will most likely not be reached
           (if (= @saved-sketch-atom ::not-set-yet)
             (do
               (a/<! (a/timeout 100))
@@ -414,8 +410,6 @@
               (qc/exit)))))}]))
 
 (defn visualize-image [img-data & {:keys [image-key use-canvas] :or {image-key (str (random-uuid)) use-canvas false}}]
-  ;(js/console.log img-data)
-  ;(js/console.log [image-key use-canvas])
   (if (undefined? img-data)
     (println "Tried to call (visualize-image) with undefined img-data.")
     (try
@@ -430,8 +424,7 @@
                 state)
               (draw [state]
                 (let [img (:image state)]))]
-                                        ;(js/console.log img-data)
-        (if (not use-canvas) ;; can display as just the image or as an animated sketch
+        (if (not use-canvas) ; can display as just the image or as an animated sketch
           (let [html-image-data (. (. img-data -canvas) toDataURL)]
             ^{:key image-key}
             [:img {:src html-image-data}])
@@ -443,8 +436,6 @@
                     :size (img-size)
                     )))
       (catch :default e
-        ;(js/console.log "vie")
-        ;(println "visualize-image error")
         (js/console.log e)))))
 
 (defn display-loose-images [g-state]
@@ -452,11 +443,9 @@
     (map (fn [i-entry]
            (if (map? i-entry)
              (let [idat (get i-entry "image-data")]
-                                        ;(js/console.log i-entry)
                (if (undefined? idat)
                  (println (str "Image data undefined for " i-entry))
-                 (visualize-image idat {:key (get i-entry "uuid")}))
-               )))
+                 (visualize-image idat {:key (get i-entry "uuid")})))))
          g-state)))
 
 (defn visualize-generator-sketch
@@ -569,10 +558,8 @@
             just-data (nth data-segments 2)
             image-path (nth data-segments 3)
             bits (into [] (flatten (mapv hex-string-to-byte (mapv clojure.string/join (partition 2 just-data)))))
-            draw-index (range (* width height))]
-       
-        [:div
-        
+            draw-index (range (* width height))]       
+        [:div      
          [:svg {:style {:background "pink" :width (str (* 8 width) "px") :height (str (* 8 height) "px")}}
           [:image {:href image-path :width (str (* 8 width) "px") :height (str (* 8 height) "px") :preserveAspectRatio "xMinYMin" :x 0 :y 0 }]
           (->> draw-index
@@ -605,7 +592,6 @@
       (str (count data-segments)))))
 
 (defn convert-viz [hic]
-  ;;(println "(convert-viz)")
   (clojure.walk/postwalk
    (fn [data]
      (cond
@@ -632,9 +618,7 @@
          )
        :else
        (let []
-         ;;(js/console.log data)
-         data))
-     )
+         data)))
    hic))
 
 ;; (defn convert-viz-imaging
@@ -667,7 +651,6 @@
      g-state))
 
 (defn filter-gen-state-img [g-state]
-  ;(js/console.log g-state)
   (clojure.walk/postwalk
      (fn [node]
        (cond
@@ -676,14 +659,8 @@
          (and (map-entry? node) (= (first node) "image-data"))
          (let [;;_ (js/console.log node)
                i-canvas (. (second node) -canvas)
-               html-image-data (. i-canvas toDataURL)
-               ]
-           ;;(js/console.log node)
-           ;(visualize-image (second node) {:key (str (random-uuid))})
-           ;;^{:key "578"}
-           [:image-data html-image-data]
-           ;[:img (:src html-image-data)]
-           )
+               html-image-data (. i-canvas toDataURL)]
+           [:image-data html-image-data])
          :else
          (let []           
            node)))
@@ -698,15 +675,11 @@
      [:div.self-center.content-center.items-center.justify-center.flex.bg-washed-green
       [:div.mw9.ma2
        ;;(println (str "image-state: " img-state))
-       (convert-viz (json->hiccup (clj->js (filter-gen-state-img img-state))))
-       ]]]))
+       (convert-viz (json->hiccup (clj->js (filter-gen-state-img img-state))))]]]))
 
 (defn display-most-recent-artifact []
   [:div
    (let [recent-artifact  (:recent-artifact @app-state)]
-     ;; (js/console.log recent-artifact)
-     ;; (js/console.log (get recent-artifact "image-data"))
-     ;; (js/console.log (contains? recent-artifact "image-data"))
      (if (contains? recent-artifact "image-data")
        (let [img-data (get recent-artifact "image-data")]
          (if (undefined? img-data)
@@ -716,7 +689,6 @@
 
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
-    ;(js/console.log gen-state)
     [:div.self-center.content-center.items-center.justify-center.flex.bg-lightest-blue
      [:div.mw9.ma2
       (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
@@ -728,7 +700,6 @@
         [:hr]
         (.stringify js/JSON (clj->js gen-state)))
       ]]))
-;(.stringify js/JSON)
 
 (defn image-header []
   [:h1 "Ecological Generator Output Visualization"])
