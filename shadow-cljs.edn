@@ -22,32 +22,33 @@
   [coll-pen "0.2.1"]
   [re-com "2.13.2"]
   [re-frame "1.2.0"]
-  ;[clj-commons/fs "1.6.307"]
-  ;[org.clojure/core.match "1.0.0"]
-  ;[cljs-node-io "1.1.2"]
-  ;[clj-http "3.12.0"]
-  ;[cljs-http "0.1.46"]
-                                        ;[erinite/template "0.2.0"]
+  ;;[clj-commons/fs "1.6.307"]
+  ;;[org.clojure/core.match "1.0.0"]
+  ;;[cljs-node-io "1.1.2"]
+  ;;[clj-http "3.12.0"]
+  ;;[cljs-http "0.1.46"]
+  ;;[erinite/template "0.2.0"]
   [net.mikera/core.matrix "0.62.0"]
-  ;[thinktopic/aljabr "0.1.1"]
+  ;;[thinktopic/aljabr "0.1.1"]
   ]
 
  :nrepl
  {:port 3333}
 
- ;:dev-http
- ;{8000 "public"}
+ ;;:dev-http
+ ;;{8000 "public"}
 
  :builds
  {:eco {:target :browser
         :output-dir "public/js"
         :asset-path "js"
         :modules {:main {:entries [ecological.core]}}
-        ;;:compiler-options {:infer-externs :auto}
+        :compiler-options {:infer-externs :auto
+                           :externs ["datascript/externs.js"]}
         :devtools {:preloads [devtools.preload]
                    :before-load ecological.core/stop 
                    :after-load ecological.core/start
-                   ;:before-load-async ecological.build/build-asset-data
+                   ;;:before-load-async ecological.build/build-asset-data
                    :watch-dir "resources"
                    :build-hooks [(ecological.asset-management/hook "resources/assets")] ; It seems like this isn't getting called for some reason, so perhaps I'm doing something wrong with it?
                    :http-root "public"
