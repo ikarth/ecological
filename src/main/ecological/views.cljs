@@ -30,7 +30,7 @@
             [quil.core :as qc]
             [quil.middleware :as qm]
             [cljs.core.async :as a]
-            ;[clojure.core.matrix :as matrix]
+            ;;[clojure.core.matrix :as matrix]
             ))
 
 (defn header
@@ -414,38 +414,48 @@
               (qc/exit)))))}]))
 
 (defn visualize-image [img-data & {:keys [image-key use-canvas] :or {image-key (str (random-uuid)) use-canvas false}}]
-  ;;(js/console.log img-data)
-  (letfn [(img-size [] [(. img-data -width) (. img-data -height)])
-          (initial-state []
-            (let [[w h] (img-size)]
-              (qc/resize-sketch w h)
-              (qc/background-image img-data)
-              (qc/no-loop)
-              {:image img-data}))
-          (update-state [state]
-            state)
-          (draw [state]
-            (let [img (:image state)]))]
-    ;(js/console.log img-data)
-    (if (not use-canvas) ;; can display as just the image or as an animated sketch
-      (let [html-image-data (. (. img-data -canvas) toDataURL)]
-        ^{:key image-key}
-        [:img {:src html-image-data}])
-      (q-sketch :setup initial-state
-                :update update-state
-                :draw draw
-                :host nil
-                :middleware [qm/fun-mode]
-                :size (img-size)
-                ))))
+  ;(js/console.log img-data)
+  ;(js/console.log [image-key use-canvas])
+  (if (undefined? img-data)
+    (println "Tried to call (visualize-image) with undefined img-data.")
+    (try
+      (letfn [(img-size [] [(. img-data -width) (. img-data -height)])
+              (initial-state []
+                (let [[w h] (img-size)]
+                  (qc/resize-sketch w h)
+                  (qc/background-image img-data)
+                  (qc/no-loop)
+                  {:image img-data}))
+              (update-state [state]
+                state)
+              (draw [state]
+                (let [img (:image state)]))]
+                                        ;(js/console.log img-data)
+        (if (not use-canvas) ;; can display as just the image or as an animated sketch
+          (let [html-image-data (. (. img-data -canvas) toDataURL)]
+            ^{:key image-key}
+            [:img {:src html-image-data}])
+          (q-sketch :setup initial-state
+                    :update update-state
+                    :draw draw
+                    :host nil
+                    :middleware [qm/fun-mode]
+                    :size (img-size)
+                    )))
+      (catch :default e
+        ;(js/console.log "vie")
+        ;(println "visualize-image error")
+        (js/console.log e)))))
 
 (defn display-loose-images [g-state]
   (let [image (get "image-data" g-state)]
     (map (fn [i-entry]
            (if (map? i-entry)
              (let [idat (get i-entry "image-data")]
-               ;(js/console.log i-entry)
-               (visualize-image idat {:key (get i-entry "uuid")})
+                                        ;(js/console.log i-entry)
+               (if (undefined? idat)
+                 (println (str "Image data undefined for " i-entry))
+                 (visualize-image idat {:key (get i-entry "uuid")}))
                )))
          g-state)))
 
@@ -698,7 +708,10 @@
      ;; (js/console.log (get recent-artifact "image-data"))
      ;; (js/console.log (contains? recent-artifact "image-data"))
      (if (contains? recent-artifact "image-data")
-       (visualize-image (get recent-artifact "image-data") {:key "most-recent-artifact"})))])
+       (let [img-data (get recent-artifact "image-data")]
+         (if (undefined? img-data)
+           (println "(display-most-recent-artifact) can't find recent-artifact image data")
+           (visualize-image img-data {:key "most-recent-artifact"})))))])
 
 
 (defn display-gbs []
