@@ -153,11 +153,12 @@
 
 (defn select-move
   "Makes the given design move be the currently selected one."
-  [event move]
+  [event move & {:keys [clear-altered] :or {clear-altered true}}]
   (.preventDefault event)
   ;(js/console.log "Selecting" (:name move))
   (swap! app-state assoc-in [:selected-move] move)
-  (swap! app-state assoc-in [:altered-parameters] {})
+  (if clear-altered
+    (swap! app-state assoc-in [:altered-parameters] {}))
   (swap! app-state assoc-in [:selected-parameters] (get-current-parameters move false))
   (swap! app-state assoc-in [:data-view] (generator/fetch-data-view))
   )
@@ -176,10 +177,13 @@
         old-values (get current-state param-name [-1 -1])
         form (get-in current-move [:parameters param-name :form] :form-not-found)
         new-value-raw (-> event .-target .-value)
+        _ (js/console.log new-value-raw)
         new-value
         (cond
           (not (== new-value-raw new-value-raw))
           (nth old-values param-index)
+          (= :enum form)
+          new-value-raw
           (or (= :scalar form) (= :vector2 form))
           (util/string-to-float new-value-raw)
           :else
@@ -209,7 +213,7 @@
                )
              )
            )
-    ;;(println (:altered-parameters @app-state))
+    (println (:altered-parameters @app-state))
       ;; (swap! app-state update-in [:altered-parameters]
       ;;    (fn [old-parameters]
     ;;      (merge old-parameters new-parameter)))
@@ -241,15 +245,15 @@
 
 (defn perform-bound-move
   [event]
-  ;(println "(perform-bound-move)")
+  (println (str "(perform-bound-move)"))
   (if (some? event)
     (.preventDefault event))
                                         ;(js/console.log (:selected-bound-move @app-state))
   (let [randomize-parameters (empty? (get @app-state :altered-parameters))]
     (swap! app-state assoc-in [:selected-parameters] (get-current-parameters (second (:selected-bound-move @app-state))
                                                                              randomize-parameters))
-    ;; (println (:selected-bound-move @app-state))
-    ;; (println (str "Selected Parameters: " (:selected-parameters @app-state)))
+    (println (str "Selected move:" (:selected-bound-move @app-state)))
+    (println (str "Selected parameters: " (:selected-parameters @app-state)))
     (let [params (get-current-parameters (:move (second (:selected-bound-move @app-state))) randomize-parameters)]
       ;;(println params)
       (generator/execute-design-move!

@@ -118,6 +118,16 @@
             ;{:style {:background-color "#464646"}}
             ;;(println val-range)            
             (cond
+              (= val-form :enum)
+              [:select.pr2 {:default-value val-default
+                            :on-change (fn [event] (alter-bound-move-parameters event
+                                                                                [val-name 0]
+                                                                                design-move))}
+               (for [[i p] (map-indexed vector val-range)]
+                 ^{:key i}
+                 [:option (str p)]
+                 )
+               ]
               (or (= val-form :scalar) (= val-form :vector2))
               (for [[i p] (map-indexed vector val-range)]
                 ^{:key i}
@@ -149,7 +159,10 @@
              (str (name val-name))]]))
        [:div.tc
         (if current-move-is-altered
-          [:button.btn.grow.ma2.bg-green {:on-click #(perform-bound-move %)} "Perform Move"]
+          [:button.btn.grow.ma2.bg-green {:on-click (fn [event]
+                                                      ;(select-move event design-move :clear-altered false)
+                                                      (if (select-random-bindings)
+                                                        (perform-bound-move event)))} "Perform Move"]
           [:button.btn.grow.ma2.bg-grey "Perform Move"])
         [:button.btn.grow.ma2.bg-blue {:on-click #(if (select-random-bindings) (perform-bound-move %))} "Randomize Move"]
         ]
@@ -205,7 +218,7 @@
                                  (select-move event move)
                                  (if (select-random-bindings)
                                    (perform-bound-move event)))}
-                    "->"])]))))]]
+                    "🎲"])]))))]]
       [:div.dtc.tc.pa3.pv2.bg-black-05.pa
        [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
        [:p.tl-l

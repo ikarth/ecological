@@ -176,8 +176,12 @@
 (def move-blend-blend
   {:name "move-blend-blend"
    :comment "Blends two images together."
-   ;; :parameters
-   ;; {}
+   :parameters
+   {:filter-mode
+    {:default :overlay
+     :form :enum
+     :range [:blend :add :darkest :lightest :difference :exclusion :multiply :screen :overlay :hard-light :soft-light :dodge :burn]
+     }}
    :query
    '[:find ?image-src ?image-src-size ?image-dest ?image-dest-size
      :in $ %
@@ -186,14 +190,16 @@
      [?e1 :raster/size  ?image-src-size]
      [?e2 :raster/image ?image-dest]
      [?e2 :raster/size  ?image-dest-size]
-     [(not= ?e1 ?e2)]]
+     [(not= ?e1 ?e2)]]   
    :exec
    (fn [db [image-src src-size image-dest size] params]
      (let [;size (:size params) ; TODO: get from image size
+           filter-mode (get params :filter-mode :overlay)
+           _ (println (str "filter-mode in (move-blend-blend): " filter-mode))
            _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
-           result-image (ops/op-image-blend image-src image-dest :size size :filter-mode :overlay)]       
+           result-image (ops/op-image-blend image-src image-dest :size size :filter-mode filter-mode)]       
        [{:db/id -1
          :raster/image result-image
          :raster/size [w h]
