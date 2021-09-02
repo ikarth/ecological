@@ -60,6 +60,8 @@
    moves/move-generate-test-pattern-raster
    moves/move-generate-random-noise-raster
    moves/move-filter-threshold
+   moves/move-filter-blur
+   moves/move-filter-posterize
    moves/move-blend-blend
    ])
 

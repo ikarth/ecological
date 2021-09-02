@@ -169,7 +169,7 @@
     (not (empty? cur-alter))))
 
 (defn alter-bound-move-parameters
-  [event [param-name param-index] current-move]
+  [event [param-name param-index] current-move valid-range]
   ;; (if (some? event)
   ;;   (.preventDefault event))
   (js/console.log event)
@@ -183,7 +183,10 @@
           (not (== new-value-raw new-value-raw))
           (nth old-values param-index)
           (= :enum form)
-          new-value-raw
+          (if (string? new-value-raw)
+            (let [kval (keyword (rest new-value-raw))]
+              (if (some #(= kval %) valid-range) kval new-value-raw))
+            new-value-raw)
           (or (= :scalar form) (= :vector2 form))
           (util/string-to-float new-value-raw)
           :else
@@ -230,7 +233,7 @@
   (swap! app-state assoc-in [:selected-parameters] (get-current-parameters move false)))
 
 (defn select-random-bindings
-  []
+  [& {:keys [clear-altered] :or {clear-altered true}}]
   (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
   (if (:selected-move @app-state)
     (let [valid-moves (:possible-moves @app-state)
@@ -238,7 +241,8 @@
           possible-moves (filter #(= (get-in % [:move :name]) selected-move-name) valid-moves)
           chosen-move (rand-nth possible-moves)]
       (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
-      (swap! app-state assoc-in [:altered-parameters] {})
+      (if clear-altered
+        (swap! app-state assoc-in [:altered-parameters] {}))
       (swap! app-state assoc-in [:selected-parameters] (get-current-parameters chosen-move true))
       true)
     false))
@@ -249,9 +253,11 @@
   (if (some? event)
     (.preventDefault event))
                                         ;(js/console.log (:selected-bound-move @app-state))
+  (println (str "Altered parameters:" (get @app-state :altered-parameters)))
   (let [randomize-parameters (empty? (get @app-state :altered-parameters))]
     (swap! app-state assoc-in [:selected-parameters] (get-current-parameters (second (:selected-bound-move @app-state))
                                                                              randomize-parameters))
+
     (println (str "Selected move:" (:selected-bound-move @app-state)))
     (println (str "Selected parameters: " (:selected-parameters @app-state)))
     (let [params (get-current-parameters (:move (second (:selected-bound-move @app-state))) randomize-parameters)]

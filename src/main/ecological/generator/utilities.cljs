@@ -47,3 +47,17 @@
 
 (defn string-to-float [val]
   (js/parseFloat val))
+
+(defn remove-leading-colons [val]
+  (if (string? val)
+    (if (clojure.string/starts-with? val ":")
+      (remove-leading-colons (subs val 1))
+      val)
+    val))
+
+(defn string-to-keyword [val]
+  (if (keyword? val)
+    val
+    (if (string? val)
+      (keyword (remove-leading-colons val))
+      val)))

@@ -1,6 +1,7 @@
 (ns ecological.generator.image.moves
     (:require [datascript.core :as d]
-            [ecological.generator.image.ops :as ops]
+              [ecological.generator.image.ops :as ops]
+              [ecological.generator.utilities :as util]
             ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -153,6 +154,50 @@
 (def move-filter-threshold
   {:name "move-filter-threshold"
    :comment "Converts an image to black and white pixels based on if they are above or below a threshold value."
+   :parameters
+   {:filter-mode
+    {:default :threshold
+     :form :enum
+     :range [:threshold :gray :invert :erode :dilate]
+     }
+    :filter-level
+    {:default 0.5
+     :form :scalar
+     :step 0.1
+     :range [[0.0 1.0]]}}
+    :query
+   '[:find ?image-image ?image-size
+     :in $ %
+     :where
+     [?element :raster/image ?image-image]
+     [?element :raster/size   ?image-size]
+     ]
+   :exec
+   (fn [db [image-data size] params]
+     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                     (str ":size should be nil or a vector of size 2, but instead it is " size))
+           [w h] (if (nil? size) ops/default-image-size size)
+           filter-mode (util/string-to-keyword (get params :filter-mode :threshold))
+           filter-level (get params :filter-level [0.7])
+           filter-level (if (number? filter-level) [filter-level] filter-level)
+           _ (println filter-mode)
+           _ (println filter-level)
+           result-image (ops/op-image-filter image-data :filter-mode filter-mode :filter-level filter-level)]       
+       [{:db/id -1
+         :raster/image result-image
+         :raster/size [w h]
+         :raster/uuid (str (random-uuid))         
+         }]))})
+
+(def move-filter-blur
+  {:name "move-filter-blur"
+   :comment "Performs a Gaussian blur on an image."
+   :parameters {
+    :filter-level
+    {:default 1
+     :form :scalar
+     :step 0.25
+     :range [[0.0 5.0]]}}
    :query
    '[:find ?image-image ?image-size
      :in $ %
@@ -165,12 +210,43 @@
      (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
-           result-image (ops/op-image-filter image-data :filter-mode :threshold :filter-level 0.5)]       
+           filter-level (first (get params :filter-level [1]))
+           result-image (ops/op-image-filter image-data :filter-mode :blur :filter-level filter-level)]
+       (println (str "blur: " filter-level))
        [{:db/id -1
          :raster/image result-image
          :raster/size [w h]
-         :raster/uuid (str (random-uuid))
-         
+         :raster/uuid (str (random-uuid))         
+         }]))})
+
+
+(def move-filter-posterize
+  {:name "move-filter-posterize"
+   :comment "Reduces the number of colors in an image."
+   :parameters {
+    :filter-level
+    {:default 4
+     :form :scalar
+     :range [[2 16]]}}
+   :query
+   '[:find ?image-image ?image-size
+     :in $ %
+     :where
+     [?element :raster/image ?image-image]
+     [?element :raster/size   ?image-size]
+     ]
+   :exec
+   (fn [db [image-data size] params]
+     (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                     (str ":size should be nil or a vector of size 2, but instead it is " size))
+           [w h] (if (nil? size) ops/default-image-size size)
+           filter-level (first (get params :filter-level [4]))
+           result-image (ops/op-image-filter image-data :filter-mode :posterize :filter-level filter-level)]
+       (println (str "posterize: " filter-level))
+       [{:db/id -1
+         :raster/image result-image
+         :raster/size [w h]
+         :raster/uuid (str (random-uuid))         
          }]))})
 
 (def move-blend-blend
@@ -194,8 +270,10 @@
    :exec
    (fn [db [image-src src-size image-dest size] params]
      (let [;size (:size params) ; TODO: get from image size
-           filter-mode (get params :filter-mode :overlay)
+           filter-mode (util/string-to-keyword (get params :filter-mode :overlay))
            _ (println (str "filter-mode in (move-blend-blend): " filter-mode))
+           _ (println (type filter-mode))
+           _ (js/console.log filter-mode)
            _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
