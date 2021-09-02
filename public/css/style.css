@@ -186,6 +186,6 @@ th.jh-key{
     width: 6em;
     height: 1.8em;
 }
-.stripy:nth-child(even) {
+div div.stripy:nth-child(even) {
     background-color: #e0e0d8;
 }
