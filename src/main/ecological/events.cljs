@@ -177,7 +177,7 @@
         old-values (get current-state param-name [-1 -1])
         form (get-in current-move [:parameters param-name :form] :form-not-found)
         new-value-raw (-> event .-target .-value)
-        _ (js/console.log new-value-raw)
+        ;;_ (js/console.log new-value-raw)
         new-value
         (cond
           (not (== new-value-raw new-value-raw))
@@ -216,7 +216,7 @@
                )
              )
            )
-    (println (:altered-parameters @app-state))
+    ;;(println (:altered-parameters @app-state))
       ;; (swap! app-state update-in [:altered-parameters]
       ;;    (fn [old-parameters]
     ;;      (merge old-parameters new-parameter)))
@@ -249,17 +249,17 @@
 
 (defn perform-bound-move
   [event]
-  (println (str "(perform-bound-move)"))
+  ;;(println (str "(perform-bound-move)"))
   (if (some? event)
     (.preventDefault event))
                                         ;(js/console.log (:selected-bound-move @app-state))
-  (println (str "Altered parameters:" (get @app-state :altered-parameters)))
+  ;;(println (str "Altered parameters:" (get @app-state :altered-parameters)))
   (let [randomize-parameters (empty? (get @app-state :altered-parameters))]
     (swap! app-state assoc-in [:selected-parameters] (get-current-parameters (second (:selected-bound-move @app-state))
                                                                              randomize-parameters))
 
-    (println (str "Selected move:" (:selected-bound-move @app-state)))
-    (println (str "Selected parameters: " (:selected-parameters @app-state)))
+    ;;(println (str "Selected move:" (:selected-bound-move @app-state)))
+    ;;(println (str "Selected parameters: " (:selected-parameters @app-state)))
     (let [params (get-current-parameters (:move (second (:selected-bound-move @app-state))) randomize-parameters)]
       ;;(println params)
       (generator/execute-design-move!
