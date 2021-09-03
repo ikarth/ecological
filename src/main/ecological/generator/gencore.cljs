@@ -43,34 +43,33 @@
 
 
 (defn default-parameters [design-move randomize-parameters]
-  ;(println " (default-parameters) " )
-  ;(js/console.log design-move)
-  ;(println design-move)
+  ;;(println " (default-parameters) " )
+  ;;(js/console.log design-move)
+  ;;(println design-move)
   (let [params (get design-move :parameters {})
         ;;defaults (zipmap (keys params) (map :default (vals params)))
         ;;ranges (zipmap (keys params) (map :range (vals params)))
         ]
-    ;(println params)
     (let [defaults
           (map (fn [[name param]]
-                 ;(println param)
+                 ;;(println name param)
                  {name
-                    (cond
-                      (and randomize-parameters (= :enum (:form param)))
-                      (rand-nth (:range param))
-                      (and randomize-parameters (= :vector2 (:form param)))
-                      (mapv (fn [[low high]]
-                                (random-from-range low high)) (:range param))
-                      (and randomize-parameters (= :scalar (:form param)))
-                      (mapv (fn [[low high]]
-                             (random-from-range low high)) (:range param))
-                      :else
-                      (:default param))})
+                  (cond
+                    (and randomize-parameters (= :enum (:form param)))
+                    (rand-nth (:range param))
+                    (and randomize-parameters (= :vector2 (:form param)))
+                    (mapv (fn [[low high]]
+                            (random-from-range low high)) (:range param))
+                    (and randomize-parameters (= :scalar (:form param)))
+                    ((fn [[low high]]
+                       (random-from-range low high)) (:range param))
+                    :else
+                    (:default param))})
                params)]
-      ;(println "results of default:")
-      ;(println defaults)
-      ;(println (merge defaults))
-      ;(println (apply merge defaults))
+      ;;(println "results of default:")
+      ;;(println defaults)
+      ;;(println (merge defaults))
+      ;;(println (apply merge defaults))
       (apply merge defaults))))
 
 (defn assemble-exec-result [db design-move params]

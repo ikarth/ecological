@@ -58,7 +58,7 @@
      :form :scalar
      :intent :detail
      :step 1
-     :range [[3 6]]
+     :range [3 6]
      }
     :noise-falloff
     {:default 0.5
@@ -66,7 +66,7 @@
      :intent :detail
      :precision 2
      :step 0.1
-     :range [[0.3 0.7]]
+     :range [0.3 0.7]
      }}
    :exec
    (fn [db _ params]
@@ -91,8 +91,8 @@
                                           (first noise-falloff)
                                           noise-falloff)
                          )]
-       (js/console.log noise-octaves)
-       (js/console.log noise-falloff)
+       ;;(js/console.log noise-octaves)
+       ;;(js/console.log noise-falloff)
        [{:db/id -1
          :raster/image perlin-image
          :raster/size [w h]
@@ -164,7 +164,7 @@
     {:default 0.5
      :form :scalar
      :step 0.1
-     :range [[0.0 1.0]]}}
+     :range [0.0 1.0]}}
     :query
    '[:find ?image-image ?image-size
      :in $ %
@@ -178,10 +178,10 @@
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
            filter-mode (util/string-to-keyword (get params :filter-mode :threshold))
-           filter-level (get params :filter-level [0.7])
-           filter-level (if (number? filter-level) [filter-level] filter-level)
-           _ (println filter-mode)
-           _ (println filter-level)
+           filter-level (get params :filter-level 0.7)
+           filter-level (if (number? filter-level) filter-level (first filter-level))
+           ;;_ (println filter-mode)
+           ;;_ (println filter-level)
            result-image (ops/op-image-filter image-data :filter-mode filter-mode :filter-level filter-level)]       
        [{:db/id -1
          :raster/image result-image
@@ -197,7 +197,7 @@
     {:default 1
      :form :scalar
      :step 0.25
-     :range [[0.0 5.0]]}}
+     :range [0.0 5.0]}}
    :query
    '[:find ?image-image ?image-size
      :in $ %
@@ -210,9 +210,9 @@
      (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
-           filter-level (first (get params :filter-level [1]))
+           filter-level (get params :filter-level 1)
            result-image (ops/op-image-filter image-data :filter-mode :blur :filter-level filter-level)]
-       (println (str "blur: " filter-level))
+       ;;(println (str "blur: " filter-level))
        [{:db/id -1
          :raster/image result-image
          :raster/size [w h]
@@ -240,9 +240,9 @@
      (let [_ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
-           filter-level (first (get params :filter-level [4]))
+           filter-level (get params :filter-level 4)
            result-image (ops/op-image-filter image-data :filter-mode :posterize :filter-level filter-level)]
-       (println (str "posterize: " filter-level))
+       ;;(println (str "posterize: " filter-level))
        [{:db/id -1
          :raster/image result-image
          :raster/size [w h]
@@ -271,9 +271,9 @@
    (fn [db [image-src src-size image-dest size] params]
      (let [;size (:size params) ; TODO: get from image size
            filter-mode (util/string-to-keyword (get params :filter-mode :overlay))
-           _ (println (str "filter-mode in (move-blend-blend): " filter-mode))
-           _ (println (type filter-mode))
-           _ (js/console.log filter-mode)
+           ;;_ (println (str "filter-mode in (move-blend-blend): " filter-mode))
+           ;;_ (println (type filter-mode))
+           ;;_ (js/console.log filter-mode)
            _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
                      (str ":size should be nil or a vector of size 2, but instead it is " size))
            [w h] (if (nil? size) ops/default-image-size size)
