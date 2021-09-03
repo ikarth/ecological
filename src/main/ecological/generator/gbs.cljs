@@ -132,4 +132,5 @@
    :initial-transaction [load-resources
                          load-gbs-projects]
    :setup [(assets/load-manifest) (assets/load-scene-sources)]
+   :export-project-view #(export/export-project-view db-conn)
    })

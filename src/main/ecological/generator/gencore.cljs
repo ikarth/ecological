@@ -225,3 +225,14 @@
   (if-let [db-conn (get @current-database :db-conn)]
     (let [exporter-func (get @current-database :export-most-recent (fn [_] (println "No most-recent-artifact exporter implemented for this database.")))]
       (exporter-func db-conn))))
+
+(defn fetch-project-view
+  "Returns a summarized list of the most signifigant artifacts, to make it easier to keep track of them."
+  []
+  ;(println @current-database)
+  (if-let [db-conn (get @current-database :db-conn)]
+    (let [exporter-func (get @current-database :export-project-view (fn [_] (println "No (project-view) exporter implemented for this database.")))]
+                                        ;(println (:export-project-view @current-database))
+      (if (fn? exporter-func)
+        (exporter-func db-conn)
+        []))))

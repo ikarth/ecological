@@ -106,6 +106,7 @@
     (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
     (swap! app-state assoc-in [:data-view] (generator/fetch-data-view))
     (swap! app-state assoc-in [:recent-artifact] (generator/fetch-most-recent-artifact))
+    (swap! app-state assoc-in [:project-view] (generator/fetch-project-view))
     
     ))
 
@@ -123,6 +124,7 @@
   (swap! app-state assoc-in [:data] (generator/fetch-database))
   (swap! app-state assoc-in [:data-view] (generator/fetch-data-view))
   (swap! app-state assoc-in [:recent-artifact] (generator/fetch-most-recent-artifact))
+  (swap! app-state assoc-in [:project-view] (generator/fetch-project-view))  
   ;(js/console.log (:data-view @app-state))
   )
 
