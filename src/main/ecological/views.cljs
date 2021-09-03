@@ -10,8 +10,14 @@
                                        perform-random-move
                                        select-random-bindings
                                        select-tab
-                                       init-database]]
+                                       init-database
+                                       set-active-sketch
+                                       get-current-parameters
+                                       alter-bound-move-parameters
+                                       is-current-move-altered
+                                       ]]
             [reagent.core :as r]
+            [reagent.dom :as rd]
             [cljs.pprint]
             [json-html.core :refer [json->hiccup json->html edn->html]]
             [coll-pen.core]
@@ -21,7 +27,10 @@
             [re-com.core :as rc]
             [re-com.box :as rc-box]
             [re-com.util :as rc-util]
-            ;[clojure.core.matrix :as matrix]
+            [quil.core :as qc]
+            [quil.middleware :as qm]
+            [cljs.core.async :as a]
+            ;;[clojure.core.matrix :as matrix]
             ))
 
 (defn header
@@ -92,7 +101,76 @@
 
 (defn list-move-bindings [design-move]
   "[bindings to be described here]"
-  )
+  (if-let [params (get design-move :parameters)]
+    (let [current-values (get-current-parameters design-move false)
+          current-move-is-altered (is-current-move-altered)
+          ]
+      [:div.stripy
+       (for [[val-name pram] params]
+         (let [val-updated (get current-values val-name)
+               val-default (if val-updated val-updated (:default pram))
+               val-range   (:range   pram)
+               val-step    (:step    pram)
+               val-prec    (:precision pram)
+               val-form    (:form    pram)]
+           ^{:key val-name}
+           [:div.stripy.pa1
+            ;{:style {:background-color "#464646"}}
+            ;;(println val-range)            
+            (cond
+              (= val-form :enum)
+              [:select.pr2 {:default-value "";val-default
+                            :on-change (fn [event] (alter-bound-move-parameters event
+                                                                                [val-name 0]
+                                                                                design-move val-range))}
+               (for [[i p] (map-indexed vector (into [""] val-range))]
+                 ^{:key i}
+                 [:option (str p)]
+                 )
+               ]
+              (or (= val-form :scalar) (= val-form :vector2))
+              (for [[i p] (map-indexed vector val-range)]
+                ^{:key i}
+                [:div.dib.pa0.pl1.pr1
+                 ;; (println "for")
+                 ;; (println  (min (if (coll? val-range) (nth val-range i) val-range)))
+                 ;; (println  (if (coll? val-range) (nth val-range i) val-range))
+                 ;; (println  (if (coll? val-range) (nth val-range i) nil))
+                 ;; (println  val-range)
+                 ;; (js/console.log pram)
+                 [:input.parameters
+                  {:style {:width "6em" :height "1.8em"}
+                   :type "number"
+                   ;;:pattern "[0-9a-z]"
+                   :step (if val-step val-step 1)
+                   :precision (if val-prec val-prec 4)
+                   ;;:min (apply min (if (coll? val-range) (nth val-range i) val-range))
+                   ;;:max (apply max (if (coll? val-range) (nth val-range i) val-range))
+                   :value (if (coll? val-default)
+                                    (nth val-default i)
+                                    val-default)
+                   :on-change (fn [event]
+                                (alter-bound-move-parameters event
+                                                             [val-name i]
+                                                             design-move val-range))}]])
+              :else
+              (str val-default))
+            [:span.b
+             (str (name val-name))]]))
+       [:div.tc
+        (if current-move-is-altered
+          [:button.btn.grow.ma2.bg-green {:on-click (fn [event]
+                                                      ;(select-move event design-move :clear-altered false)
+                                                      (if (select-random-bindings :clear-altered false)
+                                                        (perform-bound-move event)))} "Perform Move"]
+          [:button.btn.grow.ma2.bg-grey "Perform Move"])
+        [:button.btn.grow.ma2.bg-blue {:on-click #(if (select-random-bindings :clear-altered false) (perform-bound-move %))} "Randomize Move"]
+        ]
+       ])
+    "No params?"
+    ))
+
+
 
 ;; (def panel-style  (merge (flex-child-style "1")
                          ;; {:background-color "#fff4f4"
@@ -128,14 +206,24 @@
                     :else
                     :li.pv2.pointer.hover-bg-gold.bg-black-05
                     )]
-              ^{:key (:name move)} [move-li-key {:on-click #(select-move % move)} (:name move) " (" (valid-move-count move possible-moves) ")"]
-              
-              )))]]      
+              (let [vmc (valid-move-count move possible-moves)]
+                ^{:key (:name move)}
+                [move-li-key {:on-click #(select-move % move)}
+                 (:name move)                 
+                 " (" vmc ") "
+                 (if (< 0 vmc)
+                   [:div.dib.pa0.pointer.center.b--light--silver.hover-bg-red.shadow-hover.ba
+                    {:style {:width "10%" :height "60%" :left "1em"} 
+                     :on-click (fn [event]
+                                 (select-move event move)
+                                 (if (select-random-bindings)
+                                   (perform-bound-move event)))}
+                    "🎲"])]))))]]
       [:div.dtc.tc.pa3.pv2.bg-black-05.pa
        [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
        [:p.tl-l
         (if selected-move (:comment selected-move) "")]
-       [:p.tl-l
+       [:div.tl-l
         (if selected-move (list-move-bindings selected-move) "")]]
       [:div.dtc.tc.pv4.bg-black-10
        [:p
@@ -184,12 +272,17 @@
    ;[:button.btn {:on-click #(test-constraint-solving %)} "test constraint solver"]
    ])
 
+(defn image-generate-btn
+  []
+  [:div
+   [:button.btn.ma2.grow.bg-green.white.bold.hover-bg-gold {:on-click #(init-database %)} "start empty project"]
+   [:button.btn.ma2.grow.bg-light-yellow.hover-bg-gold {:on-click #(run-generator %)} "generate complete project"]])
+
 (defn generate-btn
   []
   [:div
    [:button.btn.ma2.grow.bg-green.white.bold.hover-bg-gold {:on-click #(init-database %)} "start empty project"]
    [:button.btn.ma2.grow.bg-light-yellow.hover-bg-gold {:on-click #(run-generator %)} "generate complete project"]]
-   
    )
 
 (defn http-post! [path body cb]
@@ -289,6 +382,112 @@
                    (bytes-to-bools
                     [(hex-string-to-byte h-val)]))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Inspired by
+;; https://github.com/simon-katz/nomisdraw/blob/master/src/cljs/nomisdraw/utils/nomis_quil_on_reagent.cljs
+(defn q-sketch
+  [& {:as sketch-args}]
+  (let [host (if (not (contains? sketch-args :host))
+               (str (random-uuid))
+               (if (not (= nil (:host sketch-args)))
+                 (:host sketch-args)
+                 (str (random-uuid))))
+        size (:size sketch-args)
+        _ (assert (or (nil? size) (and (vector? size) (= (count size) 2)))
+                  (str ":size should be nil or a vector of size 2, but instead it is " size))
+        [w h] (if (nil? size) [600 600] size)
+        canvas-id host 
+        canvas-tag-&-id (keyword (str "div#" canvas-id))
+        sketch-args* (merge sketch-args {:host canvas-id})
+        saved-sketch-atom (atom ::not-set-yet)
+        ]
+    ^{:key canvas-id}
+    [r/create-class
+     {:reagent-render
+      (fn []
+        [canvas-tag-&-id {:style {:max-width w}
+                          :width w
+                          :height h}])
+      :component-did-mount
+      (fn []
+        (a/go (reset! saved-sketch-atom (apply qc/sketch (apply concat sketch-args*)))))
+      :component-will-unmount
+      (fn []
+        (a/go-loop [] ; will most likely not be reached
+          (if (= @saved-sketch-atom ::not-set-yet)
+            (do
+              (a/<! (a/timeout 100))
+              (recur))
+            (qc/with-sketch @saved-sketch-atom
+              (qc/exit)))))}]))
+
+(defn visualize-image [img-data & {:keys [image-key use-canvas] :or {image-key (str (random-uuid)) use-canvas false}}]
+  (if (undefined? img-data)
+    (println "Tried to call (visualize-image) with undefined img-data.")
+    (try
+      (letfn [(img-size [] [(. img-data -width) (. img-data -height)])
+              (initial-state []
+                (let [[w h] (img-size)]
+                  (qc/resize-sketch w h)
+                  (qc/background-image img-data)
+                  (qc/no-loop)
+                  {:image img-data}))
+              (update-state [state]
+                state)
+              (draw [state]
+                (let [img (:image state)]))]
+        (if (not use-canvas) ; can display as just the image or as an animated sketch
+          (let [html-image-data (. (. img-data -canvas) toDataURL)]
+            ^{:key image-key}
+            [:img {:src html-image-data}])
+          (q-sketch :setup initial-state
+                    :update update-state
+                    :draw draw
+                    :host nil
+                    :middleware [qm/fun-mode]
+                    :size (img-size)
+                    )))
+      (catch :default e
+        (js/console.log e)))))
+
+(defn display-loose-images [g-state]
+  (let [image (get "image-data" g-state)]
+    (map (fn [i-entry]
+           (if (map? i-entry)
+             (let [idat (get i-entry "image-data")]
+               (if (undefined? idat)
+                 (println (str "Image data undefined for " i-entry))
+                 (visualize-image idat {:key (get i-entry "uuid")})))))
+         g-state)))
+
+(defn visualize-generator-sketch
+  ([w h]
+   (visualize-generator-sketch w h nil))
+  ([w h name]
+   (letfn
+       [(initial-state []
+          (qc/pixel-density 1)
+          {:time 0})
+        (update-state [state] (update state :time inc))
+        (draw [state]
+          (let [t (:time state)]
+            (qc/background 80 170 100)
+            (qc/fill 100 120 230)
+            (qc/ellipse (rem t w) (rem t h) 50 50)))]
+     (q-sketch :setup initial-state
+               :update update-state
+               :draw draw
+               :host name
+               :middleware [qm/fun-mode]
+               :size [w h]))))
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 ;; https://github.com/chrismaltby/gb-studio/blob/9cc3b4d341a6db6a6c10f7f35fb7f60e969f1d8c/src/consts.js#L50
 ;; export const COLLISION_TOP = 0x1;
@@ -360,8 +559,8 @@
                    (flatten (mapv hex-string-to-byte
                                   (mapv clojure.string/join (partition 2 just-data)))))
         draw-index (range (* width height))]
-    [:div]
-    ))
+    [:div ;; TODO
+     ])) 
 
 (defn render-bits-viz [data]
   (let [data-segments (clojure.string/split data #"\|")]
@@ -372,10 +571,8 @@
             just-data (nth data-segments 2)
             image-path (nth data-segments 3)
             bits (into [] (flatten (mapv hex-string-to-byte (mapv clojure.string/join (partition 2 just-data)))))
-            draw-index (range (* width height))]
-       
-        [:div
-        
+            draw-index (range (* width height))]       
+        [:div      
          [:svg {:style {:background "pink" :width (str (* 8 width) "px") :height (str (* 8 height) "px")}}
           [:image {:href image-path :width (str (* 8 width) "px") :height (str (* 8 height) "px") :preserveAspectRatio "xMinYMin" :x 0 :y 0 }]
           (->> draw-index
@@ -404,12 +601,8 @@
                                             }]
                       nil))))
                (filter #(not (nil? %)))
-               (into (list))
-               )
-          ]]
-        )
-      (str (count data-segments));data
-      )))
+               (into (list)))]])
+      (str (count data-segments)))))
 
 (defn convert-viz [hic]
   (clojure.walk/postwalk
@@ -427,97 +620,140 @@
               (or (clojure.string/includes? data "./")
                   (clojure.string/includes? data ".\\")))
          [:div [:img {:src data}]]
+         (clojure.string/includes? data "image-data")
+         [:div (str data)]
          :else data)
        (and (vector? data) (= (first data) :collisions-viz))
-       (vector-render-bits-viz (rest data))       
-       :else data)
-     )
+       (vector-render-bits-viz (rest data))
+       (and (vector? data) (string? (second data)) (= "data:image" (subs (second data) 0 10)))
+       (let []
+         [:img {:src (second data)}]
+         )
+       :else
+       (let []
+         data)))
    hic))
+
+;; (defn convert-viz-imaging
+;;   "Takes a hiccup construct and converts it for display in-browser."
+;;   [hic]
+;;   (clojure.walk/postwalk
+;;    (fn [data]
+;;      (cond
+;;        ;; (and (vector? data) (= (first data) :imaging))
+;;        ;; data
+;;        ;; false;(clojure.string/includes? data "image-data")
+;;        ;; (let []
+;;        ;;   (println (str "converting image data: " data))
+;;        ;;   data
+;;        ;;   )
+;;        :else
+;;        (let []
+;;          ;(println (str "viz-data: " data))
+;;          data)
+;;        ))
+;;    hic))
 
 (defn filter-gen-state [g-state]
   (clojure.walk/postwalk
-   (fn [node]
-     (cond
-       (and (map? node) (contains? node "collisions"))
-       (dissoc node "collisions" "editor-position")
-       :else node)
-     )
-   g-state))
+     (fn [node]
+       (cond
+         (and (map? node) (contains? node "collisions"))
+         (dissoc node "collisions" "editor-position")
+         :else node))
+     g-state))
+
+(defn filter-gen-state-img [g-state]
+  (clojure.walk/postwalk
+     (fn [node]
+       (cond
+         (and (map? node) (contains? node "collisions"))
+         (dissoc node "collisions" "editor-position")
+         (and (map-entry? node) (= (first node) "image-data"))
+         (let [;;_ (js/console.log node)
+               i-canvas (. (second node) -canvas)
+               html-image-data (. i-canvas toDataURL)]
+           [:image-data html-image-data])
+         :else
+         (let []           
+           node)))
+     g-state))
+
+(defn display-imaging []
+  (let [img-state (:gbs-output @app-state)]
+    ;(js/console.log img-state)
+    [:div
+     (comment
+       (display-loose-images img-state))
+     [:div.self-center.content-center.items-center.justify-center.flex.bg-washed-green
+      [:div.mw9.ma2
+       ;;(println (str "image-state: " img-state))
+       (convert-viz (json->hiccup (clj->js (filter-gen-state-img img-state))))]]]))
+
+(defn display-most-recent-artifact []
+  [:div
+   (let [recent-artifact  (:recent-artifact @app-state)]
+     (if (contains? recent-artifact "image-data")
+       (let [img-data (get recent-artifact "image-data")]
+         (if (undefined? img-data)
+           (println "(display-most-recent-artifact) can't find recent-artifact image data")
+           (visualize-image img-data {:key "most-recent-artifact"})))))])
+
 
 (defn display-gbs []
   (let [gen-state (:gbs-output @app-state)]
     [:div.self-center.content-center.items-center.justify-center.flex.bg-lightest-blue
      [:div.mw9.ma2
-                                        ;[graph-display-button]
-                                        ;[:div#artifact-graph {:style {:min-height "100px"}}]
-      ;[:hr]
       (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
       (comment
         [:hr]
+        "display gbs"
         (coll-pen.core/draw (convert-data-for-display gen-state)
                             {:el-per-page 30 :truncate false })
         [:hr]
         (.stringify js/JSON (clj->js gen-state)))
-      ]])
-  
-   ;; (with-out-str) (cljs.pprint/pprint)
-   ;; (clj->js (:gbs-output @app-state))
-   )
-;(.stringify js/JSON)
+      ]]))
 
 (defn image-header []
   [:h1 "Ecological Generator Output Visualization"])
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn app []
   (let [image-tab [:div
-                   [image-header]]
+                   [image-header] ;; TODO: display most recent image here
+                   [operation-harness]
+                   [image-generate-btn]
+                   [display-imaging]
+                   [#(visualize-generator-sketch 400 300 "quil-canvas")] ;; NOTE: This is a load-bearing Quil/Processing sketch! Image generation ops don't work without some kind of canvas to use.                   
+                   ]
         gbs-tab
         [:div
          [header]
-         [manual-operation]
          [operation-harness]
          [generate-btn]
          [constraint-solving-test-btn]
          [display-gbs]
-         [:hr]
-         ;; (coll-pen.core/draw (:data @app-state)
-         ;;                       {:el-per-page 30 :truncate false })
-                                        ;(js/console.log (:data @app-state))
-                                        ;(js/console.log (:selected-move @app-state))
-         (.stringify js/JSON (clj->js (:data @app-state)))
-         [:hr]
-         (.stringify js/JSON (clj->js (:possible-moves @app-state)))
-         [:br]
-         [:hr]]
-        tab-defs [{:id ::tab-gbs :label "GBS" :contents gbs-tab}
-                  {:id ::image-tab :label "Images" :contents image-tab}
-                  ]
-        selected-tab (get @app-state :selected-tab (first tab-defs))
-        ]
+         ]
+        tab-defs [{:id nil :label "None" :contents [:div "Select A Generator Above..."]}
+                  {:id :tab-image :label "Images" :contents image-tab}
+                  {:id :tab-gbs :label "GBS" :contents gbs-tab}]
+        selected-tab (get @app-state :selected-tab (first tab-defs))]
     [:div
-     [:div.tabs.bg-light-blue
+     [:div.tabs.bg-light-blue      
       (for [tab tab-defs]
-        ^{:key (:id tab)} [(if (= (:id selected-tab) (:id tab))
-                              :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw2.b--black-60.hover-orange.bg-white
-                              :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30
-                              ) {:on-click #(select-tab % tab)} (:label tab)])
-      ]
+        (let []
+          (if (:id tab)
+            ^{:key (:id tab)}
+            [(if (= (:id selected-tab) (:id tab))
+               :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw2.b--black-60.hover-orange.bg-white
+               :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30)
+             {:on-click #(select-tab % tab)} (:label tab)])))]
      [:div
-       ;(js/console.log tab-defs)
-      (get selected-tab :contents [:div])
-
-      ]
-     
-     ;; [rc/horizontal-tabs
-     ;;  :src (rc/at)
-     ;;  :tabs tab-defs
-     ;;  :model selected-tab-id
-     ;;  :on-change #((js/console.log %
-     ;;                               )
-     ;;               (reset! selected-tab-id %))]
-     ;; [rc/h-box
-     ;;  :src (rc/at)
-     ;;  :children [:div (:contents (rc-util/item-for-id @selected-tab-id tab-defs))]]
-     ]
-      ))
+      [:div.dib.ma2.pa2.left-0.top-0.v-top
+       [display-most-recent-artifact]]
+      [:div.dib.ma2.pa2.left-0.top-0.v-top; {:style "min-height: 200px"}
+       (coll-pen.core/draw (:data-view @app-state) {:key :pen-data-display :el-per-page 10 :truncate false})]
+      
+      (get selected-tab :contents [:div])]]))
     
