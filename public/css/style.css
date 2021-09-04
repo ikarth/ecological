@@ -144,6 +144,12 @@ th.jh-key{
     list-style-type: none;
     cursor: pointer;
 }
+
+div.project-view .selection-list li {
+    padding: 0;
+    padding-left: 0.1em;
+}
+
 .selection-list li:nth-child(even) {
     background-color: #d5d5d5;
     border-top: 2px solid #d5d5d5;
