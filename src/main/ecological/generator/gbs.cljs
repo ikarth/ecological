@@ -113,15 +113,17 @@
   [
    ;;move-load-resources-from-disk
    ;;move-load-gbs-projects-from-disk
-   moves/move-create-background-from-image   
-   moves/move-generate-scene-from-template
+   ;;moves/move-create-background-from-image   
+   ;;moves/move-generate-scene-from-template
    moves/move-place-greenfield-scene
-   moves/move-add-existing-background-to-scene
+   ;;moves/move-add-existing-background-to-scene
    ])
 
 (def initial-transaction
-  [load-resources
-   load-gbs-projects])
+  [;;load-resources
+   ;;load-gbs-projects
+   ]
+  )
 
 (def records
   {:db-conn db-conn
