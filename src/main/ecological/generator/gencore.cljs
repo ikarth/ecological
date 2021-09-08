@@ -81,7 +81,7 @@
         _ (assert (fn? exec-func) (str move-name " has no :exec function!"))
         current-time (timestamp)
         result (exec-func db (:vars design-move) params)
-        province-added (map (fn [transact]
+        provenance-added (map (fn [transact]
                               (merge transact {:entity/timestamp current-time
                                                :provenance/cause move-name
                                               ;:provenance/bindings (:vars design-move)
@@ -95,18 +95,18 @@
                          :design/timestamp current-time
                          }
                         ]
-        tx-data (into [] (concat province-added history-record))]
+        tx-data (into [] (concat provenance-added history-record))]
     ;;(println tx-data)
     tx-data))
 
 (defn execute-design-move!
   "Executes the supplied design move in the context of the current-database."
   [design-move params]
-  ;;(println (str " (execute-design-move!) " design-move " , " params " <---"))
+  ;(println (str " (execute-design-move!) " design-move " , " params " <---"))
   (if-let [db-conn (get @current-database :db-conn)]
     (let []
-      ;;(println "(execute-design-move!)")
       (assert (map? design-move) "Design move is missing, so can't be executed.")
+      (println (str "executing move: " (:name (:move design-move))))
       (d/transact! db-conn (assemble-exec-result @db-conn design-move params)))
     (println "Current database is missing somehow.")
     ))

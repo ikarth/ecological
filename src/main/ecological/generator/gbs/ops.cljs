@@ -45,21 +45,21 @@
         connection (get bindings :connection :wish)]
     [{:db/id -1
       :type/gbs :gbs/endpoint
-      :parent/scene scene
-      :parent/connection connection
+      :endpoint/scene scene
+      :endpoint/connection connection
       :entity/position position}]))
 
 (defn link-endpoint-to-scene
   [& {:keys [scene endpoint position] :or {scene :wish endpoint :wish position :wish}}]
   [{:db/id endpoint
-    :parent/scene scene
+    :endpoint/scene scene
     :entity/position position ; position in scene
     }])
 
 (defn link-endpoint-to-connection
   [& {:keys [connection endpoint] :or {connection :wish endpoint :wish}}]
   [{:db/id endpoint
-    :parent/connection connection
+    :endpoint/connection connection
     }])
 
 (defn add-background-to-scene

@@ -13,4 +13,5 @@
   "True if neither of the endpoints are linked."
   [connection-id]
   ;;(d/query '[])
+  true
   )
