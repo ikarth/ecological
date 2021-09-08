@@ -124,3 +124,33 @@
   (-> {}
       {}
       ))
+
+(defn list-scenes [db-conn]
+  (let [scene-labels []
+        scenes
+        (d/q '[:find ?scene ?name ?uuid; ?connections
+               :in $ ?nameDefaultValue ?idDefaultValue
+               :where
+               [?scene :scene/editor-position ?editor-position]
+               [(get-else $ ?scene :scene/name ?nameDefaultValue) ?name]
+               [(get-else $ ?scene :scene/uuid ?idDefaultValue) ?uuid]
+               ;[(get-else $ ?scene :scene/connections []) ?connections]
+               ;[(get-else $ ?connections :connection/scene ?scene)]
+               ]
+             @db-conn
+             "generated scene"
+             "no id number")]
+    ;(println scenes)
+    (mapv (fn [scene]
+            (-> (zipmap [:num :name :uuid] scene)
+                ((fn [el]
+                   [(str (:num el) ": " (:name el) " " (subs (:uuid el) 32))
+                    ;;(into [] (:connections el))
+                    ]       ))))
+         scenes)))
+
+(defn export-project-view
+  [db-conn]
+  ;(println "(export-project-view)")
+  (list-scenes db-conn)
+  )

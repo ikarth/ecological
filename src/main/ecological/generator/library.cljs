@@ -21,6 +21,7 @@
          :exporter (fn [_] (println "Exporter not implemented."))
          :export-most-recent (fn [_] (println "Most-Recent-Exporter not implemented."))
          :setup []
+         :project-view (fn [_] (println "Project view not implemented."))
          }))
 
 
@@ -40,6 +41,8 @@
                (get new-database :exporter))
         (swap! current-database assoc-in [:export-most-recent]
                (get new-database :export-most-recent))
+        (swap! current-database assoc-in [:export-project-view]
+               (get new-database :export-project-view))
         (swap! current-database assoc-in [:initial-transaction]
                (get new-database :initial-transaction)))
        (println (str "Database not found: " database-id)))))

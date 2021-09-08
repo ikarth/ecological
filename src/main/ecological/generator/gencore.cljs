@@ -81,11 +81,11 @@
         _ (assert (fn? exec-func) (str move-name " has no :exec function!"))
         current-time (timestamp)
         result (exec-func db (:vars design-move) params)
-        province-added (map (fn [transact]
+        provenance-added (map (fn [transact]
                               (merge transact {:entity/timestamp current-time
-                                               :province/cause move-name
-                                        ;:province/bindings (:vars design-move)
-                                               :province/params (str params)
+                                               :provenance/cause move-name
+                                              ;:provenance/bindings (:vars design-move)
+                                               :provenance/params (str params)
                                                 }))
                             result)
         history-record [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
@@ -95,18 +95,18 @@
                          :design/timestamp current-time
                          }
                         ]
-        tx-data (into [] (concat province-added history-record))]
+        tx-data (into [] (concat provenance-added history-record))]
     ;;(println tx-data)
     tx-data))
 
 (defn execute-design-move!
   "Executes the supplied design move in the context of the current-database."
   [design-move params]
-  ;;(println (str " (execute-design-move!) " design-move " , " params " <---"))
+  ;(println (str " (execute-design-move!) " design-move " , " params " <---"))
   (if-let [db-conn (get @current-database :db-conn)]
     (let []
-      ;;(println "(execute-design-move!)")
       (assert (map? design-move) "Design move is missing, so can't be executed.")
+      (println (str "executing move: " (:name (:move design-move))))
       (d/transact! db-conn (assemble-exec-result @db-conn design-move params)))
     (println "Current database is missing somehow.")
     ))
@@ -225,3 +225,14 @@
   (if-let [db-conn (get @current-database :db-conn)]
     (let [exporter-func (get @current-database :export-most-recent (fn [_] (println "No most-recent-artifact exporter implemented for this database.")))]
       (exporter-func db-conn))))
+
+(defn fetch-project-view
+  "Returns a summarized list of the most signifigant artifacts, to make it easier to keep track of them."
+  []
+  ;(println @current-database)
+  (if-let [db-conn (get @current-database :db-conn)]
+    (let [exporter-func (get @current-database :export-project-view (fn [_] (println "No (project-view) exporter implemented for this database.")))]
+                                        ;(println (:export-project-view @current-database))
+      (if (fn? exporter-func)
+        (exporter-func db-conn)
+        []))))

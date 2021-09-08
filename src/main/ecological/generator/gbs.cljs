@@ -21,6 +21,7 @@
    :scene/uuid                {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
    :scene/backgroundUUID      {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/string
    :scene/collisions          {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
+   ;:scene/connections         {:db/cardinality :db.cardinality/many}
    :scene/editor-position     {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
    :background/filename       {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/string
    :background/image          {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
@@ -30,6 +31,11 @@
    :resource/filename         {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
    :resource/type             {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/keyword
    :constraint/asp            {:db/cardinality :db.cardinality/one}
+   :endpoint/scene            {:db/cardinality :db.cardinality/one}
+   :endpoint/connection       {:db/cardinality :db.cardinality/one}
+   :connection/direction      {:db/cardinality :db.cardinality/one}
+   :entity/position           {:db/cardinality :db.cardinality/one}
+   :type/gbs                  {:db/cardinality :db.cardinality/one}   
    })
 
 (def db-conn (d/create-conn genboy-schema))
@@ -113,15 +119,22 @@
   [
    ;;move-load-resources-from-disk
    ;;move-load-gbs-projects-from-disk
-   moves/move-create-background-from-image   
-   moves/move-generate-scene-from-template
+   ;;moves/move-create-background-from-image   
+   ;;moves/move-generate-scene-from-template
+   ;;moves/move-place-greenfield-scene
+   ;;moves/move-add-existing-background-to-scene
+   ;;moves/move-add-connection-to-scene
    moves/move-place-greenfield-scene
-   moves/move-add-existing-background-to-scene
+   moves/move-place-greenfield-connection
+   moves/move-place-greenfield-endpoint
+   moves/move-connect-scenes
    ])
 
 (def initial-transaction
-  [load-resources
-   load-gbs-projects])
+  [;;load-resources
+   ;;load-gbs-projects
+   ]
+  )
 
 (def records
   {:db-conn db-conn
@@ -132,4 +145,5 @@
    :initial-transaction [load-resources
                          load-gbs-projects]
    :setup [(assets/load-manifest) (assets/load-scene-sources)]
+   :export-project-view #(export/export-project-view db-conn)
    })

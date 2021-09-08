@@ -31,7 +31,7 @@
                [?element :raster/size ?size]
                [?element :raster/image ?raster]
                [?element :entity/timestamp ?timestamp]
-               [?element :province/cause ?cause]
+               [?element :provenance/cause ?cause]
                ]
              @db-conn)]
     (map #(zipmap element-labels %)
@@ -53,7 +53,7 @@
                [?element :raster/size ?size]
                [?element :raster/image ?raster]
                [?element :entity/timestamp ?timestamp]
-               [?element :province/cause ?cause]
+               [?element :provenance/cause ?cause]
                ]
              @db-conn)]
     (map #(zipmap element-labels %)

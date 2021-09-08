@@ -690,8 +690,48 @@
        ;;(println (str "image-state: " img-state))
        (convert-viz (json->hiccup (clj->js (filter-gen-state-img img-state))))]]]))
 
+
+(defn display-project-element [element count]
+  ;; (println "(display-project-element)")
+  ;; (println (type element))
+  ;; (println element)
+  ;; (println count)
+  (cond
+    (string? element)
+    [:li element]
+    (coll? element)    
+    (for [[ii el] (map-indexed vector element)]
+      (let []
+        ;; (println el)
+        (if el
+          ^{:key ii} [:li [:ul.ma0.ml1.mr1 (display-project-element el (if (nil? count) 1 (inc count)))]]))) ;[:div element]
+    :else
+    [:span (str element)]
+           ))
+
+(defn display-project-view
+  "Display a view of the important artifacts in the project."
+  []
+  [:div.dib.pr3.project-view
+   [:h4 "Project View"]
+   (let [project-view (get @app-state :project-view [])]
+     [:ul.pl3.selection-list
+      ;[:li.hover-orange.pointer (str {:example 3}) ]
+      (for [[i element] (map-indexed vector project-view)]
+        ^{:key i}
+        [:li.hover-orange.pointer
+         (if (coll? element)
+           (let []
+             [:ul.ma0.ml3.mr3
+              (str (first element))
+              (display-project-element (second element) 0)])
+           (str element))
+         ]
+        )]
+     )])
+
 (defn display-most-recent-artifact []
-  [:div
+  [:div.dib
    (let [recent-artifact  (:recent-artifact @app-state)]
      (if (contains? recent-artifact "image-data")
        (let [img-data (get recent-artifact "image-data")]
@@ -705,13 +745,13 @@
     [:div.self-center.content-center.items-center.justify-center.flex.bg-lightest-blue
      [:div.mw9.ma2
       (convert-viz (json->hiccup (clj->js (filter-gen-state gen-state))))
-      (comment
-        [:hr]
-        "display gbs"
-        (coll-pen.core/draw (convert-data-for-display gen-state)
-                            {:el-per-page 30 :truncate false })
-        [:hr]
-        (.stringify js/JSON (clj->js gen-state)))
+      (comment)
+      [:hr]
+      "display gbs"
+      (coll-pen.core/draw (convert-data-for-display gen-state)
+                          {:el-per-page 30 :truncate false })
+      [:hr]
+      (.stringify js/JSON (clj->js gen-state))
       ]]))
 
 (defn image-header []
@@ -751,6 +791,7 @@
              {:on-click #(select-tab % tab)} (:label tab)])))]
      [:div
       [:div.dib.ma2.pa2.left-0.top-0.v-top
+       [display-project-view]
        [display-most-recent-artifact]]
       [:div.dib.ma2.pa2.left-0.top-0.v-top; {:style "min-height: 200px"}
        (coll-pen.core/draw (:data-view @app-state) {:key :pen-data-display :el-per-page 10 :truncate false})]
