@@ -83,9 +83,9 @@
         result (exec-func db (:vars design-move) params)
         province-added (map (fn [transact]
                               (merge transact {:entity/timestamp current-time
-                                               :province/cause move-name
-                                        ;:province/bindings (:vars design-move)
-                                               :province/params (str params)
+                                               :provenance/cause move-name
+                                              ;:provenance/bindings (:vars design-move)
+                                               :provenance/params (str params)
                                                 }))
                             result)
         history-record [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.

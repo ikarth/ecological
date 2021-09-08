@@ -7,6 +7,8 @@
                                         ;[quil.applet :as qa]
             ["clingo-wasm" :as clingo]
             [ecological.generator.gbs.assets :refer [asset-manifest scene-manifest]]
+            [ecological.generator.gbs.ops :as ops]
+            [ecological.generator.gbs.query :as q]
             ))
 
 
@@ -93,14 +95,14 @@
        transaction
        ))})
 
-(def move-place-greenfield-scene
-  {:name "place-greenfield-scene"
-   :exec (fn [db _] ; takes parameters but ignores them
-           [{:db/id -1
-             :scene/uuid (str (random-uuid))             
-             :scene/editor-position [20 20]
-             :scene/name "generated greenfield scene"
-               }])}) ; todo: query db for empty editor space to place scene?
+;; (def move-place-greenfield-scene
+;;   {:name "place-greenfield-scene"
+;;    :exec (fn [db _] ; takes parameters but ignores them
+;;            [{:db/id -1
+;;              :scene/uuid (str (random-uuid))             
+;;              :scene/editor-position [20 20]  ; todo: query db for empty editor space to place scene?
+;;              :scene/name "generated greenfield scene"
+;;                }])})
 
 
 (def move-create-background-from-image
@@ -159,23 +161,23 @@
      []
      )})
 
-(def move-apply-collision-to-scene
-  {})
+;; (def move-apply-collision-to-scene
+;;   {})
 
-(def move-selection-collision-by-background
-  {})
+;; (def move-selection-collision-by-background
+;;   {})
 
-(def move-mixin-npc
-  {})
+;; (def move-mixin-npc
+;;   {})
 
-(def move-connect-scenes
-  {})
+;; (def move-connect-scenes
+;;   {})
 
-(def move-connect-scenes-by-region
-  {})
+;; (def move-connect-scenes-by-region
+;;   {})
 
-(def move-connect-scenes-by-edge-tag
-  {})
+;; (def move-connect-scenes-by-edge-tag
+;;   {})
 
 
 ;; Design moves to write:
@@ -211,3 +213,95 @@
 
 ;; (def design-moves-finalizing
 ;;   [{:name "resolve-scene-backgrounds"}])
+
+
+;; Generative Operations
+;; Create a scene
+;; Create a scene with connections to specific scenes
+;; Create a scene with connections in particular directions
+;; Add a connection to a scene
+;; Turn a finalized connection into a trigger + script
+;; Update a connection to point to a specific scene
+;; Draw a background (border + empty room?)
+;; Draw a background (empty + indicators for connections?)
+;; generate background based on scene properties
+;; generate collisions based on background
+;; ...and then we can move on to making graphs of scenes
+
+
+
+;; (def move-add-connection-to-scene
+;;   {:name "add-connection-to-scene"
+;;    :query
+;;    '[:find ?sceneid ?connections
+;;      :in $ %
+;;      :where
+;;      [?sceneid :scene/editor-position ?ed-pos]
+;;      [(get-else $ ?sceneid :scene/connections []) ?connections]
+;;      ]
+;;    :exec
+;;    (fn [db [scene-id connections] parameters]
+;;      (println connections)
+;;      (let [connection-limit 4
+;;            existing-count (count connections)
+;;            existing-directions []]
+;;        (if (>= existing-count connection-limit)
+;;          []
+;;          (let []
+;;            [
+;;             ;; {:db/id scene-id
+;;             ;;  :scene/connections (into connections [-1])
+;;             ;;  }
+;;             {:db/id -1
+;;              :connection/scene scene-id
+;;              :connection/position [:unknown :unknown]
+;;              :connection/direction :unknown
+;;              }
+;;             ])
+;;          )))})
+
+
+
+
+(def move-place-greenfield-scene
+  {:name "place-greenfield-scene"
+   :exec (fn [db bindings parameters]
+           (ops/create-scene db bindings parameters))})
+
+(def move-place-greenfield-connection
+  {:name "place-greenfield-connection"
+   :exec (fn [db bindings parameters] ; takes parameters but ignores them
+           (ops/create-connection db bindings parameters))})
+
+(def move-place-greenfield-endpoint
+  {:name "place-greenfield-endpoint"
+   :exec (fn [db bindings parameters] ; takes parameters but ignores them
+           (ops/create-endpoint db bindings parameters))})
+
+(def move-connect-scenes
+  {:name "connect-scenes"
+   :comment "Connect two scenes via existing empty connection."
+   :query
+   '[:find ?sceneA ?sceneB ?connection ?endA ?endB
+     :in $ %
+     :where
+     [?sceneA :type/gbs :gbs/scene]
+     [?sceneB :type/gbs :gbs/scene]
+     [?endA   :type/gbs :gbs/endpoint]
+     [?endB   :type/gbs :gbs/endpoint]
+     [?endA   :parent/scene :wish]
+     [?endB   :parent/scene :wish]
+     [(not= ?endA ?endB)]
+     [(not= ?sceneA ?sceneB)]
+     ;;[(q/scenes-connected? ?sceneA ?sceneB)]
+     [?connection :type/gbs :gbs/connection]]
+   :exec
+   (fn [db [sceneA sceneB connection endA endB] parameters]
+     (into
+      []
+      (concat
+       (ops/link-endpoint-to-scene :scene sceneA :endpoint endA)
+       (ops/link-endpoint-to-scene :scene sceneB :endpoint endB)
+       (ops/link-endpoint-to-connection :endpoint endA :connection connection)
+       (ops/link-endpoint-to-connection :endpoint endB :connection connection))))})
+ 

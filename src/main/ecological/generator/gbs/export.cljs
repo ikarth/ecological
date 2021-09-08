@@ -135,6 +135,7 @@
                [(get-else $ ?scene :scene/name ?nameDefaultValue) ?name]
                [(get-else $ ?scene :scene/uuid ?idDefaultValue) ?uuid]
                [(get-else $ ?scene :scene/connections []) ?connections]
+               ;[(get-else $ ?connections :connection/scene ?scene)]
                ]
              @db-conn
              "generated scene"

@@ -21,6 +21,7 @@
    :scene/uuid                {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
    :scene/backgroundUUID      {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/string
    :scene/collisions          {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
+   :scene/connections         {:db/cardinality :db.cardinality/many}
    :scene/editor-position     {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
    :background/filename       {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/string
    :background/image          {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
@@ -115,8 +116,13 @@
    ;;move-load-gbs-projects-from-disk
    ;;moves/move-create-background-from-image   
    ;;moves/move-generate-scene-from-template
-   moves/move-place-greenfield-scene
+   ;;moves/move-place-greenfield-scene
    ;;moves/move-add-existing-background-to-scene
+   ;;moves/move-add-connection-to-scene
+   moves/move-place-greenfield-scene
+   moves/move-place-greenfield-connection
+   moves/move-place-greenfield-endpoint
+   moves/move-connect-scenes
    ])
 
 (def initial-transaction
