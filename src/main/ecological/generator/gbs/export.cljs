@@ -125,6 +125,41 @@
       {}
       ))
 
+(defn list-connections [db-conn]
+  (let [data
+        (d/q
+         '[:find ?connection ?endA ?endB ?sceneA ?sceneB ?sceneAname ?sceneBname
+           :in $
+           :where
+           [?connection :type/gbs :gbs/connection]
+           [?endA :type/gbs :gbs/endpoint]
+           [?endB :type/gbs :gbs/endpoint]
+           [?sceneA :type/gbs :gbs/scene]
+           [?sceneB :type/gbs :gbs/scene]
+           [(not= ?endA ?endB)]
+           [(not= ?sceneA ?sceneB)]
+           [(> ?endA ?endB)]
+           [?endA :endpoint/scene ?sceneA]
+           [?endB :endpoint/scene ?sceneB]
+           [?endA :endpoint/connection ?connection]
+           [?endB :endpoint/connection ?connection]
+           [?sceneA :scene/name ?sceneAname]
+           [?sceneB :scene/name ?sceneBname]
+           ]
+         @db-conn)
+        ]
+    (println data)
+    (mapv (fn [connect]
+            ;; (-> (zipmap [:connection :endA :endB :sceneA :sceneB :sceneAname :sceneBname] connect)
+            ;;     #([(str (:connection %) ": " (:sceneA %) " <-> " (:sceneB %))])
+            ;;     )
+            (let [c (zipmap [:connection :endA :endB :sceneA :sceneB :sceneAname :sceneBname] connect)]
+              [(str "Edge " (:connection c) ": " (:sceneA c) " <-> " (:sceneB c))]
+              )
+            ;(str connect)
+            )          
+          data)))
+
 (defn list-scenes [db-conn]
   (let [scene-labels []
         scenes
@@ -151,6 +186,7 @@
 
 (defn export-project-view
   [db-conn]
-  ;(println "(export-project-view)")
-  (list-scenes db-conn)
+  ;;(println "(export-project-view)")
+  [(list-connections db-conn)
+   (list-scenes db-conn)]
   )

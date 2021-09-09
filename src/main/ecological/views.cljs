@@ -714,20 +714,22 @@
   []
   [:div.dib.pr3.project-view
    [:h4 "Project View"]
-   (let [project-view (get @app-state :project-view [])]
-     [:ul.pl3.selection-list
-      ;[:li.hover-orange.pointer (str {:example 3}) ]
-      (for [[i element] (map-indexed vector project-view)]
-        ^{:key i}
-        [:li.hover-orange.pointer
-         (if (coll? element)
-           (let []
-             [:ul.ma0.ml3.mr3
-              (str (first element))
-              (display-project-element (second element) 0)])
-           (str element))
-         ]
-        )]
+   (let [project-views (get @app-state :project-view [])]
+     (for [[p-index project-view] (map-indexed vector project-views)]
+       ^{:key p-index}
+       [:ul.pl3.selection-list
+                                        ;[:li.hover-orange.pointer (str {:example 3}) ]
+        (for [[i element] (map-indexed vector project-view)]
+          ^{:key i}
+          [:li.hover-orange.pointer
+           (if (coll? element)
+             (let []
+               [:ul.ma0.ml3.mr3
+                (str (first element))
+                (display-project-element (second element) 0)])
+             (str element))
+           ]
+          )])
      )])
 
 (defn display-most-recent-artifact []

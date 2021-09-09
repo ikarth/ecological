@@ -22,12 +22,22 @@
 ;; generate collisions based on background
 ;; ...and then we can move on to making graphs of scenes
 
+(defn refer-wish
+  ([] 1)
+  ([db] 1))
+
+(defn get-or-wish [db bindings key]
+  (let [binding (get bindings key :wish)]
+    (if (= binding :wish)
+      (refer-wish db)
+      binding)))
+
 (defn create-scene
   [db bindings parameters]
   [{:db/id -1
     :type/gbs :gbs/scene
     ;; :scene/uuid (str (random-uuid))
-    :scene/editor-position :wish
+    :scene/editor-position (refer-wish)
     :scene/name "generated greenfield scene"
      }])
 
@@ -35,14 +45,14 @@
   [db bindings parameters]
   [{:db/id -1
     :type/gbs :gbs/connection
-    :connection/direction :wish
+    :connection/direction (refer-wish)
     }])
 
 (defn create-endpoint
   [db bindings parameters]
-  (let [scene      (get bindings :scene      :wish)
-        position   (get bindings :position   :wish)
-        connection (get bindings :connection :wish)]
+  (let [scene      (get-or-wish db bindings :scene)
+        position   (get-or-wish db bindings :position)
+        connection (get-or-wish db bindings :connection)]
     [{:db/id -1
       :type/gbs :gbs/endpoint
       :endpoint/scene scene
@@ -50,14 +60,14 @@
       :entity/position position}]))
 
 (defn link-endpoint-to-scene
-  [& {:keys [scene endpoint position] :or {scene :wish endpoint :wish position :wish}}]
+  [& {:keys [scene endpoint position] :or {scene (refer-wish) endpoint (refer-wish) position (refer-wish)}}]
   [{:db/id endpoint
     :endpoint/scene scene
     :entity/position position ; position in scene
     }])
 
 (defn link-endpoint-to-connection
-  [& {:keys [connection endpoint] :or {connection :wish endpoint :wish}}]
+  [& {:keys [connection endpoint] :or {connection (refer-wish) endpoint (refer-wish)}}]
   [{:db/id endpoint
     :endpoint/connection connection
     }])

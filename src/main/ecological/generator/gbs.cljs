@@ -31,15 +31,22 @@
    :resource/filename         {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
    :resource/type             {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/keyword
    :constraint/asp            {:db/cardinality :db.cardinality/one}
-   :endpoint/scene            {:db/cardinality :db.cardinality/one}
-   :endpoint/connection       {:db/cardinality :db.cardinality/one}
+   :endpoint/scene            {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
+   :endpoint/connection       {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
    :connection/direction      {:db/cardinality :db.cardinality/one}
    :entity/position           {:db/cardinality :db.cardinality/one}
-   :type/gbs                  {:db/cardinality :db.cardinality/one}   
+   :type/gbs                  {:db/cardinality :db.cardinality/one}
    })
 
 (def db-conn (d/create-conn genboy-schema))
 
+
+(defn wish
+  []
+  [{:db/id -1
+    :type :wish
+    }]
+  )
 
 (defn load-resources
   "Load resources from disk that we need to generate things..."
@@ -133,6 +140,7 @@
 (def initial-transaction
   [;;load-resources
    ;;load-gbs-projects
+   wish
    ]
   )
 
@@ -142,8 +150,7 @@
    :design-moves design-moves
    :exporter #(export/export-gbs-project gbs-basic db-conn)
    :export-most-recent #(export/export-most-recent-artifact gbs-basic db-conn)
-   :initial-transaction [load-resources
-                         load-gbs-projects]
+   :initial-transaction initial-transaction
    :setup [(assets/load-manifest) (assets/load-scene-sources)]
    :export-project-view #(export/export-project-view db-conn)
    })
