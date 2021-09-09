@@ -148,7 +148,7 @@
            ]
          @db-conn)
         ]
-    (println data)
+    ;;(println data)
     (mapv (fn [connect]
             ;; (-> (zipmap [:connection :endA :endB :sceneA :sceneB :sceneAname :sceneBname] connect)
             ;;     #([(str (:connection %) ": " (:sceneA %) " <-> " (:sceneB %))])
@@ -182,11 +182,90 @@
                    [(str (:num el) ": " (:name el) " " (subs (:uuid el) 32))
                     ;;(into [] (:connections el))
                     ]       ))))
-         scenes)))
+          scenes)))
+
+(defn list-project [db-conn]
+  (let [scene-labels []
+        scenes
+        (d/q '[:find ?scene ?name ?uuid; ?connections
+               :in $ ?nameDefaultValue ?idDefaultValue
+               :where
+               [?scene :type/gbs :gbs/scene]
+               [(get-else $ ?scene :scene/name ?nameDefaultValue) ?name]
+               [(get-else $ ?scene :scene/uuid ?idDefaultValue) ?uuid]
+               ]
+             @db-conn
+             "generated scene"
+             "no id number")
+        endpoints
+        (d/q '[:find ?endpoint ?scene
+               :in $
+               :where
+               [?endpoint :type/gbs :gbs/endpoint]
+               [?endpoint :endpoint/scene ?scene]
+               ] @db-conn)
+        connections
+        (d/q '[:find ?connection ?left ?right ?left-scene ?right-scene
+              :in $
+              :where
+              [?connection :type/gbs :gbs/connection]
+              [?connection :connection/left-end ?left]
+              [?connection :connection/right-end ?right]
+              [?left :endpoint/scene ?left-scene]
+              [?right :endpoint/scene ?right-scene]
+              ] @db-conn)]
+    ;(println scenes)
+    (mapv (fn [scene]
+            (-> (zipmap [:num :name :uuid] scene)
+                ((fn [el]
+                   (let [ends
+                         (filter
+                          (fn [end]
+                            (= (second end) (:num el))
+                            )
+                          endpoints)
+                         cons (filter
+                               (fn [con]
+                                 (or (= (:num el) (nth con 3))
+                                     (= (:num el) (nth con 4))))
+                               connections)
+                         ]
+                     ;; (println "pview")
+                     ;; (println ends)
+                     ;; (println cons)
+                     [(str (:num el) ": " (:name el) " " (subs (:uuid el) 32))
+                      (for [end ends]
+                        (let [left (filter  (fn [cn] (= (first end) (nth cn 1))) cons)
+                              right (filter (fn [cn] (= (first end) (nth cn 2))) cons)
+                              ]
+                          ;; (println (str "end:" end))
+                          ;; (println (str "cons: " cons))
+                          ;; (println (str "left: " left))
+                          ;; (println (str "right: " right))
+                          (str (first end) " -> "
+                               (cond
+                                 (not (empty? left))
+                                 (str (nth (first left) 4))
+                                 (not (empty? right))                                                     
+                                 (str (nth (first right) 3))
+                                 :else
+                                 "")
+                                                         )
+                                                  ;;      (catch Exception e (str "caught exception: " (.getMessage e)))
+                               ;;      )
+                              
+                                                ))
+                      ;;(str ends)
+                      ;;(into [] (:connections el))
+                      
+                      ])       ))))
+          scenes)))
 
 (defn export-project-view
   [db-conn]
   ;;(println "(export-project-view)")
   [(list-connections db-conn)
-   (list-scenes db-conn)]
+   ;;(list-scenes db-conn)
+   (list-project db-conn)
+   ]
   )

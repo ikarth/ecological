@@ -29,19 +29,23 @@
                 (swap! asset-state assoc :asset-manifest (edn/read-string (.-responseText response))))))
 
 (defn load-scene-sources []
-  (load-file! ".\\data\\scenes\\Forest.gbsproj"
-        (fn [response]
-          ;; TODO: should do more error checking
-          (js/console.log "loaded forest scenes for templates")
-          (let [res-text (.-responseText response)]
-            ;(js/console.log res-text)
-            (swap! asset-state assoc :scene-manifest (js->clj (js/JSON.parse res-text) :keywordize-keys true)))
-          )))
+  ;; (load-file! ".\\data\\scenes\\Forest.gbsproj"
+  ;;       (fn [response]
+  ;;         ;; TODO: should do more error checking
+  ;;         (js/console.log "loaded forest scenes for templates")
+  ;;         (let [res-text (.-responseText response)]
+  ;;           ;(js/console.log res-text)
+  ;;           (swap! asset-state assoc :scene-manifest (js->clj (js/JSON.parse res-text) :keywordize-keys true)))
+  ;;         ))
+  )
 
 (defn asset-manifest []
-  (get @asset-state :asset-manifest []))
+  (get @asset-state :asset-manifest [])
+  )
 
 
 (defn scene-manifest []
-  (get @asset-state :scene-manifest []))
+  (get @asset-state :scene-manifest [])
+
+  )
 
