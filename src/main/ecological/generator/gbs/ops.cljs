@@ -43,20 +43,25 @@
 
 (defn create-connection
   [db bindings parameters]
-  [{:db/id -1
-    :type/gbs :gbs/connection
-    :connection/direction (refer-wish)
-    }])
+  (let [left  (get-or-wish db bindings :end-left)
+        right (get-or-wish db bindings :end-right)]
+    [{:db/id -1
+      :type/gbs :gbs/connection
+      :connection/direction (refer-wish)
+      :connection/left-end left
+      :connection/right-end right
+      }]))
 
 (defn create-endpoint
   [db bindings parameters]
   (let [scene      (get-or-wish db bindings :scene)
         position   (get-or-wish db bindings :position)
-        connection (get-or-wish db bindings :connection)]
+        ;connection (get-or-wish db bindings :connection)
+        ]
     [{:db/id -1
       :type/gbs :gbs/endpoint
       :endpoint/scene scene
-      :endpoint/connection connection
+      ;:endpoint/connection connection
       :entity/position position}]))
 
 (defn link-endpoint-to-scene
@@ -66,19 +71,30 @@
     :entity/position position ; position in scene
     }])
 
-(defn link-endpoint-to-connection
-  [& {:keys [connection endpoint] :or {connection (refer-wish) endpoint (refer-wish)}}]
-  [{:db/id endpoint
-    :endpoint/connection connection
-    }])
+;; (defn link-any-endpoint-to-connection
+;;   [& {:keys [connection endpoint] :or {connection (refer-wish) endpoint (refer-wish)}}]
+;;   []
+;;   )
 
-(defn add-background-to-scene
-  [db bindings parameters])
+;; (defn link-left-endpoint-to-connection
+;;   [& {:keys [connection endpoint] :or {connection (refer-wish) endpoint (refer-wish)}}]
+;;   [{:db/id connection
+;;     :connection/left-end endpoint
+;;     }])
 
-(defn create-background-from-scene
-  [db bindings parameters])
+;; (defn link-right-endpoint-to-connection
+;;   [& {:keys [connection endpoint] :or {connection (refer-wish) endpoint (refer-wish)}}]
+;;   [{:db/id connection
+;;     :connection/right-end endpoint
+;;     }])
 
-(defn add-lock-to-scene
-  [db bindings parameters])
+;; (defn add-background-to-scene
+;;   [db bindings parameters])
+
+;; (defn create-background-from-scene
+;;   [db bindings parameters])
+
+;; (defn add-lock-to-scene
+;;   [db bindings parameters])
 
 

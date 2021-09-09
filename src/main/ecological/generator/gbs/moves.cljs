@@ -268,41 +268,65 @@
    :exec (fn [db bindings parameters]
            (ops/create-scene db bindings parameters))})
 
-(def move-place-greenfield-connection
-  {:name "place-greenfield-connection"
-   :exec (fn [db bindings parameters] ; takes parameters but ignores them
-           (ops/create-connection db bindings parameters))})
+;; (def move-place-greenfield-connection
+;;   {:name "place-greenfield-connection"
+;;    :exec (fn [db bindings parameters] ; takes parameters but ignores them
+;;            (ops/create-connection db bindings parameters))})
 
 (def move-place-greenfield-endpoint
   {:name "place-greenfield-endpoint"
    :exec (fn [db bindings parameters] ; takes parameters but ignores them
            (ops/create-endpoint db bindings parameters))})
 
+(def move-add-endpoint-to-scene
+  {:name "add-endpoint-to-scene"
+   :comment "Add a linking endpoint to a scene, to be used for a future portal trigger."
+   :query
+   '[:find ?sceneA
+     :in $ %
+     :where
+     [?sceneA :type/gbs :gbs/scene]]
+   :exec
+   (fn [db [scene] parameters]
+     (ops/create-endpoint db {:scene scene} []))})
+
 (def move-connect-scenes
   {:name "connect-scenes"
    :comment "Connect two scenes via existing empty connection."
    :query
-   '[:find ?sceneA ?sceneB ?connection ?endA ?endB
+   '[:find ?sceneA ?sceneB ?endA ?endB
      :in $ %
      :where
      [?sceneA :type/gbs :gbs/scene]
      [?sceneB :type/gbs :gbs/scene]
      [?endA   :type/gbs :gbs/endpoint]
      [?endB   :type/gbs :gbs/endpoint]
-     [?endA   :endpoint/scene 1]
-     [?endB   :endpoint/scene 1]
+     [?endA   :endpoint/scene ?sceneA]
+     [?endB   :endpoint/scene ?sceneB]
+     [(> ?endA ?endB)] ;; break ties
      [(not= ?endA ?endB)]
      [(not= ?sceneA ?sceneB)]
-     ;;[(q/scenes-connected? ?sceneA ?sceneB)]
-     ;;[(q/connection-empty? $ ?connection)]
-     [?connection :type/gbs :gbs/connection]]
+     (not-join [?sceneA ?sceneB]
+               [?endC :endpoint/scene ?sceneA]
+               [?endD :endpoint/scene ?sceneB]
+               [?existing-connection :type/gbs :gbs/connection]
+               [?existing-connection :connection/left-end ?endC]
+               [?existing-connection :connection/right-end ?endD])
+     (not-join [?sceneA ?sceneB]
+               [?endC :endpoint/scene ?sceneA]
+               [?endD :endpoint/scene ?sceneB]
+               [?existing-connection :type/gbs :gbs/connection]
+               [?existing-connection :connection/left-end ?endD]
+               [?existing-connection :connection/right-end ?endC])]
    :exec
-   (fn [db [sceneA sceneB connection endA endB] parameters]
+   (fn [db [sceneA sceneB endA endB] parameters]
      (into
       []
       (concat
-       (ops/link-endpoint-to-scene :scene sceneA :endpoint endA)
-       (ops/link-endpoint-to-scene :scene sceneB :endpoint endB)
-       (ops/link-endpoint-to-connection :endpoint endA :connection connection)
-       (ops/link-endpoint-to-connection :endpoint endB :connection connection))))})
+       (ops/create-connection db {:end-left endA :end-right endB} parameters)
+       ;; (ops/link-endpoint-to-scene :scene sceneA :endpoint endA)
+       ;; (ops/link-endpoint-to-scene :scene sceneB :endpoint endB)
+       ;; (ops/link-left-endpoint-to-connection :endpoint endA :connection connection)
+       ;; (ops/link-right-endpoint-to-connection :endpoint endB :connection connection)
+       )))})
  

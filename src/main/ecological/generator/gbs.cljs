@@ -32,8 +32,9 @@
    :resource/type             {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/keyword
    :constraint/asp            {:db/cardinality :db.cardinality/one}
    :endpoint/scene            {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
-   :endpoint/connection       {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
+   :connection/left-end       {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
    :connection/direction      {:db/cardinality :db.cardinality/one}
+   :connection/right-end      {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
    :entity/position           {:db/cardinality :db.cardinality/one}
    :type/gbs                  {:db/cardinality :db.cardinality/one}
    })
@@ -132,9 +133,10 @@
    ;;moves/move-add-existing-background-to-scene
    ;;moves/move-add-connection-to-scene
    moves/move-place-greenfield-scene
-   moves/move-place-greenfield-connection
-   moves/move-place-greenfield-endpoint
+   ;moves/move-place-greenfield-connection
+   ;moves/move-place-greenfield-endpoint
    moves/move-connect-scenes
+   moves/move-add-endpoint-to-scene
    ])
 
 (def initial-transaction
