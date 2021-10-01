@@ -36,10 +36,34 @@
   [db bindings parameters]
   [{:db/id -1
     :type/gbs :gbs/scene
-    ;; :scene/uuid (str (random-uuid))
-    :scene/editor-position (refer-wish)
+    :scene/uuid (str (random-uuid))
+    :scene/editor-position [20 20] ;;(refer-wish) ; TODO: find empty editor position
     :scene/name "generated greenfield scene"
-     }])
+    }])
+
+(defn create-background
+  [db bindings parameters]
+  (let [image-size [160 160] ;; todo: check actual size of image
+        tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
+        image-tiles (map #(quot % tile-size) image-size)
+        resource-id :generated
+        ]
+    [{:db/id -1
+      :type/gbs :gbs/background
+      :background/uuid (str (random-uuid))
+      :background/size image-tiles
+      :background/filename "GENERATED"
+      :background/resource resource-id
+      }]))
+
+(defn create-image
+  [db bindings parameters]
+  [{:db/id -1
+    :type/gbs :gbs/resource
+    :resource/type :image
+    :resource/filename (str (random-uuid) ".png")
+    :resource/filepath :none
+    :resource/image-size [160 160]}])
 
 (defn create-connection
   [db bindings parameters]
@@ -50,12 +74,14 @@
       :connection/direction (refer-wish)
       :connection/left-end left
       :connection/right-end right
+      :connection/left-graphic (refer-wish)
+      :connection/right-graphic (refer-wish)
       }]))
 
 (defn create-endpoint
   [db bindings parameters]
   (let [scene      (get-or-wish db bindings :scene)
-        position   (get-or-wish db bindings :position)
+        position   [0 0] ;(get-or-wish db bindings :position)
         ;connection (get-or-wish db bindings :connection)
         ]
     [{:db/id -1
@@ -70,6 +96,19 @@
     :endpoint/scene scene
     :entity/position position ; position in scene
     }])
+
+;; (defn convert-connection-to-trigger
+;;   [db bindings parameters]
+;;   (let [connection-id    (get bindings :db/id)
+;;         connection-left  (get bindings :connection/left-end)
+;;         connection-right (get bindings :connection/right-end)
+
+
+;;         ])
+;;   ;[& {:keys [] :or {}}]
+;;   )
+
+
 
 ;; (defn link-any-endpoint-to-connection
 ;;   [& {:keys [connection endpoint] :or {connection (refer-wish) endpoint (refer-wish)}}]

@@ -136,6 +136,19 @@
                :background/resource resource-id}] ))})
 
 
+(def move-create-greenfield-image
+  {:name "create-greenfield-image"
+   :comment "Creates a new image in the database"
+   :exec
+   (fn [db bindings parameters]
+     (ops/create-image db bindings parameters))})
+
+(def move-create-greenfield-background
+  {:name "create-greenfield-background"
+   :comment "Creates a new image to act as a background"
+   :exec (fn [db bindings parameters]
+           (ops/create-background db bindings parameters))})
+
 (def move-add-existing-background-to-scene
   {:name "add-existing-background-to-scene"
    :comment "Adds an existing background (chosen at random) to a scene that doesn't have a background yet."
@@ -292,7 +305,7 @@
 
 (def move-connect-scenes
   {:name "connect-scenes"
-   :comment "Connect two scenes via existing empty connection."
+   :comment "Connect two scenes via new connection."
    :query
    '[:find ?sceneA ?sceneB ?endA ?endB
      :in $ %
@@ -329,4 +342,61 @@
        ;; (ops/link-left-endpoint-to-connection :endpoint endA :connection connection)
        ;; (ops/link-right-endpoint-to-connection :endpoint endB :connection connection)
        )))})
- 
+
+(def ground-connection-into-trigger
+  {:name    "ground-connnection-into-trigger"
+   :comment "translate finished connections into scene triggers for eventual export"
+   :query
+   '[:find ?connection ?endA ?endB ?sceneA ?sceneB ?endApos ?endBpos
+     :in $ %
+     :where
+     [?connection :type/gbs :gbs/connection]
+     [?endA :type/gbs :gbs/endpoint]
+     [?endB :type/gbs :gbs/endpoint]
+     [?endA :entity/position ?endApos]
+     [?endB :entity/position ?endBpos]
+     [?sceneA :type/gbs :gbs/scene]
+     [?sceneB :type/gbs :gbs/scene]
+     [(not= ?endA ?endB)]
+     [(not= ?sceneA ?sceneB)]
+     ;;[(> ?endA ?endB)]
+     [?endA :endpoint/scene ?sceneA]
+     [?endB :endpoint/scene ?sceneB]
+     [?connection :connection/left-end ?endA]
+     [?connection :connection/right-end ?endB]
+     ;;[?sceneA :scene/name ?sceneAname]
+     ;;[?sceneB :scene/name ?sceneBname]
+     (not-join [?endA ?connection]
+               [?triggerA :type/gbs :gbs/trigger]
+               [?triggerA :trigger/parent ?endA]
+               (or
+                [?connection :connection/left-end ?endA]
+                [?connection :connection/right-end ?endA]))
+     (not-join [?endB ?connection]
+               [?triggerB :type/gbs :gbs/trigger]
+               [?triggerB :trigger/parent ?endB]
+               (or
+                [?connection :connection/left-end ?endB]
+                [?connection :connection/right-end ?endB]))]
+   :exec
+   (fn [db [connection endA endB sceneA sceneB posA posB] parameters]
+     [{:db/id -1
+       :type/gbs :gbs/trigger
+       :trigger/scene  sceneA
+       :trigger/parent endA
+       :trigger/type   :trigger-type/connection
+       :trigger/target sceneB
+       :trigger/direction "up" ;:TODO
+       :trigger/target-location posB
+       }
+      {:db/id -2
+       :type/gbs :gbs/trigger
+       :trigger/scene  sceneB
+       :trigger/parent endB
+       :trigger/type   :trigger-type/connection
+       :trigger/target sceneA
+       :trigger/direction "down" ;:TODO
+       :trigger/target-location posA
+       }      
+      ]
+     )})

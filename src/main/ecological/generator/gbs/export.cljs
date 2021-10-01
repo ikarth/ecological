@@ -2,6 +2,7 @@
   (:require [datascript.core :as d]
             [clojure.string]
             [ecological.generator.utilities :as util]
+            [cljs.pprint :as pprint]
             ;[goog.crypt :as crypt]
             ;[quil.core :as qc]
             ;[quil.middleware :as qm]
@@ -43,7 +44,60 @@
      (map #(zipmap element-labels %)
          elements)))
 
+;; Get all of the stuff that will be added on top of the backgrounds and transform the background images accordingly...
+(defn ground-backgrounds [db-conn]
+  (let [backgrounds
+        (d/q '[])
+        connections
+        (d/q '[])
+        ]
+    )  
+  )
 
+(defn export-triggers [db-conn scene]
+  (pprint/pprint "(export-triggers)")
+  (pprint/pprint scene)
+  (pprint/pprint db-conn)
+  (let [scene-id (first scene)
+        triggers
+        (d/q
+         '[:find ?trigger-id ?target-scene ?target-uuid ?this-location ?target-location ?direction
+           :in $ ?s-id
+           :where
+           [?trigger-id :type/gbs :gbs/trigger]
+           [?trigger-id :trigger/scene ?s-id]
+           [?trigger-id :trigger/parent ?end-id]
+           [?end-id :entity/position ?this-location]
+           [?trigger-id :trigger/target-location ?target-location]
+           [?trigger-id :trigger/target ?target-scene]
+           [?target-scene :scene/uuid ?target-uuid]
+           [?trigger-id :trigger/direction ?direction]]     
+         @db-conn scene-id)
+        ]
+    (pprint/pprint triggers)
+    (map (fn [[id target target-uuid loc target-loc direction]]
+           {"x" (first loc)
+            "y" (second loc)
+            "width" 2
+            "height" 1
+            "trigger" "walk"
+            "script"
+            [{"id" (str (random-uuid))
+              "command" "EVENT_SWITCH_SCENE"
+              "args" {"x" (first target-loc)
+                      "y" (second target-loc)
+                      "direction" (str direction)
+                      "sceneId" target-uuid
+                      "fadeSpeed" 2
+                      }
+              } 
+             {"id" (str (random-uuid))
+              "command" "EVENT_END"
+              }
+             ]
+            "id" (str (random-uuid))
+            }           )
+         triggers)))
 
 (defn export-scenes
   "Export all of the scenes from the database and return EDN that can eventually be interperted by GBS."
@@ -70,26 +124,39 @@
                (random-uuid)
                [])]
       (map (fn [scene]
-             ;;(js/console.log scene)
-             (->
-              (zipmap scene-labels (concat
-                                    scene
+             ;(js/console.log scene)
+             ;(pprint/pprint scene)
+             (let [s
+                   (->
+                    (zipmap scene-labels (concat
+                                          scene
                                         ;(export-actors (first scene))
-                                        ;(export-triggers (first scene))
+                                         ; (export-triggers db-conn (first scene))
                                         ;(export-scripts (first scene))
-                                    ))
-              (update-in ["collisions-viz"]
-                         (fn [colls]
-                           (comment
-                             [:collisions-viz
-                              (first (nth scene 8))
-                              (second (nth scene 8))
-                              (util/bytes-to-hex-string colls)
-                              (nth scene 6)
-                              ])
-                           (str "collisions-viz|" (first (nth scene 8)) "|" (second (nth scene 8)) "|" (util/bytes-to-hex-string colls) "|" (nth scene 6))
-                           
-                           ))))
+                                          ))
+                    (update-in ["collisions-viz"]
+                               (fn [colls]
+                                 (comment
+                                   [:collisions-viz
+                                    (first (nth scene 8))
+                                    (second (nth scene 8))
+                                    (util/bytes-to-hex-string colls)
+                                    (nth scene 6)
+                                    ])
+                                 (str "collisions-viz|" (first (nth scene 8)) "|" (second (nth scene 8)) "|" (util/bytes-to-hex-string colls) "|" (nth scene 6))
+                                 
+                                 ))
+                    (assoc-in
+                     ["triggers"]
+                     (export-triggers db-conn scene)
+                              
+                              )
+
+                    )]
+               (pprint/pprint s)
+               ()
+               s
+               ))
            scenes)))
 
 (defn export-resources
@@ -124,6 +191,8 @@
   (-> {}
       {}
       ))
+
+
 
 (defn list-connections [db-conn]
   (let [data

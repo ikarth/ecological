@@ -87,7 +87,7 @@
                                               ;:provenance/bindings (:vars design-move)
                                                :provenance/params (str params)
                                                 }))
-                            result)
+                              result)
         history-record [{:db/id -999999 ; magic number to try and be unique...this will break if more than 1,000,000 changes are in the transaction. Which is unlikely.
                          ;:design/move-count current-design-move-count ; todo: count the actual number of moves that have been made by looking up the last one, instead of just using the loop counter
                          :design/move-record move-name
@@ -95,7 +95,10 @@
                          :design/timestamp current-time
                          }
                         ]
-        tx-data (into [] (concat provenance-added history-record))]
+        tx-data (into [] (concat provenance-added history-record))
+        tx-data result ;; Temporarily disable history recording...
+
+        ]
     ;;(println tx-data)
     tx-data))
 

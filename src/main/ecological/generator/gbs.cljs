@@ -127,16 +127,17 @@
   [
    ;;move-load-resources-from-disk
    ;;move-load-gbs-projects-from-disk
-   ;;moves/move-create-background-from-image   
+   moves/move-create-background-from-image   
    ;;moves/move-generate-scene-from-template
-   ;;moves/move-place-greenfield-scene
-   ;;moves/move-add-existing-background-to-scene
+   moves/move-add-existing-background-to-scene
    ;;moves/move-add-connection-to-scene
    moves/move-place-greenfield-scene
+   moves/move-create-greenfield-image
    ;moves/move-place-greenfield-connection
    ;moves/move-place-greenfield-endpoint
    moves/move-connect-scenes
    moves/move-add-endpoint-to-scene
+   moves/ground-connection-into-trigger
    ])
 
 (def initial-transaction
