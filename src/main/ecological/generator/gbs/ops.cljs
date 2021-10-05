@@ -2,7 +2,7 @@
   (:require ;[datascript.core :as d]
             ;[clojure.string]
             ;[goog.crypt :as crypt]
-            [quil.core :as qc]
+            [quil.core :as qc :include-macros true]
             [quil.middleware :as qm]
             ;[quil.applet :as qa]
             ))
@@ -61,9 +61,42 @@
   [{:db/id -1
     :type/gbs :gbs/resource
     :resource/type :image
-    :resource/filename (str (random-uuid) ".png")
-    :resource/filepath :none
+    :resource/filename "test.png" ;(str (random-uuid) ".png")
+    :resource/filepath ""
     :resource/image-size [160 160]}])
+
+(defn create-speckled-background-image
+  [db bindings parameters]
+  (let [id (random-uuid)
+        image-size [160 160]
+        speckle-density 2
+        ;palette [(qc/color 200 100 0) (qc/color 0 100 200)]  ;0x86c06cff 0xe0f8cfff
+        image-data
+        (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
+          (let [image-target (qc/create-image (first image-size) (second image-size))]
+            (dotimes [x (first image-size)]
+              (dotimes [y (second image-size)]
+                (let [intensity (if (> speckle-density (qc/random 100)) 0 1)]
+                  (qc/set-pixel image-target
+                                x
+                                y
+                                ;;(qc/color 200 100 0)
+                                (if (> speckle-density (qc/random 100))
+                                  (qc/color 0x86 0xc0 0x6c)
+                                  (qc/color 0xe0 0xf8 0xcf))
+                                ;(nth palette intensity (qc/color 20 30 20))
+                                          ))))
+            (qc/update-pixels image-target)
+            image-target))]
+    [{:db/id -1
+      :type/gbs :gbs/resource
+      :resource/type :image
+      :resource/uuid id
+      :resource/filename (str id ".png")
+      :resource/filepath :memory
+      :resource/image-size image-size
+      :resource/image-data image-data
+      }]))
 
 (defn create-connection
   [db bindings parameters]

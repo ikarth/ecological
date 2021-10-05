@@ -143,6 +143,13 @@
    (fn [db bindings parameters]
      (ops/create-image db bindings parameters))})
 
+(def move-create-speckled-background-image
+  {:name "create-speckled-background-image"
+   :comment "Creates new image with light speckle of dots"
+   :exec
+   (fn [db bindings parameters]
+     (ops/create-speckled-background-image db bindings parameters))})
+
 (def move-create-greenfield-background
   {:name "create-greenfield-background"
    :comment "Creates a new image to act as a background"

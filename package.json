@@ -6,6 +6,7 @@
     "shadow-cljs": "^2.14.6"
   },
   "dependencies": {
+    "@zip.js/zip.js": "^2.3.17",
     "clingo-wasm": "^0.0.9",
     "create-react-class": "^15.7.0",
     "cytoscape": "^3.18.2",

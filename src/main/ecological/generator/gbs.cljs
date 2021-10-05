@@ -138,6 +138,7 @@
    moves/move-connect-scenes
    moves/move-add-endpoint-to-scene
    moves/ground-connection-into-trigger
+   moves/move-create-speckled-background-image
    ])
 
 (def initial-transaction

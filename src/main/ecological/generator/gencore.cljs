@@ -96,7 +96,7 @@
                          }
                         ]
         tx-data (into [] (concat provenance-added history-record))
-        tx-data result ;; Temporarily disable history recording...
+        ;tx-data result ;; Temporarily disable history recording...
 
         ]
     ;;(println tx-data)

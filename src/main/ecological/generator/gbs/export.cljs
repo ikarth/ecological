@@ -104,9 +104,9 @@
   [db-conn]
   ;; collisions and collisions-viz are separate because we want to have one for GBS and one for our internal display. TODO: However, we might be able to construct collisions-viz after the query.
   (let [scene-labels
-          ["_datascript_internal_id" "backgroundId" "editor-position" "name" "id" "collisions" "background-image" "collisions-viz" "size"]
+          ["_datascript_internal_id" "backgroundId" "editor-position" "name" "id" "collisions" "background-path" "background-filename" "collisions-viz" "size"]
           scenes
-          (d/q '[:find ?scene ?backgroundUUID ?editor-position ?name ?uuid ?collisions ?bkg-resource-path ?collisions ?size
+          (d/q '[:find ?scene ?backgroundUUID ?editor-position ?name ?uuid ?collisions ?bkg-resource-path ?bkg-filename ?collisions ?size
                  :in $ ?nameDefaultValue ?idDefaultValue ?collisionsDefaultValue
                  :where
                  [?scene :scene/editor-position ?editor-position]
@@ -116,7 +116,8 @@
                  [?scene :scene/background ?bkg]
                  [?bkg :background/uuid ?backgroundUUID]
                  [?bkg :background/resource ?bkg-resource]
-                 [?bkg-resource :resource/filepath ?bkg-resource-path]
+                 [?bkg-resource :resource/filepath ?bkg-resource-path]                 
+                 [?bkg-resource :resource/filename ?bkg-filename]
                  [?bkg :background/size ?size]
                  ] ;; todo: size, actors and scripts/triggers
                @db-conn
@@ -136,14 +137,14 @@
                                           ))
                     (update-in ["collisions-viz"]
                                (fn [colls]
-                                 (comment
-                                   [:collisions-viz
-                                    (first (nth scene 8))
-                                    (second (nth scene 8))
-                                    (util/bytes-to-hex-string colls)
-                                    (nth scene 6)
-                                    ])
-                                 (str "collisions-viz|" (first (nth scene 8)) "|" (second (nth scene 8)) "|" (util/bytes-to-hex-string colls) "|" (nth scene 6))
+                                 ;; (comment
+                                 ;;   [:collisions-viz
+                                 ;;    (first (nth scene 8))
+                                 ;;    (second (nth scene 8))
+                                 ;;    (util/bytes-to-hex-string colls)
+                                 ;;    (nth scene 6)
+                                 ;;    ])
+                                 (str "collisions-viz|" (first (nth scene 9)) "|" (second (nth scene 9)) "|" (util/bytes-to-hex-string colls) "|" (nth scene 7))
                                  
                                  ))
                     (assoc-in
@@ -162,11 +163,12 @@
 (defn export-resources
   "Exports the collection of resources, mostly for debugging because GBS won't use this data."
   [db-conn]
-  (let [resource-labels ["_datascript_internal_id" "type" "filename" "path"]
+  (let [resource-labels ["_datascript_internal_id" "type" "filename" "path" "image-data"]
         resources
-        (d/q '[:find ?id ?rtype ?rfname ?rfpath
+        (d/q '[:find ?id ?rtype ?rfname ?rfpath ?idata
                :in $
-               :where 
+               :where
+               [?id :resource/image-data ?idata]
                [?id :resource/type ?rtype]
                [?id :resource/filename ?rfname]
                [?id :resource/filepath ?rfpath]]

@@ -4,6 +4,7 @@
                                        decrement
                                        graph-display
                                        run-generator
+                                       download-export
                                        select-move
                                        select-bound-move
                                        perform-bound-move
@@ -282,7 +283,8 @@
   []
   [:div
    [:button.btn.ma2.grow.bg-green.white.bold.hover-bg-gold {:on-click #(init-database %)} "start empty project"]
-   [:button.btn.ma2.grow.bg-light-yellow.hover-bg-gold {:on-click #(run-generator %)} "generate complete project"]]
+   [:button.btn.ma2.grow.bg-light-yellow.hover-bg-gold {:on-click #(run-generator %)} "generate complete project"]
+   [:button.btn.ma2.grow.bg-light-yellow.hover-bg-gold {:on-click #(download-export %)} "download project export"]]
    )
 
 (defn http-post! [path body cb]
@@ -660,17 +662,23 @@
        (cond
          (and (map? node) (contains? node "collisions"))
          (dissoc node "collisions" "editor-position")
+         (and (map-entry? node) (= (first node) "image-data"))
+         (let [_ (js/console.log node)
+               i-canvas (. (second node) -canvas)
+               html-image-data (. i-canvas toDataURL)]
+           [:image-data html-image-data])
          :else node))
      g-state))
 
 (defn filter-gen-state-img [g-state]
   (clojure.walk/postwalk
-     (fn [node]
+   (fn [node]
+     (println node)
        (cond
          (and (map? node) (contains? node "collisions"))
          (dissoc node "collisions" "editor-position")
          (and (map-entry? node) (= (first node) "image-data"))
-         (let [;;_ (js/console.log node)
+         (let [_ (js/console.log node)
                i-canvas (. (second node) -canvas)
                html-image-data (. i-canvas toDataURL)]
            [:image-data html-image-data])
@@ -735,11 +743,13 @@
 (defn display-most-recent-artifact []
   [:div.dib
    (let [recent-artifact  (:recent-artifact @app-state)]
+     (println recent-artifact)
      (if (contains? recent-artifact "image-data")
        (let [img-data (get recent-artifact "image-data")]
          (if (undefined? img-data)
            (println "(display-most-recent-artifact) can't find recent-artifact image data")
            (visualize-image img-data {:key "most-recent-artifact"})))))])
+
 
 
 (defn display-gbs []
@@ -753,7 +763,9 @@
       (coll-pen.core/draw (convert-data-for-display gen-state)
                           {:el-per-page 30 :truncate false })
       [:hr]
-      (.stringify js/JSON (clj->js gen-state))
+      ;;(println gen-state)
+      ;;(println (dissoc gen-state :z_resources))
+      (.stringify js/JSON (clj->js (dissoc gen-state :z_resources)))
       ]]))
 
 (defn image-header []
@@ -767,7 +779,7 @@
                    [operation-harness]
                    [image-generate-btn]
                    [display-imaging]
-                   [#(visualize-generator-sketch 400 300 "quil-canvas")] ;; NOTE: This is a load-bearing Quil/Processing sketch! Image generation ops don't work without some kind of canvas to use.                   
+                              
                    ]
         gbs-tab
         [:div
@@ -791,12 +803,15 @@
                :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw2.b--black-60.hover-orange.bg-white
                :div.pointer.dib.ma0.pa2.br.bl.bt.br3.br--top.bw1.b--black-20.hover-orange.bg-black-30)
              {:on-click #(select-tab % tab)} (:label tab)])))]
+            
      [:div
       [:div.dib.ma2.pa2.left-0.top-0.v-top
        [display-project-view]
-       [display-most-recent-artifact]]
+       [display-most-recent-artifact]
+       ]
       [:div.dib.ma2.pa2.left-0.top-0.v-top; {:style "min-height: 200px"}
        (coll-pen.core/draw (:data-view @app-state) {:key :pen-data-display :el-per-page 10 :truncate false})]
-      
-      (get selected-tab :contents [:div])]]))
+      (get selected-tab :contents [:div])
+      [#(visualize-generator-sketch 400 300 "quil-canvas")] ;; NOTE: This is a load-bearing Quil/Processing sketch! Image generation ops don't work without some kind of canvas to use. 
+      ]]))
     
