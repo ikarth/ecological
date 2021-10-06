@@ -10,6 +10,8 @@
     "clingo-wasm": "^0.0.9",
     "create-react-class": "^15.7.0",
     "cytoscape": "^3.18.2",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.7.1",
     "p5": "^1.4.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",

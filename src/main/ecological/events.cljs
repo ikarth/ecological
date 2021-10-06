@@ -15,7 +15,9 @@
             [ecological.generator.gencore :as generator]
             [ecological.generator.utilities :as util]
             ["clingo-wasm" :default clingo]
-            
+            ["file-saver" :as filesaver]
+            ["jszip" :as jszip]
+           
             ))
 
 
@@ -297,6 +299,39 @@
   (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
   )
 
+(defn save-file [filename data-blob]
+  ;; (if js/window.navigator.msSaveBlob
+  ;;   (js/window.navigator.msSaveBlob data-blob filename)
+  ;;   (let [link (js/document.createElement "a")]
+  ;;     (aset link "download" filename)
+  ;;     (if js/window.webkitURL
+  ;;       (aset link "href" (js/window.webkitURL.createObjectURL data-blob))
+  ;;       (js/alert "no webkitURL")
+  ;;       )
+  ;;     )
+    
+  ;;   )
+  )
+
+(defn download-export [event]
+  (.preventDefault event)
+  (swap! app-state assoc-in [:all-moves] (generator/fetch-all-moves))
+  (swap! app-state assoc-in [:gbs-output] (generator/fetch-generated-project!))
+  (swap! app-state assoc-in [:data] (generator/fetch-database))
+  (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
+  (swap! app-state assoc-in [:project-export] (generator/fetch-database))
+  (let [zip (js/JSZip)]
+    (-> zip
+        (. file "hello.txt" "This is a test")
+        (. generateAsync #js {:type "base64"})
+        (.then (fn [archive]
+                 #(js/console.log archive)
+                 (let [mimetype (str "text/plain;charset=" (.-characterSet js/document))
+                       blob (new js/Blob
+                                 (clj->js ["Hello World!"])
+                                 (clj->js {:type mimetype}))]
+                   (js/saveAs blob "test_text.zip"))
+                 ))        )    ))
 
 
 ;; from https://blog.klipse.tech/visualization/2021/02/16/graph-playground-cytoscape.html
