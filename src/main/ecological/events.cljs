@@ -17,6 +17,7 @@
             ["clingo-wasm" :default clingo]
             ["file-saver" :as filesaver]
             ["jszip" :as jszip]
+            [clojure.string :as string]
            
             ))
 
@@ -320,18 +321,57 @@
   (swap! app-state assoc-in [:data] (generator/fetch-database))
   (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
   (swap! app-state assoc-in [:project-export] (generator/fetch-database))
-  (let [zip (js/JSZip)]
-    (-> zip
-        (. file "hello.txt" "This is a test")
-        (. generateAsync #js {:type "base64"})
+  (println (get @app-state :project-export))
+  (let [resource-files (:z_resources (:gbs-output @app-state))]
+    (js/console.log (generator/fetch-database))
+    (println (generator/fetch-database))
+    (println (:z_resources (:gbs-output @app-state)))
+    (-> (js/JSZip)
+        (#(. % file "readme.txt" "This is an archive that contains the generated GBStudio project."))
+        (#(. % file "resources.txt"
+             (reduce
+              (fn [mani f] (str mani "\n*\t" (get f "filename")))
+              "resource manifest\n===========\n"
+              resource-files
+              )))
+        ((fn [zip]
+           (doseq [resource resource-files]
+             (js/console.log (get resource "image-data"))
+             (js/console.log (. (. (get resource "image-data") -canvas) toDataURL))
+             ;;(println (.. (get resource "image-data") -imageData -data))
+             (let [canvas (. (get resource "image-data") -canvas)
+                   image-filename (get resource "filename")
+                   image-data (string/split (. canvas toDataURL) #"base64," 2)
+                   ]
+               (js/console.log (js-obj "base64" true))
+               (println (second image-data))
+               (. zip file
+                  image-filename
+                  (second image-data)
+                  (js-obj "base64" true)
+                  )
+               
+               ;; (js/Promise.
+               ;;  (. canvas toBlob (fn [canvas-data] (. zip file image-filename canvas-data {:binary true}))))
+               ))
+           zip
+           ))
+        ;; ((fn [zip]
+        ;;    (reduce
+        ;;     (fn [zfile file-to-add]
+        ;;       (conj zfile
+        ;;             [(get file-to-add "filename") (get file-to-add "image-data")])
+        ;;       ;;zfile              
+        ;;       )
+        ;;     zip
+        ;;     resource-files)
+        ;;    ))
+        (#(. % generateAsync #js {:type "blob"}))
         (.then (fn [archive]
-                 #(js/console.log archive)
-                 (let [mimetype (str "text/plain;charset=" (.-characterSet js/document))
-                       blob (new js/Blob
-                                 (clj->js ["Hello World!"])
-                                 (clj->js {:type mimetype}))]
-                   (js/saveAs blob "test_text.zip"))
-                 ))        )    ))
+                 (js/saveAs archive "test_text.zip")))
+        ;;(.catch)
+        ;;(.finally)
+        )))
 
 
 ;; from https://blog.klipse.tech/visualization/2021/02/16/graph-playground-cytoscape.html

@@ -766,6 +766,7 @@
       ;;(println gen-state)
       ;;(println (dissoc gen-state :z_resources))
       (.stringify js/JSON (clj->js (dissoc gen-state :z_resources)))
+      ;(.stringify js/JSON (clj->js (update-in [:z_resources] str gen-state)))
       ]]))
 
 (defn image-header []
