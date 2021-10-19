@@ -41,8 +41,28 @@
                [?resource :resource/filepath ?path]
                ]
              @db-conn)]
-     (map #(zipmap element-labels %)
-         elements)))
+    (let [bkgs (map #(zipmap element-labels %)
+                    elements)
+          tile-size 8 ;; TODO: get the official tile size from somewhere
+          ]
+      (map (fn [bkg bkgs]
+             {;;"_data"
+              ;;bkg
+              "width"
+              (first (get bkg "size"))
+              "height"
+              (second (get bkg "size"))
+              "filename"
+              (get bkg "filename")
+              "id"
+              (get bkg "id")
+              "imageWidth"
+              (* tile-size (first (get bkg "size")))
+              "imageHeight"
+              (* tile-size (second (get bkg "size")))
+              })
+           bkgs
+           )      )     ))
 
 ;; Get all of the stuff that will be added on top of the backgrounds and transform the background images accordingly...
 (defn ground-backgrounds [db-conn]
@@ -147,15 +167,48 @@
                                  (str "collisions-viz|" (first (nth scene 9)) "|" (second (nth scene 9)) "|" (util/bytes-to-hex-string colls) "|" (nth scene 7))
                                  
                                  ))
-                    (assoc-in
-                     ["triggers"]
-                     (export-triggers db-conn scene)
-                              
-                              )
-
-                    )]
-               (pprint/pprint s)
-               ()
+                    ((fn [scn] (assoc-in scn ["x"] (first (get scn "editor-position")))))
+                    ((fn [scn] (assoc-in scn ["y"] (second (get scn "editor-position")))))
+                    ((fn [scn] (assoc-in scn ["width"]  (first  (get scn "size")))))
+                    ((fn [scn] (assoc-in scn ["height"] (second (get scn "size")))))
+                    ((fn [scn] (assoc-in scn ["type"] "0")))
+                    ((fn [scn] (assoc-in scn ["paletteIds"] [])))
+                    ((fn [scn] (assoc-in scn ["tileColors"] [])))
+                    ((fn [scn] (assoc-in scn ["script"] [])))
+                    ((fn [scn] (assoc-in scn ["playerHit1Script"] [])))
+                    ((fn [scn] (assoc-in scn ["playerHit2Script"] [])))
+                    ((fn [scn] (assoc-in scn ["playerHit3Script"] [])))
+                    ((fn [scn] (assoc-in scn ["actors"] [])))
+                    ((fn [scn] (assoc-in scn ["triggers"] [])))                    
+                    ;;(assoc-in ["actors"] (export-actors db-conn scene))
+                    (assoc-in ["triggers"] (export-triggers db-conn scene))
+                    (dissoc "size")
+                    (dissoc "editor-position")
+                    )
+                   ]
+               ;; (pprint/pprint s)
+               ;; (println s)
+               ;; (js/console.log s)
+               ;; ()
+               ;; {"name"           (get s "name")
+               ;;  "backgroundId"   (get s "backgroundId")
+               ;;  "width"          (first  (get s "size"))
+               ;;  "height"         (second (get s "size"))
+               ;;  "type"           "0"
+               ;;  "paletteIds"     []
+               ;;  "collisions"     []
+               ;;  "tileColors"     []
+               ;;  "script"         []
+               ;;  "playerHit1Script" []
+               ;;  "playerHit2Script" []
+               ;;  "playerHit3Script" []
+               ;;  "id"             (get s "id")
+               ;;  "x"              (first  (get s "editor-position"))
+               ;;  "y"              (second (get s "editor-position"))
+               ;;  "actors"         []
+               ;;  "triggers"       []
+               ;;  "collisions-viz" (get s "collisions-viz")
+               ;;  }
                s
                ))
            scenes)))
@@ -186,7 +239,8 @@
       (assoc :_design-moves (export-design-moves db-conn))
       (assoc :z_resources (export-resources db-conn))
       (assoc :backgrounds (export-backgrounds db-conn))
-      (assoc :scenes (export-scenes db-conn))))
+      (assoc :scenes (export-scenes db-conn))
+      ))
 
 (defn export-most-recent-artifact
   [basic-export db-conn]

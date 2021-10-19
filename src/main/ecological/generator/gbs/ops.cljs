@@ -69,7 +69,7 @@
   [db bindings parameters]
   (let [id (random-uuid)
         image-size [160 160]
-        speckle-density 2
+        speckle-density 0.18
         ;palette [(qc/color 200 100 0) (qc/color 0 100 200)]  ;0x86c06cff 0xe0f8cfff
         image-data
         (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")

@@ -321,12 +321,17 @@
   (swap! app-state assoc-in [:data] (generator/fetch-database))
   (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
   (swap! app-state assoc-in [:project-export] (generator/fetch-database))
-  (let [resource-files (:z_resources (:gbs-output @app-state))]
+  (let [gbs-project (dissoc (:gbs-output @app-state) :z_resources) 
+        resource-files (:z_resources (:gbs-output @app-state))]
     ;; (js/console.log (generator/fetch-database))
-    ;; (println (generator/fetch-database))
+    (println gbs-project)
+    (println (clj->js gbs-project)             )
+    (js/console.log (clj->js gbs-project))
+    (js/console.log (.stringify js/JSON (clj->js gbs-project))  )
     ;; (println (:z_resources (:gbs-output @app-state)))
     (-> (js/JSZip)
         (#(. % file "readme.txt" "This is an archive that contains the generated GBStudio project."))
+        (#(. % file "project.gbsproj" (.stringify js/JSON (clj->js gbs-project))))
         (#(. % file "resources.txt"
              (reduce
               (fn [mani f] (str mani "\n*\t" (get f "filename")))

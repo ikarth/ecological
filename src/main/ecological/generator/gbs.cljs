@@ -3,6 +3,7 @@
             [ecological.generator.gbs.moves :as moves]
             [ecological.generator.gbs.export :as export]
             [ecological.generator.gbs.assets :as assets]
+            [shadow.resource :as rc]
             ))
 
 
@@ -12,7 +13,135 @@
 
 ;; gbs-basic is the boilerplate JSON for a GB Studio .proj file. It will probably have to be updated for future versions of GB Studio, though it's been fairly stable.
 
-(def gbs-basic (js->clj (.parse js/JSON "{ \"author\": \"https://github.com/ikarth/ecological\", \"name\": \"Generated Game Boy ROM\", \"_version\": \"2.0.0\", \"scenes\": [], \"backgrounds\": [], \"variables\": [], \"spriteSheets\": [], \"music\": [], \"customEvents\": [], \"palettes\": [], \"settings\": { \"showCollisions\": true, \"showConnections\": true, \"worldScrollX\": 0, \"worldScrollY\": 0, \"zoom\": 100, \"customColorsWhite\": \"E8F8E0\", \"customColorsLight\": \"B0F088\", \"customColorsDark\": \"509878\", \"customColorsBlack\": \"202850\", \"defaultBackgroundPaletteIds\": [ \"default-bg-1\", \"default-bg-2\", \"default-bg-3\", \"default-bg-4\", \"default-bg-5\", \"default-bg-6\" ], \"defaultSpritePaletteId\": \"default-sprite\", \"defaultUIPaletteId\": \"default-ui\", \"startX\": 0, \"startY\": 0, \"startDirection\": 0, \"startSceneId\": 0, \"playerSpriteSheetId\": \"581d34d0-9591-4e6e-a609-1d94f203b0cd\" } }" ) :keywordize-keys true))
+;; (def gbs-basic (js->clj (.parse js/JSON "{ \"author\": \"https://github.com/ikarth/ecological\", \"name\": \"Generated Game Boy ROM\", \"_version\": \"2.0.0\", \"_release\": \"2\", \"settings\": { \"showCollisions\": true, \"showConnections\": true, \"worldScrollX\": 0, \"worldScrollY\": 0, \"zoom\": 100, \"defaultSpritePaletteId\": \"default-sprite\", \"defaultUIPaletteId\": \"default-ui\", \"startX\": 0, \"startY\": 0, \"startDirection\": \"down\", \"startSceneId\": \"\", \"playerSpriteSheetId\": \"\" } }" ) :keywordize-keys true))
+
+(def gbs-basic
+  {:customEvents [],
+   :palettes
+   [{:id "default-bg-1",
+     :name "Default BG 1",
+     :colors ["F8E8C8" "D89048" "A82820" "301850"],
+     :defaultName "Default BG 1",
+     :defaultColors ["F8E8C8" "D89048" "A82820" "301850"]}
+    {:id "default-bg-2",
+     :name "Default BG 2",
+     :colors ["E0F8A0" "78C838" "488818" "081800"],
+     :defaultName "Default BG 2",
+     :defaultColors ["E0F8A0" "78C838" "488818" "081800"]}
+    {:id "default-bg-3",
+     :name "Default BG 3",
+     :colors ["F8D8A8" "E0A878" "785888" "002030"],
+     :defaultName "Default BG 3",
+     :defaultColors ["F8D8A8" "E0A878" "785888" "002030"]}
+    {:id "default-bg-4",
+     :name "Default BG 4",
+     :colors ["B8D0D0" "D880D8" "8000A0" "380000"],
+     :defaultName "Default BG 4",
+     :defaultColors ["B8D0D0" "D880D8" "8000A0" "380000"]}
+    {:id "default-bg-5",
+     :name "Default BG 5",
+     :colors ["F8F8B8" "90C8C8" "486878" "082048"],
+     :defaultName "Default BG 5",
+     :defaultColors ["F8F8B8" "90C8C8" "486878" "082048"]}
+    {:id "default-bg-6",
+     :name "Default BG 6",
+     :colors ["F8D8B0" "78C078" "688840" "583820"],
+     :defaultName "Default BG 6",
+     :defaultColors ["F8D8B0" "78C078" "688840" "583820"]}
+    {:id "default-sprite",
+     :name "Default Sprites",
+     :colors ["F8F0E0" "D88078" "B05010" "000000"],
+     :defaultName "Default Sprites",
+     :defaultColors ["F8F0E0" "D88078" "B05010" "000000"]}
+    {:id "default-ui",
+     :name "Default UI",
+     :colors ["F8F8B8" "90C8C8" "486878" "082048"],
+     :defaultName "Default UI",
+     :defaultColors ["F8F8B8" "90C8C8" "486878" "082048"]}],
+   :music
+   [{:id "f50428ab-a084-4591-9bba-2ba10fe7b1c6",
+     :name "template",
+     :filename "template.mod",
+     :settings {},
+     :inode "42221246506897054",
+     :_v 1633816999994}],
+   :backgrounds
+   [{:imageHeight 144,
+     :_v 1633817000006,
+     :name "placeholder",
+     :width 20,
+     :inode "112308515707846197",
+     :filename "placeholder.png",
+     :imageWidth 160,
+     :id "1e5f9d6a-bdbc-43e6-8c34-22f5bb5dea05",
+     :height 18}],
+   :name "Example",
+   :settings
+   {:worldScrollX 708,
+    :navigatorSplitSizes [647 214 214],
+    :zoom 200,
+    :startDirection "down",
+    :defaultFadeStyle "white",
+    :startAnimSpeed 3,
+    :showCollisions true,
+    :startMoveSpeed 1,
+    :worldScrollY 0,
+    :customColorsEnabled true,
+    :playerPaletteId "",
+    :defaultSpritePaletteId "default-sprite",
+    :defaultUIPaletteId "default-ui",
+    :defaultBackgroundPaletteIds
+    ["default-bg-1"
+     "default-bg-2"
+     "default-bg-3"
+     "default-bg-4"
+     "default-bg-5"
+     "default-bg-6"],
+    :playerSpriteSheetId "581d34d0-9591-4e6e-a609-1d94f203b0cd",
+    :startX 9,
+    :startY 9,
+    :customHead "",
+    :showConnections true,
+    :startSceneId "",
+    :showNavigator true},
+   :variables [],
+   :author "User",
+   :scenes [],
+   :spriteSheets
+   [{:id "11b5452b-187c-43a3-afb1-a1f4f74ffda2",
+     :name "actor",
+     :numFrames 3,
+     :type "actor",
+     :filename "actor.png",
+     :inode "82190693199813398",
+     :_v 1633817000006}
+    {:id "581d34d0-9591-4e6e-a609-1d94f203b0cd",
+     :name "actor_animated",
+     :numFrames 6,
+     :type "actor_animated",
+     :filename "actor_animated.png",
+     :inode "385057768140479545",
+     :_v 1633817000006}
+    {:id "daf95270-e30d-423b-9ee7-990ae29f57f6",
+     :name "static",
+     :numFrames 1,
+     :type "static",
+     :filename "static.png",
+     :inode "141863388262405010",
+     :_v 1633817000007}],
+   :engineFieldValues [{:id "fade_style", :value 0}],
+   :_version "2.0.0", 
+   :_release "6"})
+
+
+;; (def gbs-basic
+;;   (js->clj (.parse js/JSON
+;;                    "")
+;;            :keywordize-keys true)
+;;   )
+
+;; (def gbs-basic
+;;   (json/read-str (rc/inline "gbs_basic.json"))
 
 (def genboy-schema
   {:signal/signal             {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/keyword
