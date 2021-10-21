@@ -267,6 +267,7 @@
    moves/move-connect-scenes
    moves/move-add-endpoint-to-scene
    moves/ground-connection-into-trigger
+   moves/endpoint-assign-position
    moves/move-create-speckled-background-image
    ])
 

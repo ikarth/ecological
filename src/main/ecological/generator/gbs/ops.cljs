@@ -4,7 +4,9 @@
             ;[goog.crypt :as crypt]
             [quil.core :as qc :include-macros true]
             [quil.middleware :as qm]
-            ;[quil.applet :as qa]
+            ;;[quil.applet :as qa]
+            ["js-xxhash" :as xxhash]
+            ["prando" :as prando]
             ))
 
 
@@ -21,6 +23,40 @@
 ;; generate background based on scene properties
 ;; generate collisions based on background
 ;; ...and then we can move on to making graphs of scenes
+
+(defn stable-hash-number
+  ([source-string]
+   (stable-hash-number source-string 42))
+  ([source-string seed]
+   (let [encoded (.encode (js/TextEncoder.) source-string)
+         hash    (js/xxHash32. encoded seed)]
+     (js/ParseInt
+      (.slice (.toString hash 10) -4 -2)
+      10))))
+
+(defn stable-random-value
+  "Returns a determanistically random value between min and max"
+  ([hash-input min max]
+   (stable-random-value hash-input min max 42))
+  ([hash-input min max salt-count]
+   (comment
+    ;; TODO: figure out interpo with Prando so we can use it for determanistic randomness     
+     (let [rng (. js/prando Prando hash-input)
+           skipped (.skip rng salt-count)
+           num (.nextInt rng min max)]
+       num))
+   (println min)
+   (println max)
+   (+ min (rand-int (- max min)))))
+
+(defn stable-hash-choice
+  [hash-input choices]
+  (comment
+    ;; TODO: figure out interpo with Prando so we can use it for determanistic randomness
+    (let [rng (. js/prando Prando hash-input)]
+      (.nextArrayItem rng (apply array choices))))
+  (rand-nth choices)
+  )
 
 (defn refer-wish
   ([] 1)
@@ -45,7 +81,7 @@
   [db bindings parameters]
   (let [image-size [160 160] ;; todo: check actual size of image
         tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
-        image-tiles (map #(quot % tile-size) image-size)
+        image-tiles (mapv #(quot % tile-size) image-size)
         resource-id :generated
         ]
     [{:db/id -1
@@ -69,6 +105,8 @@
   [db bindings parameters]
   (let [id (random-uuid)
         image-size [160 160]
+        tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
+        image-tile-size (mapv #(quot % tile-size) image-size)
         speckle-density 0.18
         ;palette [(qc/color 200 100 0) (qc/color 0 100 200)]  ;0x86c06cff 0xe0f8cfff
         image-data
@@ -88,6 +126,8 @@
                                           ))))
             (qc/update-pixels image-target)
             image-target))]
+    (js/console.log image-tile-size)
+    (println image-tile-size)
     [{:db/id -1
       :type/gbs :gbs/resource
       :resource/type :image
@@ -95,6 +135,7 @@
       :resource/filename (str id ".png")
       :resource/filepath :memory
       :resource/image-size image-size
+      :resource/image-tile-size image-tile-size
       :resource/image-data image-data
       }]))
 
@@ -121,7 +162,47 @@
       :type/gbs :gbs/endpoint
       :endpoint/scene scene
       ;:endpoint/connection connection
-      :entity/position position}]))
+      ;;:entity/position position ; TODO: add wish for position binding?
+      }]))
+
+(defn place-endpoint-at-random-edge
+  [db bindings parameters]
+  (let [endpoint-id (get bindings :endpoint-id)
+        scene       (get bindings :scene)
+        edge        (or (:edge bindings) (stable-hash-choice endpoint-id ["edge-top" "edge-bottom" "edge-left" "edge-right"]))
+        size-x      (first  (or (:size bindings) [0 0]))
+        size-y      (second (or (:size bindings) [0 0]))
+        ;;lerp        (or (:interpolation bindings) )
+        ;;range-x     [2 (- size-x 2)]
+        ;;range-y     [2 (- size-y 2)]
+        hashed-seed 42 ;;TODO: make this work (stable-hash-number endpoint-id)
+        ;;midpoint    [(* 0.5 size-x) (* 0.5 size-y)]
+        direction   (case edge
+                          "edge-bottom" "up"
+                          "edge-top"    "down"
+                          "edge-right"  "left"
+                          "edge-left"   "right"
+                          :default     "up"
+                          )
+        x           (case edge
+                      "edge-top"    (+ 2 (rand-int (- size-x 6)))
+                      "edge-bottom" (+ 2 (rand-int (- size-x 6)))
+                      "edge-left"   0
+                      "edge-right"  (- size-x 2)
+                      :default      0)
+        y           (case edge
+                          "edge-top"    0
+                          "edge-bottom" (- size-y 1)
+                          "edge-left"   (+ 1 (rand-int (- size-y 3)))
+                          "edge-right"  (+ 1 (rand-int (- size-y 3)))
+                          :default
+                          0)]
+    (println [x y size-x size-y edge bindings])
+    [{:db/id endpoint-id
+      :entity/position [x y]
+      :entity/direction direction
+      }]
+    ))
 
 (defn link-endpoint-to-scene
   [& {:keys [scene endpoint position] :or {scene (refer-wish) endpoint (refer-wish) position (refer-wish)}}]

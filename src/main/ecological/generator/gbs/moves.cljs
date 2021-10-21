@@ -124,10 +124,14 @@
      [?r :resource/image-size ?image-size]     
      (not-join [?image-filename]
                [?e :background/filename ?image-filename])]
-   :exec (fn [db [image-filename resource-id gb-image-size]]
+   :exec (fn [db [image-filename resource-id gb-image-size] parameters]
            (let [image-size gb-image-size ;; todo: check actual size of image
                  tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
-                 image-tiles (map #(quot % tile-size) image-size)]
+                 image-tiles (mapv #(quot % tile-size) image-size)]
+             (js/console.log image-tiles)
+             (println "*** move create background")
+             (println image-tiles)
+             (println image-size)
              [{:db/id -1
                :background/uuid (str (random-uuid)) ; todo: use hash to speed comparisons?
                :background/size image-tiles
@@ -326,6 +330,27 @@
      [(> ?endA ?endB)] ;; break ties
      [(not= ?endA ?endB)]
      [(not= ?sceneA ?sceneB)]
+     (or
+      ;; (not-join [?sceneA ?sceneB ?endA ?endB]
+      ;;           [?endA :entity/direction ?dirA]
+      ;;           [?endB :entity/direction ?dirB])
+      (and [?endA :entity/direction "up"]    [?endB :entity/direction "down"])
+      (and [?endA :entity/direction "down"]  [?endB :entity/direction "up"])
+      (and [?endA :entity/direction "left"]  [?endB :entity/direction "right"])
+      (and [?endA :entity/direction "right"] [?endB :entity/direction "left"])
+      )
+     ;; (not-join [?sceneA ?sceneB ?endA ?endB]
+     ;;           [?endA :entity/direction ?left]
+     ;;           [?endB :entity/direction ?right]
+     ;;           [(not= ?left ?right)]
+     ;;           (or
+     ;;            (and                 
+     ;;             [(= ?left "")]
+     ;;             )
+     ;;            (and
+     ;;             )               
+     ;;            )
+     ;;           )
      (not-join [?sceneA ?sceneB]
                [?endC :endpoint/scene ?sceneA]
                [?endD :endpoint/scene ?sceneB]
@@ -350,11 +375,48 @@
        ;; (ops/link-right-endpoint-to-connection :endpoint endB :connection connection)
        )))})
 
+(def offsets-by-direction
+  {"up"    [ 0 -1]
+   "down"  [ 0  1]
+   "left"  [-2  0]
+   "right" [ 2  0]
+   })
+
+(def endpoint-assign-position
+  {:name    "endpoint-assign-position"
+   :comment "assigns a position (and direction) to an endpoint that doesn't have one"
+   :query
+   '[:find ?entity-id ?scene-id ?scene-size
+     :in $ %
+     :where
+     [?entity-id :type/gbs :gbs/endpoint]
+     [?entity-id :endpoint/scene ?scene-id]
+     [?scene-id  :scene/background ?background-id]
+     [?background-id  :background/size ?scene-size]
+     (not-join [?entity-id]
+               (or
+                [?connection :connection/left-end ?entity-id]
+                [?connection :connection/right-end ?entity-id]))
+     (not-join [?entity-id]
+               [?entity-id :entity/position  ?entity-pos])
+     (not-join [?entity-id]
+               [?entity-id :entity/direction ?entity-dir])
+     ]
+   :exec
+   (fn [db [endpoint-id scene-id scene-size] parameters]
+     (ops/place-endpoint-at-random-edge
+      db
+      {:endpoint-id endpoint-id
+       :scene       scene-id
+       :size        scene-size
+       }
+      parameters))})
+
 (def ground-connection-into-trigger
   {:name    "ground-connnection-into-trigger"
    :comment "translate finished connections into scene triggers for eventual export"
    :query
-   '[:find ?connection ?endA ?endB ?sceneA ?sceneB ?endApos ?endBpos
+   '[:find ?connection ?endA ?endB ?sceneA ?sceneB ?endApos ?endBpos ?directionA ?directionB
      :in $ %
      :where
      [?connection :type/gbs :gbs/connection]
@@ -364,6 +426,8 @@
      [?endB :entity/position ?endBpos]
      [?sceneA :type/gbs :gbs/scene]
      [?sceneB :type/gbs :gbs/scene]
+     [?endA :entity/direction ?directionA]
+     [?endB :entity/direction ?directionB]
      [(not= ?endA ?endB)]
      [(not= ?sceneA ?sceneB)]
      ;;[(> ?endA ?endB)]
@@ -386,24 +450,26 @@
                 [?connection :connection/left-end ?endB]
                 [?connection :connection/right-end ?endB]))]
    :exec
-   (fn [db [connection endA endB sceneA sceneB posA posB] parameters]
-     [{:db/id -1
-       :type/gbs :gbs/trigger
-       :trigger/scene  sceneA
-       :trigger/parent endA
-       :trigger/type   :trigger-type/connection
-       :trigger/target sceneB
-       :trigger/direction "up" ;:TODO
-       :trigger/target-location posB
-       }
-      {:db/id -2
-       :type/gbs :gbs/trigger
-       :trigger/scene  sceneB
-       :trigger/parent endB
-       :trigger/type   :trigger-type/connection
-       :trigger/target sceneA
-       :trigger/direction "down" ;:TODO
-       :trigger/target-location posA
-       }      
-      ]
+   (fn [db [connection endA endB sceneA sceneB posA posB dirA dirB] parameters]
+     (let [offsetA (mapv + posA (get offsets-by-direction dirA))
+           offsetB (mapv + posB (get offsets-by-direction dirB))]
+       [{:db/id -1
+         :type/gbs :gbs/trigger
+         :trigger/scene  sceneA
+         :trigger/parent endA
+         :trigger/type   :trigger-type/connection
+         :trigger/target sceneB
+         :trigger/direction dirB
+         :trigger/target-location offsetB
+         }
+        {:db/id -2
+         :type/gbs :gbs/trigger
+         :trigger/scene  sceneB
+         :trigger/parent endB
+         :trigger/type   :trigger-type/connection
+         :trigger/target sceneA
+         :trigger/direction dirA
+         :trigger/target-location offsetA
+         }      
+        ])
      )})
