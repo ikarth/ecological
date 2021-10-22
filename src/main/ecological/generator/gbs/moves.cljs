@@ -331,26 +331,10 @@
      [(not= ?endA ?endB)]
      [(not= ?sceneA ?sceneB)]
      (or
-      ;; (not-join [?sceneA ?sceneB ?endA ?endB]
-      ;;           [?endA :entity/direction ?dirA]
-      ;;           [?endB :entity/direction ?dirB])
       (and [?endA :entity/direction "up"]    [?endB :entity/direction "down"])
       (and [?endA :entity/direction "down"]  [?endB :entity/direction "up"])
       (and [?endA :entity/direction "left"]  [?endB :entity/direction "right"])
-      (and [?endA :entity/direction "right"] [?endB :entity/direction "left"])
-      )
-     ;; (not-join [?sceneA ?sceneB ?endA ?endB]
-     ;;           [?endA :entity/direction ?left]
-     ;;           [?endB :entity/direction ?right]
-     ;;           [(not= ?left ?right)]
-     ;;           (or
-     ;;            (and                 
-     ;;             [(= ?left "")]
-     ;;             )
-     ;;            (and
-     ;;             )               
-     ;;            )
-     ;;           )
+      (and [?endA :entity/direction "right"] [?endB :entity/direction "left"]))
      (not-join [?sceneA ?sceneB]
                [?endC :endpoint/scene ?sceneA]
                [?endD :endpoint/scene ?sceneB]
