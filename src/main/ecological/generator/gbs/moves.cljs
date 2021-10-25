@@ -1,10 +1,6 @@
 (ns ecological.generator.gbs.moves
   (:require [datascript.core :as d]
             [clojure.string]
-            ;[goog.crypt :as crypt]
-            ;[quil.core :as qc]
-            ;[quil.middleware :as qm]
-                                        ;[quil.applet :as qa]
             ["clingo-wasm" :as clingo]
             [ecological.generator.gbs.assets :refer [asset-manifest scene-manifest]]
             [ecological.generator.gbs.ops :as ops]
@@ -90,19 +86,8 @@
             {:db/id template-id
              :template/use-count (inc use-count)}
             ]]
-       ;(js/console.log template-id)
-       ;(js/console.log transaction)
        transaction
        ))})
-
-;; (def move-place-greenfield-scene
-;;   {:name "place-greenfield-scene"
-;;    :exec (fn [db _] ; takes parameters but ignores them
-;;            [{:db/id -1
-;;              :scene/uuid (str (random-uuid))             
-;;              :scene/editor-position [20 20]  ; todo: query db for empty editor space to place scene?
-;;              :scene/name "generated greenfield scene"
-;;                }])})
 
 
 (def move-create-background-from-image
@@ -292,11 +277,6 @@
    :exec (fn [db bindings parameters]
            (ops/create-scene db bindings parameters))})
 
-;; (def move-place-greenfield-connection
-;;   {:name "place-greenfield-connection"
-;;    :exec (fn [db bindings parameters] ; takes parameters but ignores them
-;;            (ops/create-connection db bindings parameters))})
-
 (def move-place-greenfield-endpoint
   {:name "place-greenfield-endpoint"
    :exec (fn [db bindings parameters] ; takes parameters but ignores them
@@ -314,9 +294,9 @@
    (fn [db [scene] parameters]
      (ops/create-endpoint db {:scene scene} []))})
 
-(def move-connect-scenes
-  {:name "connect-scenes"
-   :comment "Connect two scenes via new connection."
+(def move-connect-scenes-via-placed-endpoints
+  {:name "connect-scenes-existing-endpoints"
+   :comment "Connect two scenes via endpoints that already have directions."
    :query
    '[:find ?sceneA ?sceneB ?endA ?endB
      :in $ %
@@ -330,7 +310,7 @@
      [(> ?endA ?endB)] ;; break ties
      [(not= ?endA ?endB)]
      [(not= ?sceneA ?sceneB)]
-     (or
+     (or ;; endpoint directions must match
       (and [?endA :entity/direction "up"]    [?endB :entity/direction "down"])
       (and [?endA :entity/direction "down"]  [?endB :entity/direction "up"])
       (and [?endA :entity/direction "left"]  [?endB :entity/direction "right"])
@@ -352,12 +332,104 @@
      (into
       []
       (concat
-       (ops/create-connection db {:end-left endA :end-right endB} parameters)
-       ;; (ops/link-endpoint-to-scene :scene sceneA :endpoint endA)
-       ;; (ops/link-endpoint-to-scene :scene sceneB :endpoint endB)
-       ;; (ops/link-left-endpoint-to-connection :endpoint endA :connection connection)
-       ;; (ops/link-right-endpoint-to-connection :endpoint endB :connection connection)
-       )))})
+       (ops/create-connection db {:end-left endA :end-right endB} parameters))))})
+
+(def move-connect-scenes-via-unplaced-endpoints
+  {:name "connect-scenes-unplaced-endpoints"
+   :comment "Connect two scenes via endpoints that don't have a placement yet."
+   :query
+   '[:find ?sceneA ?sceneB ?endA ?endB ;?scene-size-A ?scene-size-B
+     :in $ %
+     :where
+     [?sceneA :type/gbs :gbs/scene]
+     [?sceneB :type/gbs :gbs/scene]
+     [?endA   :type/gbs :gbs/endpoint]
+     [?endB   :type/gbs :gbs/endpoint]
+     [?endA   :endpoint/scene ?sceneA]
+     [?endB   :endpoint/scene ?sceneB]
+     [(> ?endA ?endB)] ;; break ties
+     [(not= ?endA ?endB)]
+     [(not= ?sceneA ?sceneB)]
+     [?sceneB  :scene/background ?background-id-B]
+     [?background-id-B  :background/size ?scene-size-B]
+     [?sceneA  :scene/background ?background-id-A]
+     [?background-id-A  :background/size ?scene-size-A]
+     (not-join [?endA ?endB]
+               [?endA :entity/direction ?dirA]
+               [?endB :entity/direction ?dirB])
+     (not-join [?sceneA ?sceneB]
+               [?endC :endpoint/scene ?sceneA]
+               [?endD :endpoint/scene ?sceneB]
+               [?existing-connection :type/gbs :gbs/connection]
+               [?existing-connection :connection/left-end ?endC]
+               [?existing-connection :connection/right-end ?endD])
+     (not-join [?sceneA ?sceneB]
+               [?endC :endpoint/scene ?sceneA]
+               [?endD :endpoint/scene ?sceneB]
+               [?existing-connection :type/gbs :gbs/connection]
+               [?existing-connection :connection/left-end ?endD]
+               [?existing-connection :connection/right-end ?endC])]
+   :exec
+   (fn [db [sceneA sceneB endA endB scene-size-A scene-size-B] parameters]
+     (let [edge-dir    (rand-nth ["edge-top" "edge-bottom" "edge-left" "edge-right"]) ;; TODO: make determanistic
+           flipped-dir (get {"edge-top" "edge-bottom"
+                             "edge-bottom" "edge-top"
+                             "edge-left" "edge-right"
+                             "edge-right" "edge-left"} edge-dir)]       
+       (into
+        []
+        (concat
+         (ops/place-endpoint-at-edge db {:endpoint-id endA :scene sceneA :size scene-size-A :edge edge-dir} parameters)
+         (ops/place-endpoint-at-edge db {:endpoint-id endB :scene sceneB :size scene-size-B :edge flipped-dir} parameters)
+         (ops/create-connection db {:end-left endA :end-right endB} parameters)))))})
+
+(def move-connect-scenes-via-half-endpoints
+  {:name "connect-scenes-half-endpoints"
+   :comment "Connect two scenes via endpoints where only one has a direction."
+   :query
+   '[:find ?sceneA ?sceneB ?endA ?endB ?scene-size-B ?dirA
+     :in $ %
+     :where
+     [?sceneA :type/gbs :gbs/scene]
+     [?sceneB :type/gbs :gbs/scene]
+     [?endA   :type/gbs :gbs/endpoint]
+     [?endB   :type/gbs :gbs/endpoint]
+     [?endA   :endpoint/scene ?sceneA]
+     [?endB   :endpoint/scene ?sceneB]
+     [(not= ?endA ?endB)]
+     [(not= ?sceneA ?sceneB)]
+     [?endA :entity/direction ?dirA]
+     (not-join [?endB]
+      [?endB :entity/direction ?dirB])
+     [?sceneB  :scene/background ?background-id-B]
+     [?background-id-B  :background/size ?scene-size-B]
+     (not-join [?sceneA ?sceneB]
+               [?endC :endpoint/scene ?sceneA]
+               [?endD :endpoint/scene ?sceneB]
+               [?existing-connection :type/gbs :gbs/connection]
+               [?existing-connection :connection/left-end ?endC]
+               [?existing-connection :connection/right-end ?endD])
+     (not-join [?sceneA ?sceneB]
+               [?endC :endpoint/scene ?sceneA]
+               [?endD :endpoint/scene ?sceneB]
+               [?existing-connection :type/gbs :gbs/connection]
+               [?existing-connection :connection/left-end ?endD]
+               [?existing-connection :connection/right-end ?endC])]
+   :exec
+   (fn [db [sceneA sceneB endA endB scene-size-B dirA] parameters]
+     (let [flipped-dir
+           (get {"up" "edge-bottom"
+                 "left" "edge-right"
+                 "down" "edge-top"
+                 "right" "edge-left"}
+                dirA)]
+       (into
+        []
+        (concat
+         (ops/place-endpoint-at-edge db {:endpoint-id endB :scene sceneB :size scene-size-B :edge flipped-dir} parameters)
+         (ops/create-connection db {:end-left endA :end-right endB} parameters)))))})
+
+
 
 (def offsets-by-direction
   {"up"    [ 0 -1]
@@ -388,7 +460,7 @@
      ]
    :exec
    (fn [db [endpoint-id scene-id scene-size] parameters]
-     (ops/place-endpoint-at-random-edge
+     (ops/place-endpoint-at-edge
       db
       {:endpoint-id endpoint-id
        :scene       scene-id
@@ -414,13 +486,10 @@
      [?endB :entity/direction ?directionB]
      [(not= ?endA ?endB)]
      [(not= ?sceneA ?sceneB)]
-     ;;[(> ?endA ?endB)]
      [?endA :endpoint/scene ?sceneA]
      [?endB :endpoint/scene ?sceneB]
      [?connection :connection/left-end ?endA]
      [?connection :connection/right-end ?endB]
-     ;;[?sceneA :scene/name ?sceneAname]
-     ;;[?sceneB :scene/name ?sceneBname]
      (not-join [?endA ?connection]
                [?triggerA :type/gbs :gbs/trigger]
                [?triggerA :trigger/parent ?endA]

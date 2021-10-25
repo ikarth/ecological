@@ -134,14 +134,7 @@
    :_release "6"})
 
 
-;; (def gbs-basic
-;;   (js->clj (.parse js/JSON
-;;                    "")
-;;            :keywordize-keys true)
-;;   )
 
-;; (def gbs-basic
-;;   (json/read-str (rc/inline "gbs_basic.json"))
 
 (def genboy-schema
   {:signal/signal             {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/keyword
@@ -263,8 +256,10 @@
    moves/move-place-greenfield-scene
    moves/move-create-greenfield-image
    ;moves/move-place-greenfield-connection
-   ;moves/move-place-greenfield-endpoint
-   moves/move-connect-scenes
+                                        ;moves/move-place-greenfield-endpoint
+   moves/move-connect-scenes-via-placed-endpoints
+   moves/move-connect-scenes-via-unplaced-endpoints
+   moves/move-connect-scenes-via-half-endpoints
    moves/move-add-endpoint-to-scene
    moves/ground-connection-into-trigger
    moves/endpoint-assign-position

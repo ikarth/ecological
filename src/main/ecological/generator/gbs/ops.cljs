@@ -156,27 +156,21 @@
   [db bindings parameters]
   (let [scene      (get-or-wish db bindings :scene)
         position   [0 0] ;(get-or-wish db bindings :position)
-        ;connection (get-or-wish db bindings :connection)
         ]
     [{:db/id -1
       :type/gbs :gbs/endpoint
       :endpoint/scene scene
-      ;:endpoint/connection connection
-      ;;:entity/position position ; TODO: add wish for position binding?
       }]))
 
-(defn place-endpoint-at-random-edge
+(defn place-endpoint-at-edge
   [db bindings parameters]
   (let [endpoint-id (get bindings :endpoint-id)
         scene       (get bindings :scene)
+        ;; use a random edge if it isn't specified...
         edge        (or (:edge bindings) (stable-hash-choice endpoint-id ["edge-top" "edge-bottom" "edge-left" "edge-right"]))
         size-x      (first  (or (:size bindings) [0 0]))
         size-y      (second (or (:size bindings) [0 0]))
-        ;;lerp        (or (:interpolation bindings) )
-        ;;range-x     [2 (- size-x 2)]
-        ;;range-y     [2 (- size-y 2)]
         hashed-seed 42 ;;TODO: make this work (stable-hash-number endpoint-id)
-        ;;midpoint    [(* 0.5 size-x) (* 0.5 size-y)]
         direction   (case edge
                           "edge-bottom" "up"
                           "edge-top"    "down"
@@ -200,9 +194,7 @@
     (println [x y size-x size-y edge bindings])
     [{:db/id endpoint-id
       :entity/position [x y]
-      :entity/direction direction
-      }]
-    ))
+      :entity/direction direction}]))
 
 (defn link-endpoint-to-scene
   [& {:keys [scene endpoint position] :or {scene (refer-wish) endpoint (refer-wish) position (refer-wish)}}]
@@ -210,44 +202,3 @@
     :endpoint/scene scene
     :entity/position position ; position in scene
     }])
-
-;; (defn convert-connection-to-trigger
-;;   [db bindings parameters]
-;;   (let [connection-id    (get bindings :db/id)
-;;         connection-left  (get bindings :connection/left-end)
-;;         connection-right (get bindings :connection/right-end)
-
-
-;;         ])
-;;   ;[& {:keys [] :or {}}]
-;;   )
-
-
-
-;; (defn link-any-endpoint-to-connection
-;;   [& {:keys [connection endpoint] :or {connection (refer-wish) endpoint (refer-wish)}}]
-;;   []
-;;   )
-
-;; (defn link-left-endpoint-to-connection
-;;   [& {:keys [connection endpoint] :or {connection (refer-wish) endpoint (refer-wish)}}]
-;;   [{:db/id connection
-;;     :connection/left-end endpoint
-;;     }])
-
-;; (defn link-right-endpoint-to-connection
-;;   [& {:keys [connection endpoint] :or {connection (refer-wish) endpoint (refer-wish)}}]
-;;   [{:db/id connection
-;;     :connection/right-end endpoint
-;;     }])
-
-;; (defn add-background-to-scene
-;;   [db bindings parameters])
-
-;; (defn create-background-from-scene
-;;   [db bindings parameters])
-
-;; (defn add-lock-to-scene
-;;   [db bindings parameters])
-
-
