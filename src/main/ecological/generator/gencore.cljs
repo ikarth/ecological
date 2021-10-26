@@ -96,10 +96,10 @@
                          }
                         ]
         tx-data (into [] (concat provenance-added history-record))
-        ;tx-data result ;; Temporarily disable history recording...
+        tx-data result ;; Temporarily disable history recording...
 
         ]
-    ;;(println tx-data)
+    (println tx-data)
     tx-data))
 
 (defn execute-design-move!
@@ -110,7 +110,10 @@
     (let []
       (assert (map? design-move) "Design move is missing, so can't be executed.")
       (println (str "executing move: " (:name (:move design-move))))
-      (d/transact! db-conn (assemble-exec-result @db-conn design-move params)))
+      (println
+       (d/transact! db-conn (assemble-exec-result @db-conn design-move params)))
+      )
+    
     (println "Current database is missing somehow.")
     ))
  

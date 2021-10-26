@@ -113,10 +113,10 @@
            (let [image-size gb-image-size ;; todo: check actual size of image
                  tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
                  image-tiles (mapv #(quot % tile-size) image-size)]
-             (js/console.log image-tiles)
-             (println "*** move create background")
-             (println image-tiles)
-             (println image-size)
+             ;; (js/console.log image-tiles)
+             ;; (println "*** move create background")
+             ;; (println image-tiles)
+             ;; (println image-size)
              [{:db/id -1
                :background/uuid (str (random-uuid)) ; todo: use hash to speed comparisons?
                :background/size image-tiles
@@ -270,7 +270,28 @@
 ;;          )))})
 
 
-
+(def move-draw-endpoint-on-background
+  {:name "draw-endpoint-on-background"
+   :comment "add visible indicator of a transition point to the background image of a scene"
+   :query
+   '[:find ?scene ?resource ?background ?image-tiles ?image-data ?image-size ?image-tile-size ?endpoint ?direction ?position
+     :in $ %
+     :where
+     [?scene :type/gbs :gbs/scene]
+     [?scene :scene/background ?background]
+     [?background :background/resource ?resource]
+     [?background :background/size ?image-tiles]
+     [?resource :resource/image-data ?image-data]
+     [?resource :resource/image-size ?image-size]
+     [?resource :resource/image-tile-size ?image-tile-size]
+     [?endpoint :endpoint/scene ?scene]
+     [?endpoint :entity/direction ?direction]
+     [?endpoint :entity/position ?position]
+     [(missing? $ ?endpoint :endpoint/background)]
+     ]
+   :exec
+   (fn [db bindings parameters]
+     (ops/draw-endpoints-on-background db bindings [(d/tempid :gbs/resource) (d/tempid :gbs/background)]))})
 
 (def move-place-greenfield-scene
   {:name "place-greenfield-scene"

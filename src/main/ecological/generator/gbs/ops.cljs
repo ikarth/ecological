@@ -89,7 +89,7 @@
       :background/uuid (str (random-uuid))
       :background/size image-tiles
       :background/filename "GENERATED"
-      :background/resource resource-id
+      ;:background/resource resource-id
       }]))
 
 (defn create-image
@@ -100,6 +100,11 @@
     :resource/filename "test.png" ;(str (random-uuid) ".png")
     :resource/filepath ""
     :resource/image-size [160 160]}])
+
+(defn copy-image
+  [db bindings parameters]
+  
+  )
 
 (defn create-speckled-background-image
   [db bindings parameters]
@@ -202,3 +207,80 @@
     :endpoint/scene scene
     :entity/position position ; position in scene
     }])
+
+(defn draw-endpoints-on-background
+  "Creates a new background (old background + transition graphics) and makes that the background for the scene in question."
+  [db [scene image-resource background image-tiles image-data image-size image-tile-size endpoint direction position] [temp-id-resource temp-id-background]]
+  (let [img-id (random-uuid)
+        image-filename (str img-id ".png")
+
+        new-image-data       
+        (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
+          (let [tile-x 8
+                tile-y 8
+                pos-x (* tile-x (first position))
+                pos-y (* tile-y (second position))
+                image-target (qc/create-image (first image-size) (second image-size))]
+            (qc/copy image-data
+                     image-target
+                     [0 0 (first image-size) (second image-size)]
+                     [0 0 (first image-size) (second image-size)])
+            (dotimes [x (* 2 tile-x)]
+              (dotimes [y (* 2 tile-y)]
+                (let [intensity 
+                      (- (* (/ x 12.0)
+                            (+ (.sin js/Math (/ y 4.0)) 0.0))
+                         (* 2.0 (rem (+ x y) 2)))                                 
+                      ]
+                  (if (< 0.0 intensity)
+                    (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x07 0x18 0x21))
+                    ;; (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color (+ 50 (* intensity 200)) 0x18 0x71))
+                    ;; (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0xdf 0xf8 0xf1))
+                    )
+                  ;; (cond 
+                  ;;   (< 2.0 intensity)
+                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x07 0x18 0x21))
+                  ;;   (< 1.5 intensity)
+                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0xf0 0x68 0x3f))
+                  ;;   (< 1.0 intensity)
+                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x30 0xf8 0xff))
+                  ;;   (< 0.5 intensity)
+                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x30 0xf8 0x0f))
+                  ;;   (< 0.0 intensity)
+                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x90 0x08 0x0f))
+                  ;;   (< -0.5 intensity)
+                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x70 0x08 0x0f))
+                  ;;   (< -1.0 intensity)
+                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x50 0x08 0x0f))
+                  ;;   :else
+                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x30 0x68 0xcf))                    
+                  ;;   )
+
+                  )))
+            (qc/update-pixels image-target)
+            image-target))]
+    [; create new image (with added transition)
+     {:db/id -1
+      :type/gbs :gbs/resource
+      :resource/type :image
+      :resource/uuid img-id
+      :resource/filename image-filename
+      :resource/image-data new-image-data
+      :resource/image-size image-size
+      :resource/image-tile-size image-tile-size
+      :resource/filepath :memory}
+     ;; ;; create new background (with same size)
+     {:db/id -2
+      ;;:type/gbs :gbs/background
+      :background/uuid (str (random-uuid))
+      :background/size image-tiles
+      :background/filename image-filename
+      :background/resource -1
+      :background/filepath :memory
+      } 
+      
+     ;; ;; assign new background to scene
+     [:db/add scene :scene/background -2]
+     ;; ;; alter endpoint to indicate that it has been drawn on the background
+     [:db/add endpoint :endpoint/background -2]
+     ]))

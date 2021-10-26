@@ -146,14 +146,22 @@
    ;:scene/connections         {:db/cardinality :db.cardinality/many}
    :scene/editor-position     {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
    :background/filename       {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/string
-   :background/image          {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
+   ;;:background/image          {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
    :background/size           {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
    ;:background/imageSize      {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/tuple
    :background/uuid           {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
+   :background/resource       {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
    :resource/filename         {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
    :resource/type             {:db/cardinality :db.cardinality/one} ; :db/valueType :db.type/keyword
+
+   :resource/uuid             {:db/cardinality :db.cardinality/one  :db/unique :db.unique/identity}
+   :resource/filepath         {:db/cardinality :db.cardinality/one}
+   :resource/image-size       {:db/cardinality :db.cardinality/one}
+   :resource/image-tile-size  {:db/cardinality :db.cardinality/one}
+   :resource/image-data       {:db/cardinality :db.cardinality/one}
    :constraint/asp            {:db/cardinality :db.cardinality/one}
    :endpoint/scene            {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
+   :endpoint/background       {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
    :connection/left-end       {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
    :connection/direction      {:db/cardinality :db.cardinality/one}
    :connection/right-end      {:db/cardinality :db.cardinality/one  :db/valueType :db.type/ref}
@@ -254,7 +262,7 @@
    moves/move-add-existing-background-to-scene
    ;;moves/move-add-connection-to-scene
    moves/move-place-greenfield-scene
-   moves/move-create-greenfield-image
+   ;;moves/move-create-greenfield-image
    ;moves/move-place-greenfield-connection
                                         ;moves/move-place-greenfield-endpoint
    moves/move-connect-scenes-via-placed-endpoints
@@ -264,6 +272,7 @@
    moves/ground-connection-into-trigger
    moves/endpoint-assign-position
    moves/move-create-speckled-background-image
+   moves/move-draw-endpoint-on-background
    ])
 
 (def initial-transaction
