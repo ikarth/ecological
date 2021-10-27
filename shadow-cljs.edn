@@ -31,6 +31,7 @@
   [net.mikera/core.matrix "0.62.0"]
   ;;[thinktopic/aljabr "0.1.1"]
   ;;[cljsjs/filesaverjs "1.3.3-0"]
+  [kixi/stats "0.5.2"]
   ]
 
  :nrepl

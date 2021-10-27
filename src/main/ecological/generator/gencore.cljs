@@ -80,6 +80,8 @@
         exec-func (get-in design-move [:move :exec])
         _ (assert (fn? exec-func) (str move-name " has no :exec function!"))
         current-time (timestamp)
+        ;; TODO: check if exec-func throws an exception or something, because we should
+        ;;       cancel the transaction if that happens...
         result (exec-func db (:vars design-move) params)
         provenance-added (map (fn [transact]
                               (merge transact {:entity/timestamp current-time

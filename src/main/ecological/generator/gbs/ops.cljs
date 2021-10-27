@@ -119,7 +119,8 @@
           (let [image-target (qc/create-image (first image-size) (second image-size))]
             (dotimes [x (first image-size)]
               (dotimes [y (second image-size)]
-                (let [intensity (if (> speckle-density (qc/random 100)) 0 1)]
+                (let [;;intensity (if (> speckle-density (qc/random 100)) 0 1)
+                      ]
                   (qc/set-pixel image-target
                                 x
                                 y
@@ -128,11 +129,13 @@
                                   (qc/color 0x86 0xc0 0x6c)
                                   (qc/color 0xe0 0xf8 0xcf))
                                 ;(nth palette intensity (qc/color 20 30 20))
-                                          ))))
+                                ))))
+            
+            ;;(js/console.log image-target)
             (qc/update-pixels image-target)
             image-target))]
-    (js/console.log image-tile-size)
-    (println image-tile-size)
+    ;;(js/console.log image-tile-size)
+    ;;(println image-tile-size)
     [{:db/id -1
       :type/gbs :gbs/resource
       :resource/type :image
@@ -172,7 +175,11 @@
   (let [endpoint-id (get bindings :endpoint-id)
         scene       (get bindings :scene)
         ;; use a random edge if it isn't specified...
-        edge        (or (:edge bindings) (stable-hash-choice endpoint-id ["edge-top" "edge-bottom" "edge-left" "edge-right"]))
+        edge        (or (:edge bindings) (stable-hash-choice endpoint-id
+                                                             ["edge-top"
+                                                              "edge-bottom"
+                                                              "edge-left"
+                                                              "edge-right"]))
         size-x      (first  (or (:size bindings) [0 0]))
         size-y      (second (or (:size bindings) [0 0]))
         hashed-seed 42 ;;TODO: make this work (stable-hash-number endpoint-id)
@@ -211,6 +218,8 @@
 (defn draw-endpoints-on-background
   "Creates a new background (old background + transition graphics) and makes that the background for the scene in question."
   [db [scene image-resource background image-tiles image-data image-size image-tile-size endpoint direction position] [temp-id-resource temp-id-background]]
+  ;;(js/console.log image-data)
+  ;;(js/console.log (qc/pixels image-data))
   (let [img-id (random-uuid)
         image-filename (str img-id ".png")
 
@@ -218,45 +227,78 @@
         (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
           (let [tile-x 8
                 tile-y 8
-                pos-x (* tile-x (first position))
-                pos-y (* tile-y (second position))
-                image-target (qc/create-image (first image-size) (second image-size))]
-            (qc/copy image-data
-                     image-target
-                     [0 0 (first image-size) (second image-size)]
-                     [0 0 (first image-size) (second image-size)])
-            (dotimes [x (* 2 tile-x)]
-              (dotimes [y (* 2 tile-y)]
-                (let [intensity 
-                      (- (* (/ x 12.0)
-                            (+ (.sin js/Math (/ y 4.0)) 0.0))
-                         (* 2.0 (rem (+ x y) 2)))                                 
-                      ]
-                  (if (< 0.0 intensity)
-                    (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x07 0x18 0x21))
-                    ;; (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color (+ 50 (* intensity 200)) 0x18 0x71))
-                    ;; (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0xdf 0xf8 0xf1))
-                    )
-                  ;; (cond 
-                  ;;   (< 2.0 intensity)
-                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x07 0x18 0x21))
-                  ;;   (< 1.5 intensity)
-                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0xf0 0x68 0x3f))
-                  ;;   (< 1.0 intensity)
-                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x30 0xf8 0xff))
-                  ;;   (< 0.5 intensity)
-                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x30 0xf8 0x0f))
-                  ;;   (< 0.0 intensity)
-                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x90 0x08 0x0f))
-                  ;;   (< -0.5 intensity)
-                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x70 0x08 0x0f))
-                  ;;   (< -1.0 intensity)
-                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x50 0x08 0x0f))
-                  ;;   :else
-                  ;;   (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) (qc/color 0x30 0x68 0xcf))                    
-                  ;;   )
-
-                  )))
+                pos-x (* tile-x (+ 0.0 (first position)))
+                pos-y (* tile-y (+ 0.0 (second position)))
+                pos-x (case direction
+                        "left" (+ pos-x tile-x) pos-x) ; start higher when on right edge
+                image-target (qc/create-image (first image-size) (second image-size))
+                size-x (* tile-x (case direction "down" 2 "up" 2 1))
+                size-y (* tile-y (case direction "down" 1 "up" 1 1))
+                ]
+            (qc/pixels image-target)
+            (println [pos-x pos-y direction])
+            (dotimes [x (first image-size)]
+              (dotimes [y (second image-size)]
+                (qc/set-pixel image-target
+                              x
+                              y
+                              (if (and (= 0 (rem (+ x y) 2))
+                                       (<= pos-x x (+ pos-x size-x))
+                                       (<= pos-y y (+ pos-y size-y)))
+                                (let [length-y
+                                      (case direction
+                                        "down" (* 2 tile-y)
+                                        "up" (* 2 tile-y)
+                                        tile-y
+                                        )
+                                      axis 
+                                      (case direction
+                                        "down" (- y pos-y) 
+                                        "up" (.abs js/Math (- size-y (- y pos-y))) ;(- (* tile-y 2) y)
+                                        "left" (.abs js/Math (- tile-x (- x pos-x)));(- (* tile-x 2) x)
+                                        (- x pos-x))
+                                      
+                                      ]
+                                  (println [direction [x y] [pos-x pos-y] [(- x pos-x)(- y pos-y)] axis])
+                                  (case (int (+ (* (rem (+ x y) 4) 0.48) (* axis 0.25)))
+                                    ;;(qc/color 0x1f 0xf3 0xff)
+                                    0 (qc/color 0x07 0x18 0x21)
+                                    1 (qc/color 0x30 0x68 0x50)
+                                    2 (qc/color 0x86 0xc0 0x6c)
+                                    (qc/color 0xe0 0xf8 0xcf)
+                                    ;;(qc/color 0x1f 0x03 0xff)
+                                    ))
+                                (qc/get-pixel image-data x y)
+                                ;; (if (> 0.3 (qc/random 100))
+                                ;;   (qc/color 0xff 0x03 0x30)
+                                ;;   (qc/get-pixel image-data x y))
+                                
+                              ))))
+            ;;(qc/update-pixels image-target)
+            ;;(println direction)
+            ;;(println position)
+            ;;(js/console.log image-target)
+            ;; (dotimes [x (* 3 tile-x)]
+            ;;   (dotimes [y (* 3 tile-y)]                
+            ;;     (if (> 0 (rem (+ x y) 2))
+            ;;       (let [axis (case direction
+            ;;                   "up" y
+            ;;                   "down" (- 0 y)
+            ;;                   "right" (- 0 x)
+            ;;                   x
+            ;;                   )
+            ;;             pixel-color
+            ;;             (qc/color 0x00 0x08 0xff)
+            ;;             ;; other-pixel-color
+            ;;             ;; (case (int (.floor js/Math(/ axis 4.0)))
+            ;;             ;;   0 (qc/color 0x07 0x18 0x21)
+            ;;             ;;   1 (qc/color 0x30 0x68 0x50)
+            ;;             ;;   2 (qc/color 0x86 0xc0 0x6c)
+            ;;             ;;   (qc/color 0xe0 0xf8 0xcf))
+            ;;             ]
+            ;;         (qc/set-pixel image-target (+ pos-x x) (+ pos-y y) pixel-color)))))
+            ;;(println image-target)
+            ;;(js/console.log image-target)
             (qc/update-pixels image-target)
             image-target))]
     [; create new image (with added transition)
