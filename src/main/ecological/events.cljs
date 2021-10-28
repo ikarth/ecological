@@ -97,20 +97,16 @@
         _ (assert (keyword? database-label) (str database-label " is not a recognized database name."))
         _ (generator/switch-database database-label)]
     (generator/make-empty-project database-label)
-    ;(println "...")
-    ;(js/console.log @app-state)
     (if (not
          (some? (:data @app-state)))
       (println "No data found in app-state?"))
-    ;;(println "---")
     (swap! app-state assoc-in [:all-moves] (generator/fetch-all-moves))
     (swap! app-state assoc-in [:gbs-output] (generator/fetch-data-output))
     (swap! app-state assoc-in [:data] (generator/fetch-database))
     (swap! app-state assoc-in [:possible-moves] (generator/fetch-possible-moves))
     (swap! app-state assoc-in [:data-view] (generator/fetch-data-view))
     (swap! app-state assoc-in [:recent-artifact] (generator/fetch-most-recent-artifact))
-    (swap! app-state assoc-in [:project-view] (generator/fetch-project-view))
-    
+    (swap! app-state assoc-in [:project-view] (generator/fetch-project-view))   
     ))
 
 (defn update-database-view [event]
@@ -148,13 +144,7 @@
         altered-state (get @app-state :altered-parameters {})
         total-state (merge default-state   
                            altered-state)]
-    ;(println "(get-current-parameters)")
-    ;; (println default-state)
-    ;(println altered-state)    
-    ;(println total-state)
-    ;; (println @app-state)
-    total-state
-    ))
+    total-state))
 
 (defn select-move
   "Makes the given design move be the currently selected one."
@@ -197,16 +187,8 @@
           :else
           new-value-raw
           )]
-    ;(println "(alter)")
-    ;(println current-move)
-    ;(println current-state)
-    ;(println @app-state)
-    ;(js/console.log form)
-    ;(js/console.log new-value)
     (swap! app-state update-in [:altered-parameters]
            (fn [old-parameters]
-             ;(js/console.log param-index)
-             ;(js/console.log old-parameters)
              (let [new-param
                    (cond
                      (= :scalar form)
@@ -216,18 +198,11 @@
                      :else
                      {param-name new-value})
                    ]
-               ;(println )
                (merge old-parameters new-param)
                )
              )
            )
-    ;;(println (:altered-parameters @app-state))
-      ;; (swap! app-state update-in [:altered-parameters]
-      ;;    (fn [old-parameters]
-    ;;      (merge old-parameters new-parameter)))
-    (:altered-parameters @app-state)
-    )
-)
+    (:altered-parameters @app-state)))
 
 (defn select-bound-move
   [event move]
@@ -254,28 +229,22 @@
 
 (defn perform-bound-move
   [event]
-  ;;(println (str "(perform-bound-move)"))
   (if (some? event)
     (.preventDefault event))
-                                        ;(js/console.log (:selected-bound-move @app-state))
-  ;;(println (str "Altered parameters:" (get @app-state :altered-parameters)))
   (let [randomize-parameters (empty? (get @app-state :altered-parameters))]
     (swap! app-state assoc-in [:selected-parameters] (get-current-parameters (second (:selected-bound-move @app-state))
                                                                              randomize-parameters))
 
-    ;;(println (str "Selected move:" (:selected-bound-move @app-state)))
-    ;;(println (str "Selected parameters: " (:selected-parameters @app-state)))
+
     (let [params (get-current-parameters (:move (second (:selected-bound-move @app-state))) randomize-parameters)]
-      ;;(println params)
       (generator/execute-design-move!
        (second (:selected-bound-move @app-state))
        ;;(:selected-parameters @app-state)    ; TODO: get params
        params ;(generator/default-parameters (second (:selected-bound-move @app-state)))
        ))
     (update-database-view nil)
-    ;; (js/console.log @app-state)
     ;; (select-tab nil (:selected-tab @app-state))
-                                        ;(swap! app-state update-in [:data] (generator/-with-database :fetch-database))
+    ;;(swap! app-state update-in [:data] (generator/-with-database :fetch-database))
     ))
 
 (defn perform-random-move
@@ -285,7 +254,6 @@
     (let [valid-moves (:possible-moves @app-state)
           chosen-move (if (< 0 (count valid-moves)) (rand-nth valid-moves) nil)
           ]
-      ;(println chosen-move)
       (when chosen-move
         (swap! app-state assoc-in [:selected-bound-move] [0 chosen-move])
         (swap! app-state assoc-in [:altered-parameters] {})
@@ -324,10 +292,10 @@
   (let [gbs-project (dissoc (:gbs-output @app-state) :z_resources) 
         resource-files (:z_resources (:gbs-output @app-state))]
     ;; (js/console.log (generator/fetch-database))
-    (println gbs-project)
-    (println (clj->js gbs-project)             )
-    (js/console.log (clj->js gbs-project))
-    (js/console.log (.stringify js/JSON (clj->js gbs-project))  )
+    ;;(println gbs-project)
+    ;;(println (clj->js gbs-project)  )
+    ;;(js/console.log (clj->js gbs-project))
+    ;;(js/console.log (.stringify js/JSON (clj->js gbs-project))  )
     ;; (println (:z_resources (:gbs-output @app-state)))
     (-> (js/JSZip)
         (#(. % file "readme.txt" "This is an archive that contains the generated GBStudio project."))

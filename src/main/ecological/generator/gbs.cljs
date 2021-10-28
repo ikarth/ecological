@@ -7,6 +7,11 @@
             ))
 
 
+
+
+(defn tracking-println [text]
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -184,7 +189,7 @@
   []
 
   (let [manifest (assets/asset-manifest)]
-      (println "(load-resources)")
+      (tracking-println "(load-resources)")
        (if (empty? manifest)
          (let []
            (js/console.log "Missing asset manifest")
@@ -211,7 +216,7 @@
 (defn load-gbs-projects
   "Load projects and convert them into a databse format to eventually use to create templates."
   []
-  (println "(load-gbs-projects)")
+  (tracking-println "(load-gbs-projects)")
   (let [sep (assets/scene-manifest)
            scenes-to-add
            (mapv (fn [key asset]
@@ -269,11 +274,13 @@
    moves/move-connect-scenes-via-unplaced-endpoints
    moves/move-connect-scenes-via-half-endpoints
    moves/move-add-endpoint-to-scene
-   moves/ground-connection-into-trigger
    moves/endpoint-assign-position
    moves/move-create-speckled-background-image
+   moves/ground-connection-into-trigger
    moves/move-draw-endpoint-on-background
    ])
+
+
 
 (def initial-transaction
   [;;load-resources

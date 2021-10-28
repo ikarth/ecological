@@ -217,7 +217,7 @@
 
 (defn draw-endpoints-on-background
   "Creates a new background (old background + transition graphics) and makes that the background for the scene in question."
-  [db [scene image-resource background image-tiles image-data image-size image-tile-size endpoint direction position] [temp-id-resource temp-id-background]]
+  [db [scene image-resource background image-tiles image-data image-size image-tile-size endpoint direction position connection trigger] [temp-id-resource temp-id-background]]
   ;;(js/console.log image-data)
   ;;(js/console.log (qc/pixels image-data))
   (let [img-id (random-uuid)

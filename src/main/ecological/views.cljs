@@ -185,41 +185,50 @@
         valid-moves (filter #(= (get (get % :move) :name) move-name) poss-moves)]
     (count valid-moves)))
 
+(defn display-list-of-design-moves [selected-move bound-move possible-moves all-moveset exclusive-type]
+         [:ul.list.pl0.ml0.center.mw6.ba.b--light--silver.br2
+          (for [vecmove (map-indexed vector all-moveset)]
+            (let [move       (second vecmove)
+                  move-index (first vecmove)]
+              (if (or (and (nil? exclusive-type) (nil? (get move :type nil)))
+                      (= exclusive-type (move :type)))
+                (let [move-li-key
+                      (cond
+                        (= (:name selected-move) (:name move))
+                        :li.pv2.pointer.hover-bg-yellow.active-bg-gold.bg-orange
+                        (odd? move-index)
+                        :li.pv2.pointer.hover-bg-gold.bg-black-10
+                        :else
+                        :li.pv2.pointer.hover-bg-gold.bg-black-05
+                        )]
+                  (println (:type move))
+                  (let [vmc (valid-move-count move possible-moves)]
+                    ^{:key (:name move)}
+                    [move-li-key {:on-click #(select-move % move)}
+                     (:name move)                 
+                     " (" vmc ") "
+                     (if (< 0 vmc)
+                       [:div.dib.pa0.pointer.center.b--light--silver.hover-bg-red.shadow-hover.ba
+                        {:style    {:width "10%" :height "60%" :left "1em"} 
+                         :on-click (fn [event]
+                                     (select-move event move)
+                                     (if (select-random-bindings)
+                                       (perform-bound-move event)))}
+                        "🎲"])])))))])
+
 (defn operation-harness
   "The interface for the generative operation test harness. The user can select the operation to perform and the input to send to it and get a preview of the results."
   []
   (let [selected-move (:selected-move @app-state)
         bound-move (:selected-bound-move @app-state)
-        possible-moves (:possible-moves @app-state)]
+        possible-moves (:possible-moves @app-state)
+        all-moves (:all-moves @app-state)
+        ]
     [:div
      [:div.dt.dt--fixed
       [:div.dtc.tc.pa3.pv1.bg-black-10
-       [:ul.list.pl0.ml0.center.mw6.ba.b--light--silver.br2
-        (for [vecmove (map-indexed vector (:all-moves @app-state))]
-          (let [move (second vecmove)
-                move-index (first vecmove)]
-            (let [move-li-key
-                  (cond
-                    (= (:name selected-move) (:name move))
-                    :li.pv2.pointer.hover-bg-yellow.active-bg-gold.bg-orange
-                    (odd? move-index)
-                    :li.pv2.pointer.hover-bg-gold.bg-black-10
-                    :else
-                    :li.pv2.pointer.hover-bg-gold.bg-black-05
-                    )]
-              (let [vmc (valid-move-count move possible-moves)]
-                ^{:key (:name move)}
-                [move-li-key {:on-click #(select-move % move)}
-                 (:name move)                 
-                 " (" vmc ") "
-                 (if (< 0 vmc)
-                   [:div.dib.pa0.pointer.center.b--light--silver.hover-bg-red.shadow-hover.ba
-                    {:style {:width "10%" :height "60%" :left "1em"} 
-                     :on-click (fn [event]
-                                 (select-move event move)
-                                 (if (select-random-bindings)
-                                   (perform-bound-move event)))}
-                    "🎲"])]))))]]
+       (display-list-of-design-moves selected-move bound-move possible-moves all-moves nil)
+       (display-list-of-design-moves selected-move bound-move possible-moves all-moves :export)]      
       [:div.dtc.tc.pa3.pv2.bg-black-05.pa
        [:h3.f3.mt0 (if selected-move (:name selected-move) "Design Move")]
        [:p.tl-l

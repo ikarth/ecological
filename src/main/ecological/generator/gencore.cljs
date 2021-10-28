@@ -10,21 +10,25 @@
   (js/parseInt (.now js/Date)))
 
 (defn get-possible-design-move-from-moveset
-  "Return a list of all possible design moves for the provided `moveset-db-conn`,
+   "Return a list of all possible design moves for the provided `moveset-db-conn`,
   as selected from the provided `design-moves` collection."
-  [moveset-db-conn design-moves]
-  (apply concat
-   (map
-    (fn [mov]
-      (let [q-map
-            (if-let [move-query (get mov :query false)]
-              ;; (if (fn? move-query) (move-query @db-conn)) ;; todo: properly handle functions for queries
-              (let [query-result (d/q move-query @moveset-db-conn nil)] ;; todo: pass additional context to query
-                ;; todo: check if result is a promise
-                (map (fn [v] {:move mov :vars v}) query-result))
-              {:move mov :vars nil})]
-        (if (map? q-map) [q-map] q-map)))
-    design-moves)))
+  ([moveset-db-conn design-moves]
+   (get-possible-design-move-from-moveset moveset-db-conn design-moves nil)
+   )
+  ([moveset-db-conn design-moves move-type]
+   (apply concat
+          (map
+           (fn [mov]
+             (println "Move type:" (get mov :type nil))
+             (let [q-map
+                   (if-let [move-query (get mov :query false)]
+                     ;; (if (fn? move-query) (move-query @db-conn)) ;; todo: properly handle functions for queries
+                     (let [query-result (d/q move-query @moveset-db-conn nil)] ;; todo: pass additional context to query
+                       ;; todo: check if result is a promise
+                       (map (fn [v] {:move mov :vars v}) query-result))
+                     {:move mov :vars nil})]
+               (if (map? q-map) [q-map] q-map)))
+           design-moves))))
 
 (defn get-possible-design-moves
   "Return a list of all possible design moves for the provided `db`. 
@@ -43,16 +47,12 @@
 
 
 (defn default-parameters [design-move randomize-parameters]
-  ;;(println " (default-parameters) " )
-  ;;(js/console.log design-move)
-  ;;(println design-move)
   (let [params (get design-move :parameters {})
         ;;defaults (zipmap (keys params) (map :default (vals params)))
         ;;ranges (zipmap (keys params) (map :range (vals params)))
         ]
     (let [defaults
           (map (fn [[name param]]
-                 ;;(println name param)
                  {name
                   (cond
                     (and randomize-parameters (= :enum (:form param)))
@@ -66,14 +66,9 @@
                     :else
                     (:default param))})
                params)]
-      ;;(println "results of default:")
-      ;;(println defaults)
-      ;;(println (merge defaults))
-      ;;(println (apply merge defaults))
       (apply merge defaults))))
 
 (defn assemble-exec-result [db design-move params]
-  ;(println (str "(assemble-exec-result)"  params))
   (let [_ (assert (map? design-move) "Need a design move before we can execute the design move function.")
         move-name (get-in design-move [:move :name])
         _ (assert (string? move-name) (str "Design move (" move-name ") not found in " design-move "."))
@@ -99,15 +94,13 @@
                         ]
         tx-data (into [] (concat provenance-added history-record))
         tx-data result ;; Temporarily disable history recording...
-
         ]
-    (println tx-data)
+    ;;(println tx-data)
     tx-data))
 
 (defn execute-design-move!
   "Executes the supplied design move in the context of the current-database."
   [design-move params]
-  ;(println (str " (execute-design-move!) " design-move " , " params " <---"))
   (if-let [db-conn (get @current-database :db-conn)]
     (let []
       (assert (map? design-move) "Design move is missing, so can't be executed.")
@@ -126,7 +119,6 @@
   (setup-databases))
 
 (defn switch-database [database-id]
-  ;;(println (str "(switch-database " database-id ")") )
   (update-database database-id))
 
 (defn reset-the-database!
@@ -237,10 +229,8 @@
 (defn fetch-project-view
   "Returns a summarized list of the most signifigant artifacts, to make it easier to keep track of them."
   []
-  ;(println @current-database)
   (if-let [db-conn (get @current-database :db-conn)]
     (let [exporter-func (get @current-database :export-project-view (fn [_] (println "No (project-view) exporter implemented for this database.")))]
-                                        ;(println (:export-project-view @current-database))
       (if (fn? exporter-func)
         (exporter-func db-conn)
         []))))

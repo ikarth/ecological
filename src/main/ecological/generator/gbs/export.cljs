@@ -243,6 +243,16 @@
       (assoc :scenes (export-scenes db-conn))
       ))
 
+(defn run-postprocessing [db-conn]
+  
+  )
+
+(defn postprocess-and-export-project
+  [basic-export db-conn]
+  (let [exporting-db (d/conn-from-db @db-conn)]
+    (run-postprocessing exporting-db)        
+    (export-gbs-project basic-export exporting-db)))
+
 (defn export-most-recent-artifact
   [basic-export db-conn]
   (-> {}
@@ -274,17 +284,10 @@
            ]
          @db-conn)
         ]
-    ;;(println data)
+
     (mapv (fn [connect]
-            ;; (-> (zipmap [:connection :endA :endB :sceneA :sceneB :sceneAname :sceneBname] connect)
-            ;;     #([(str (:connection %) ": " (:sceneA %) " <-> " (:sceneB %))])
-            ;;     )
             (let [c (zipmap [:connection :endA :endB :sceneA :sceneB :sceneAname :sceneBname] connect)]
-              [(str "Edge " (:connection c) ": " (:sceneA c) " <-> " (:sceneB c))]
-              )
-            ;(str connect)
-            )          
-          data)))
+              [(str "Edge " (:connection c) ": " (:sceneA c) " <-> " (:sceneB c))]))                    data)))
 
 (defn list-scenes [db-conn]
   (let [scene-labels []
@@ -301,7 +304,6 @@
              @db-conn
              "generated scene"
              "no id number")]
-    ;(println scenes)
     (mapv (fn [scene]
             (-> (zipmap [:num :name :uuid] scene)
                 ((fn [el]
@@ -340,7 +342,6 @@
               [?left :endpoint/scene ?left-scene]
               [?right :endpoint/scene ?right-scene]
               ] @db-conn)]
-    ;(println scenes)
     (mapv (fn [scene]
             (-> (zipmap [:num :name :uuid] scene)
                 ((fn [el]
@@ -354,42 +355,24 @@
                                (fn [con]
                                  (or (= (:num el) (nth con 3))
                                      (= (:num el) (nth con 4))))
-                               connections)
-                         ]
-                     ;; (println "pview")
-                     ;; (println ends)
-                     ;; (println cons)
+                               connections)]
                      [(str (:num el) ": " (:name el) " " (subs (:uuid el) 32))
                       (for [end ends]
                         (let [left (filter  (fn [cn] (= (first end) (nth cn 1))) cons)
                               right (filter (fn [cn] (= (first end) (nth cn 2))) cons)
                               ]
-                          ;; (println (str "end:" end))
-                          ;; (println (str "cons: " cons))
-                          ;; (println (str "left: " left))
-                          ;; (println (str "right: " right))
                           (str (first end) " -> "
                                (cond
                                  (not (empty? left))
                                  (str (nth (first left) 4))
-                                 (not (empty? right))                                                     
+                                 (not (empty? right))
                                  (str (nth (first right) 3))
                                  :else
-                                 "")
-                                                         )
-                                                  ;;      (catch Exception e (str "caught exception: " (.getMessage e)))
-                               ;;      )
-                              
-                                                ))
-                      ;;(str ends)
-                      ;;(into [] (:connections el))
-                      
-                      ])       ))))
+                                 ""))))])))))
           scenes)))
 
 (defn export-project-view
   [db-conn]
-  ;;(println "(export-project-view)")
   [(list-connections db-conn)
    ;;(list-scenes db-conn)
    (list-project db-conn)

@@ -273,8 +273,9 @@
 (def move-draw-endpoint-on-background
   {:name "draw-endpoint-on-background"
    :comment "add visible indicator of a transition point to the background image of a scene"
+   :type :export
    :query
-   '[:find ?scene ?resource ?background ?image-tiles ?image-data ?image-size ?image-tile-size ?endpoint ?direction ?position
+   '[:find ?scene ?resource ?background ?image-tiles ?image-data ?image-size ?image-tile-size ?endpoint ?direction ?position ?connection ?trigger
      :in $ %
      :where
      [?scene :type/gbs :gbs/scene]
@@ -287,7 +288,14 @@
      [?endpoint :endpoint/scene ?scene]
      [?endpoint :entity/direction ?direction]
      [?endpoint :entity/position ?position]
-     [(missing? $ ?endpoint :endpoint/background)]
+     ;; draw only if it hasn't already been added to a background
+     ;; TODO: what if it has been added to a background, but not the background we are currently using? Is that a possible state?
+     [(missing? $ ?endpoint :endpoint/background)] 
+     ;; draw only if it is part of connection grounded by a trigger...
+     (or [?connection :connection/left-end ?endpoint]
+         [?connection :connection/right-end ?endpoint]) 
+     [?trigger :trigger/parent ?endpoint]
+     [?trigger :trigger/scene ?scene]
      ]
    :exec
    (fn [db bindings parameters]
@@ -492,6 +500,7 @@
 (def ground-connection-into-trigger
   {:name    "ground-connnection-into-trigger"
    :comment "translate finished connections into scene triggers for eventual export"
+   :type :export
    :query
    '[:find ?connection ?endA ?endB ?sceneA ?sceneB ?endApos ?endBpos ?directionA ?directionB
      :in $ %
