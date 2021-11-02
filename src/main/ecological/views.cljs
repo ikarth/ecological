@@ -682,7 +682,7 @@
 (defn filter-gen-state-img [g-state]
   (clojure.walk/postwalk
    (fn [node]
-     (println node)
+     ;(println node)
        (cond
          (and (map? node) (contains? node "collisions"))
          (dissoc node "collisions" "editor-position")
@@ -709,17 +709,12 @@
 
 
 (defn display-project-element [element count]
-  ;; (println "(display-project-element)")
-  ;; (println (type element))
-  ;; (println element)
-  ;; (println count)
   (cond
     (string? element)
     [:li element]
     (coll? element)    
     (for [[ii el] (map-indexed vector element)]
       (let []
-        ;; (println el)
         (if el
           ^{:key ii} [:li [:ul.ma0.ml1.mr1 (display-project-element el (if (nil? count) 1 (inc count)))]]))) ;[:div element]
     :else
@@ -752,7 +747,6 @@
 (defn display-most-recent-artifact []
   [:div.dib
    (let [recent-artifact  (:recent-artifact @app-state)]
-     (println recent-artifact)
      (if (contains? recent-artifact "image-data")
        (let [img-data (get recent-artifact "image-data")]
          (if (undefined? img-data)
