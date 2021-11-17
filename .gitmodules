@@ -1,0 +1,3 @@
+[submodule "public/vendor/ndwfc"]
+	path = public/vendor/ndwfc
+	url = https://github.com/LingDong-/ndwfc.git

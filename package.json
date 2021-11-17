@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "devDependencies": {
-    "shadow-cljs": "^2.14.6"
+    "shadow-cljs": "^2.16.4"
   },
   "dependencies": {
     "@zip.js/zip.js": "^2.3.17",
@@ -15,8 +15,8 @@
     "jszip": "^3.7.1",
     "p5": "^1.4.0",
     "prando": "^6.0.1",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "tailwindcss": "^2.2.7",
     "wavefunctioncollapse": "^2.1.0",
     "ws": ">=5.2.3"
