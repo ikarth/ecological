@@ -21,10 +21,15 @@
     <link rel="stylesheet" href="css/style.css">
   </head>
   <body>
-    <div id="app"></div> <!-- your build -->
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <canvas id="quil-canvas"></canvas>
-    <script src="js/main.js"></script> <!-- :output-dir -->
-    <script>ecological.core.init();</script><!-- "Starter file" -->
+      <div id="app"></div> <!-- your build -->
+      <noscript>You need to enable JavaScript to run this app.</noscript>
+      <!-- WFC -->
+      <script src="vendor/ndwfc/ndwfc.js"></script>
+      <script src="vendor/ndwfc/ndwfc-tools.js"></script>
+      <!-- Quil/Processing canvas -->
+      <canvas id="quil-canvas"></canvas>
+      <!-- The core script - must be loaded last -->
+      <script src="js/main.js"></script> <!-- :output-dir -->
+      <script>ecological.core.init();</script><!-- "Starter file" -->
   </body>
 </html>
