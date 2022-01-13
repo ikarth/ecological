@@ -46,7 +46,7 @@
           tile-size 8 ;; TODO: get the official tile size from somewhere
           ]
       (map (fn [bkg bkgs]
-             (println bkg)
+             (println "bkg:" bkg)
              {;;"_data"
               ;;bkg
               "width"

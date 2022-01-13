@@ -497,6 +497,8 @@
        }
       parameters))})
 
+
+
 (def ground-connection-into-trigger
   {:name    "ground-connnection-into-trigger"
    :comment "translate finished connections into scene triggers for eventual export"
@@ -556,3 +558,17 @@
          }      
         ])
      )})
+
+;; (def generate-an-entire-game
+;;   {:name "generate-an-entire-game"
+;;    :comment "The make a game button, mostly for testing purposes."
+;;    ;:query '[]
+;;    :exec
+;;    (fn [db bindings parameters]
+;;      [(ops/create-image db [] {:filename "autogen_logo.png"})
+;;       (ops/create-scene db [] nil)
+;;       (ops/)
+;;       ]
+;;      )})   
+
+

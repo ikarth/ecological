@@ -154,10 +154,11 @@
 
 (defn generate []
   ;;(reset-the-database! database-id)
+  (js/console.log "generate...")
   (if-let [db-conn (get @current-database :db-conn)]
     (if-let [autonomous-generator (get @current-database :auto-generator)]
       (let []
-        (js/console.log autonomous-generator)
+        (js/console.log "attempting to run autonomous generator:" autonomous-generator)
         (autonomous-generator db-conn)
         (log-db db-conn)))))
 

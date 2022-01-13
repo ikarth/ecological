@@ -201,7 +201,7 @@
                         :else
                         :li.pv2.pointer.hover-bg-gold.bg-black-05
                         )]
-                  (println (:type move))
+                  (println "move type in display list: " (:type move))
                   (let [vmc (valid-move-count move possible-moves)]
                     ^{:key (:name move)}
                     [move-li-key {:on-click #(select-move % move)}

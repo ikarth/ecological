@@ -45,8 +45,7 @@
            skipped (.skip rng salt-count)
            num (.nextInt rng min max)]
        num))
-   (println min)
-   (println max)
+   (println "min/max:" min max)
    (+ min (rand-int (- max min)))))
 
 (defn stable-hash-choice
@@ -236,7 +235,7 @@
                 size-y (* tile-y (case direction "down" 1 "up" 1 1))
                 ]
             (qc/pixels image-target)
-            (println [pos-x pos-y direction])
+            (println "endpoint: " [pos-x pos-y direction])
             (dotimes [x (first image-size)]
               (dotimes [y (second image-size)]
                 (qc/set-pixel image-target
@@ -326,3 +325,16 @@
      ;; ;; alter endpoint to indicate that it has been drawn on the background
      [:db/add endpoint :endpoint/background -2]
      ]))
+
+
+;; (defn make-an-entire-game
+;;   "Creates an entire game and puts it in the database. Mostly for testing new stuff."
+;;   [db bindings parameters]
+;;   (let []
+;;     [{:db/id -1
+;;       :type/gbs :gbs/resource
+;;       :resource/type :image}
+;;      (create-scene db [] nil)
+;;      ]
+;;     )
+;;   ) 

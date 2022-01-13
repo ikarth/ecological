@@ -167,7 +167,7 @@
   [event [param-name param-index] current-move valid-range]
   ;; (if (some? event)
   ;;   (.preventDefault event))
-  (js/console.log event)
+  (js/console.log "event: " event)
   (let [current-state (get-current-parameters current-move false)
         old-values (get current-state param-name [-1 -1])
         form (get-in current-move [:parameters param-name :form] :form-not-found)

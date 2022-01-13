@@ -1,0 +1,23 @@
+# Steps to generate a game
+load an image (splash screen)
+make splash screen image into a background
+create a blank scene
+add splash screen background to blank scene (intro scene)
+generate name
+generate a title image (from name)
+make a background (from title image)
+create a blank scene
+add title image to blank scene (title screen)
+add scene-change script to intro scene (point to title)
+add save/load script to title screen
+
+generate basic graph (nodes and edges)
+perform graph grammar opereations on game graph
+translate the graph to scenes
+
+generate a combat system
+attach combat system scripts to all scenes that require them
+
+for a scene with assigned connections, generate a room/collision layout
+for a scene with collisions, generate a tile-image
+
