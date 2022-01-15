@@ -189,40 +189,20 @@
       }]))
 
 (defn create-intro-logo-background-image
-  [db bindings parameters]
-  
+  [db bindings parameters]  
   (let [id (random-uuid)
-        
-        
         image-size [160 160]
         tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
         image-tile-size (mapv #(quot % tile-size) image-size)
-        ;speckle-density 0.18
-        ;palette [(qc/color 200 100 0) (qc/color 0 100 200)]  ;0x86c06cff 0xe0f8cfff
         image-data
         (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
           (let [known-images (qc/state :images)
-                logo-image (get-in known-images ["autogen_logo_base"])
-                ;; x (js/console.log logo-image)
-                ;; y (js/console.log known-images)
-                ;; z (println qc/state)
-                
-                
-                ;y (js/console.log (. logo-image height))
-                ]
-            ;(. image-target fill 10 80 98) 
-            ;;(. image-target rect 40 40 460 260)
-            ;; (qc/set-pixel image-target 50 50
-            ;;                       (qc/color 0xe0 0xf8 0xcf))
-                                
-
+                logo-image (get-in known-images ["autogen_logo_base"])]
             (when (qc/loaded? logo-image)
               (let [image-size [(. logo-image -width) (. logo-image -height)]
                     image-target (qc/create-graphics (first image-size) (second image-size))]
                 (. image-target image logo-image 0 0)
                 image-target))))]
-    ;;(js/console.log image-tile-size)
-    ;;(println image-tile-size)
     [{:db/id -1
       :type/gbs :gbs/resource
       :resource/type :image
