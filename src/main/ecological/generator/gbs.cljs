@@ -26,7 +26,16 @@
    :_version    "3.0.0"
    :_release    "1"
    :scenes      []
-   :backgrounds []
+   :backgrounds [{
+            :id "1e5f9d6a-bdbc-43e6-8c34-22f5bb5dea05",
+            :name "placeholder",
+            :width 20,
+            :height 18,
+            :imageWidth 160,
+            :imageHeight 144,
+            :filename "placeholder.png",
+            :tileColors []
+        }]
    :spriteSheets []
    :palettes [
         {
@@ -579,6 +588,8 @@
    ;; moves/move-add-endpoint-to-scene
    ;; moves/endpoint-assign-position
    moves/move-create-speckled-background-image
+   moves/move-create-intro-logo-background-image
+   moves/move-create-intro-title-background-image
    ;; moves/ground-connection-into-trigger
    ;; moves/move-draw-endpoint-on-background
    ;;moves/generate-an-entire-game
@@ -597,8 +608,8 @@
   {:db-conn db-conn
    :db-schema genboy-schema
    :design-moves design-moves
-   :exporter #(export/export-gbs-project gbs-basic db-conn)
-   :export-most-recent #(export/export-most-recent-artifact gbs-basic db-conn)
+   :exporter #(export/export-gbs-project gbs-basic-version-three db-conn)
+   :export-most-recent #(export/export-most-recent-artifact gbs-basic-version-three db-conn)
    :initial-transaction initial-transaction
    :setup [(assets/load-manifest) (assets/load-scene-sources)]
    :export-project-view #(export/export-project-view db-conn)

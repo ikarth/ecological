@@ -43,7 +43,7 @@
              @db-conn)]
     (let [bkgs (map #(zipmap element-labels %)
                     elements)
-          tile-size 8 ;; TODO: get the official tile size from somewhere
+          tile-size 8 ;; TODO: dynamically get the official tile size from somewhere
           ]
       (map (fn [bkg bkgs]
              (println "bkg:" bkg)
@@ -234,7 +234,7 @@
 
 
 (defn export-gbs-project
-  "Export the entire project as a GBS-compatible EDN."
+  "Export the entire project as a GBS-compatible EDN. Must be converted to JSON to actually load it in the GBS editor, of course."
   [basic-export db-conn]
   (-> basic-export
       (assoc :_design-moves (export-design-moves db-conn))

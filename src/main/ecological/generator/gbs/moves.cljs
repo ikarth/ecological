@@ -139,6 +139,22 @@
    (fn [db bindings parameters]
      (ops/create-speckled-background-image db bindings parameters))})
 
+
+(def move-create-intro-logo-background-image
+  {:name "create-intro-logo-background-image"
+   :comment "Creates new image to act as the bootup splash screen."
+   :exec
+   (fn [db bindings parameters]
+     (ops/create-intro-logo-background-image db bindings parameters))})
+
+
+(def move-create-intro-title-background-image
+  {:name "create-intro-title-background-image"
+   :comment "Creates new image that displays the title of the game."
+   :exec
+   (fn [db bindings parameters]
+     (ops/create-intro-title-background-image db bindings parameters))})
+
 (def move-create-greenfield-background
   {:name "create-greenfield-background"
    :comment "Creates a new image to act as a background"

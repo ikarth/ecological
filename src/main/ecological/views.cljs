@@ -472,18 +472,33 @@
                  (visualize-image idat {:key (get i-entry "uuid")})))))
          g-state)))
 
+(defn load-auto-image [img-file-name]
+  (let [path
+        (str "data/assets/backgrounds/" img-file-name ".png")
+        ;"https://dummyimage.com/100x100/2c3e50/ffffff.png"
+        ;(str "./data/assets/backgrounds/" img-file-name + ".png")
+        ]
+    (qc/load-image path)))
+
 (defn visualize-generator-sketch
   ([w h]
    (visualize-generator-sketch w h nil))
   ([w h name]
    (letfn
-       [(initial-state []
+       [(initial-state
+         []
+         (let
+          [auto-images ["autogen_logo_base"]] ;; TODO: assemble this list dynamicly
           (qc/pixel-density 1)
-          {:time 0})
+          {:time 0,
+           :images (zipmap auto-images (map load-auto-image auto-images))}))
         (update-state [state] (update state :time inc))
         (draw [state]
           (let [t (:time state)]
             (qc/background 80 170 100)
+            (let [im (get-in state [:images "autogen_logo_base"])]
+            (when (qc/loaded? im) 
+            (qc/image im 0 0)))
             (qc/fill 100 120 230)
             (qc/ellipse (rem t w) (rem t h) 50 50)))]
      (q-sketch :setup initial-state
