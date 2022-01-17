@@ -163,7 +163,7 @@
               (qc/background 20)
               ;;(qc/fill  0 40 0)
               ;;(qc/rect 0 0 160 144)
-              (qc/fill 255)
+              (qc/fill 0xe0 0xf8 0xcf)
               (qc/text-align :center :top)
               (qc/text-size 18)  
               (. image-target text "Title of\nGenerated Game" 80 20))
@@ -193,7 +193,14 @@
             (when (qc/loaded? logo-image)
               (let [image-size [(. logo-image -width) (. logo-image -height)]
                     image-target (qc/create-graphics (first image-size) (second image-size))]
-                (. image-target image logo-image 0 0)
+                (qc/with-graphics image-target
+                  (qc/image logo-image 0 0)
+                  (qc/fill 255)
+                  (qc/fill 0xe0 0xf8 0xcf)
+                  (qc/text-align :center :bottom)
+                  (qc/text-size 12)  
+                  (qc/text (.now js/Date) 80 134)
+                  )
                 image-target))))]
     [{:db/id -1
       :type/gbs :gbs/resource
