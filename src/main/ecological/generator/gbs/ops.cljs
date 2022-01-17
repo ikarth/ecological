@@ -149,33 +149,25 @@
 (defn create-intro-title-background-image
   [db bindings parameters]
   (let [id (random-uuid)
-        image-size [160 160]
+        image-size [160 144]
         tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
         image-tile-size (mapv #(quot % tile-size) image-size)
         speckle-density 0.98
         ;palette [(qc/color 200 100 0) (qc/color 0 100 200)]  ;0x86c06cff 0xe0f8cfff
         image-data
         (qc/with-sketch (qc/get-sketch-by-id "quil-canvas")
-          (let [image-target (qc/create-image (first image-size) (second image-size))]
-            (dotimes [x (first image-size)]
-              (dotimes [y (second image-size)]
-                (let [;;intensity (if (> speckle-density (qc/random 100)) 0 1)
-                      ]
-                  (qc/set-pixel image-target
-                                x
-                                y
-                                ;;(qc/color 200 100 0)
-                                (if (> speckle-density (qc/random 100))
-                                  (qc/color 0x86 0xc0 0x6c)
-                                  (qc/color 0xe0 0xf8 0xcf))
-                                ;(nth palette intensity (qc/color 20 30 20))
-                                ))))
-            
-            ;;(js/console.log image-target)
-            (qc/update-pixels image-target)
+          (let [image-target (qc/create-graphics (first image-size) (second image-size))]
+            ;; todo: actually generate the title text
+            ;; todo: create-graphics leaks memory in clojurescript; replace directt use with a reusable graphic created at the start...
+            (qc/with-graphics image-target
+              (qc/background 20)
+              ;;(qc/fill  0 40 0)
+              ;;(qc/rect 0 0 160 144)
+              (qc/fill 255)
+              (qc/text-align :center :top)
+              (qc/text-size 18)  
+              (. image-target text "Title of\nGenerated Game" 80 20))
             image-target))]
-    ;;(js/console.log image-tile-size)
-    ;;(println image-tile-size)
     [{:db/id -1
       :type/gbs :gbs/resource
       :resource/type :image
@@ -191,7 +183,7 @@
 (defn create-intro-logo-background-image
   [db bindings parameters]  
   (let [id (random-uuid)
-        image-size [160 160]
+        image-size [160 144]
         tile-size 8  ;; gbstudio uses 8x8 tiles for its scene backgrounds
         image-tile-size (mapv #(quot % tile-size) image-size)
         image-data
